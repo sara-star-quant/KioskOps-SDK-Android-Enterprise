@@ -3,6 +3,8 @@ package com.peterz.kioskops.sdk
 import com.peterz.kioskops.sdk.compliance.RetentionPolicy
 import com.peterz.kioskops.sdk.compliance.SecurityPolicy
 import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
+import com.peterz.kioskops.sdk.compliance.QueueLimits
+import com.peterz.kioskops.sdk.compliance.IdempotencyConfig
 import com.peterz.kioskops.sdk.sync.SyncPolicy
 
 data class KioskOpsConfig(
@@ -14,6 +16,8 @@ data class KioskOpsConfig(
   val securityPolicy: SecurityPolicy = SecurityPolicy.maximalistDefaults(),
   val retentionPolicy: RetentionPolicy = RetentionPolicy.maximalistDefaults(),
   val telemetryPolicy: TelemetryPolicy = TelemetryPolicy.maximalistDefaults(),
+  val queueLimits: QueueLimits = QueueLimits.maximalistDefaults(),
+  val idempotencyConfig: IdempotencyConfig = IdempotencyConfig.maximalistDefaults(),
   /** Network sync is opt-in. Default is disabled to avoid silent off-device transfer. */
   val syncPolicy: SyncPolicy = SyncPolicy.disabledDefaults(),
 )

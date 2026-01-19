@@ -131,6 +131,7 @@ class KioskOpsSdk private constructor(
     clock = clock,
     sdkVersion = SDK_VERSION,
     queueDepthProvider = { queue.countActive() },
+    quarantinedSummaryProvider = { queue.quarantinedSummaries(100) },
     postureProvider = { postureCollector.collect() },
     policyHashProvider = {
       Hashing.sha256Base64Url(driftDetector.sanitizedProjection(cfg()))
@@ -146,19 +147,54 @@ class KioskOpsSdk private constructor(
   fun currentPolicyHash(): String = Hashing.sha256Base64Url(driftDetector.sanitizedProjection(cfg()))
 
 
+  /**
+   * Backwards-compatible enqueue API.
+   *
+   * For enterprise pilots, prefer [enqueueDetailed] to get rejection reasons.
+   */
   suspend fun enqueue(type: String, payloadJson: String): Boolean {
-    val ok = queue.enqueue(type, payloadJson, cfg())
-    if (ok) {
-      audit.record("event_enqueued", mapOf("type" to type))
-      telemetry.emit("event_enqueued", mapOf("type" to type))
-    } else {
-      audit.record("event_rejected", mapOf("type" to type))
-      telemetry.emit("event_rejected", mapOf("type" to type))
+    return enqueueDetailed(type = type, payloadJson = payloadJson).isAccepted
+  }
+
+  /**
+   * Enqueue an event with optional stable id for deterministic idempotency.
+   *
+   * - If [idempotencyKeyOverride] is provided, it is used as-is.
+   * - Else if stableEventId is provided and deterministic idempotency is enabled,
+   *   the SDK computes a deterministic key (HMAC-SHA256).
+   */
+  suspend fun enqueueDetailed(
+    type: String,
+    payloadJson: String,
+    stableEventId: String? = null,
+    idempotencyKeyOverride: String? = null,
+  ): com.peterz.kioskops.sdk.queue.EnqueueResult {
+    val res = queue.enqueue(type, payloadJson, cfg(), stableEventId = stableEventId, idempotencyKeyOverride = idempotencyKeyOverride)
+    when (res) {
+      is com.peterz.kioskops.sdk.queue.EnqueueResult.Accepted -> {
+        audit.record("event_enqueued", mapOf("type" to type))
+        telemetry.emit("event_enqueued", mapOf("type" to type))
+        if (res.droppedOldest > 0) {
+          audit.record("queue_overflow_dropped", mapOf("dropped" to res.droppedOldest.toString()))
+          telemetry.emit("queue_overflow_dropped", mapOf("dropped" to res.droppedOldest.toString(), "strategy" to "DROP_OLDEST"))
+        }
+      }
+      is com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected -> {
+        audit.record("event_rejected", mapOf("type" to type, "reason" to res::class.java.simpleName))
+        telemetry.emit("event_rejected", mapOf("type" to type, "reason" to res::class.java.simpleName))
+      }
     }
-    return ok
+    return res
   }
 
   suspend fun queueDepth(): Long = queue.countActive()
+
+  /**
+   * Returns lightweight metadata for quarantined events (no payload).
+   * Useful for support dashboards and diagnostics.
+   */
+  suspend fun quarantinedEvents(limit: Int = 50): List<com.peterz.kioskops.sdk.queue.QuarantinedEventSummary> =
+    queue.quarantinedSummaries(limit)
 
   /**
    * Opt-in network sync.

@@ -23,8 +23,9 @@ class EnqueueGuardsTest {
       securityPolicy = SecurityPolicy.maximalistDefaults().copy(maxEventPayloadBytes = 10)
     )
     val repo = QueueRepository(ctx, RingLog(ctx), NoopCryptoProvider)
-    val ok = repo.enqueue("T", "{\"long\":\"payload\"}", cfg)
-    assertThat(ok).isFalse()
+    val res = repo.enqueue("T", "{\"long\":\"payload\"}", cfg)
+    assertThat(res.isAccepted).isFalse()
+    assertThat(res).isInstanceOf(EnqueueResult.Rejected.PayloadTooLarge::class.java)
   }
 
   @Test fun rejectsDenylistedKeyWhenRawNotAllowed() = runBlocking {
@@ -35,8 +36,9 @@ class EnqueueGuardsTest {
       securityPolicy = SecurityPolicy.maximalistDefaults().copy(denylistJsonKeys = setOf("email"), allowRawPayloadStorage = false)
     )
     val repo = QueueRepository(ctx, RingLog(ctx), NoopCryptoProvider)
-    val ok = repo.enqueue("T", "{\"email\":\"a@b.com\"}", cfg)
-    assertThat(ok).isFalse()
+    val res = repo.enqueue("T", "{\"email\":\"a@b.com\"}", cfg)
+    assertThat(res.isAccepted).isFalse()
+    assertThat(res).isInstanceOf(EnqueueResult.Rejected.DenylistedKey::class.java)
   }
 
   @Test fun allowsDenylistedKeyWhenRawAllowed() = runBlocking {
@@ -47,7 +49,7 @@ class EnqueueGuardsTest {
       securityPolicy = SecurityPolicy.maximalistDefaults().copy(denylistJsonKeys = setOf("email"), allowRawPayloadStorage = true, encryptQueuePayloads = false)
     )
     val repo = QueueRepository(ctx, RingLog(ctx), NoopCryptoProvider)
-    val ok = repo.enqueue("T", "{\"email\":\"a@b.com\"}", cfg)
-    assertThat(ok).isTrue()
+    val res = repo.enqueue("T", "{\"email\":\"a@b.com\"}", cfg)
+    assertThat(res.isAccepted).isTrue()
   }
 }
