@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: KioskOps Events Ingest API
+  version: 0.1.0
+  description: |
+    Minimal ingest endpoint for the KioskOps SDK.
+
+    Key properties:
+      - Idempotency per event: (id, idempotencyKey)
+      - Client sends JSON payloads; server should validate per type
+      - Server returns per-event acknowledgements
+servers:
+  - url: https://example.your-company.tld/
+paths:
+  /events/batch:
+    post:
+      summary: Ingest a batch of operational events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSendRequest'
+      responses:
+        '200':
+          description: Batch processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchSendResponse'
+        '400':
+          description: Validation error (client should treat as permanent for that event)
+        '401':
+          description: Unauthorized (client will retry after host refreshes auth)
+        '403':
+          description: Forbidden
+        '429':
+          description: Rate limited (retry)
+        '500':
+          description: Server error (retry)
+components:
+  schemas:
+    TransportEvent:
+      type: object
+      required: [id, idempotencyKey, type, payloadJson, createdAtEpochMs]
+      properties:
+        id:
+          type: string
+          description: Client event id (UUID recommended)
+        idempotencyKey:
+          type: string
+          description: Client idempotency key (UUID recommended)
+        type:
+          type: string
+        payloadJson:
+          type: string
+          description: JSON string (server validates per type)
+        createdAtEpochMs:
+          type: integer
+          format: int64
+    BatchSendRequest:
+      type: object
+      required: [batchId, deviceId, appVersion, locationId, sentAtEpochMs, events]
+      properties:
+        batchId:
+          type: string
+        deviceId:
+          type: string
+          description: Pseudonymous device identifier (stable per install)
+        appVersion:
+          type: string
+        locationId:
+          type: string
+        sentAtEpochMs:
+          type: integer
+          format: int64
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransportEvent'
+    EventAck:
+      type: object
+      required: [id, idempotencyKey, accepted, retryable]
+      properties:
+        id:
+          type: string
+        idempotencyKey:
+          type: string
+        accepted:
+          type: boolean
+        retryable:
+          type: boolean
+          description: When false, client should stop retrying this event
+        error:
+          type: string
+          nullable: true
+        serverEventId:
+          type: string
+          nullable: true
+    BatchSendResponse:
+      type: object
+      required: [acceptedCount, acks]
+      properties:
+        acceptedCount:
+          type: integer
+        acks:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventAck'
