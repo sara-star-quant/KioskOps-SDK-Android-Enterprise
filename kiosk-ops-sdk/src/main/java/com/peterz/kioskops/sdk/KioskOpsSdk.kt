@@ -28,6 +28,7 @@ import com.peterz.kioskops.sdk.sync.SyncEngine
 import com.peterz.kioskops.sdk.sync.SyncOnceResult
 import com.peterz.kioskops.sdk.transport.AuthProvider
 import com.peterz.kioskops.sdk.transport.OkHttpTransport
+import com.peterz.kioskops.sdk.transport.RequestSigner
 import com.peterz.kioskops.sdk.transport.Transport
 import com.peterz.kioskops.sdk.transport.TransportResult
 import kotlinx.serialization.json.Json
@@ -40,6 +41,7 @@ class KioskOpsSdk private constructor(
   private val configProvider: () -> KioskOpsConfig,
   cryptoProviderOverride: CryptoProvider?,
   private val authProvider: AuthProvider?,
+  private val requestSigner: RequestSigner?,
   transportOverride: Transport?,
   okHttpClientOverride: OkHttpClient?,
 ) {
@@ -105,7 +107,8 @@ class KioskOpsSdk private constructor(
     client = okHttpClient,
     json = json,
     logs = logs,
-    authProvider = authProvider
+    authProvider = authProvider,
+    requestSigner = requestSigner
   )
 
   private val syncEngine = SyncEngine(
@@ -380,7 +383,7 @@ class KioskOpsSdk private constructor(
   }
 
   companion object {
-    const val SDK_VERSION = "0.1.0-step6"
+    const val SDK_VERSION = "0.1.0-step8"
 
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 
@@ -389,6 +392,7 @@ class KioskOpsSdk private constructor(
       configProvider: () -> KioskOpsConfig,
       cryptoProviderOverride: CryptoProvider? = null,
       authProvider: AuthProvider? = null,
+      requestSigner: RequestSigner? = null,
       transportOverride: Transport? = null,
       okHttpClientOverride: OkHttpClient? = null,
     ): KioskOpsSdk {
@@ -398,6 +402,7 @@ class KioskOpsSdk private constructor(
         configProvider,
         cryptoProviderOverride,
         authProvider,
+        requestSigner,
         transportOverride,
         okHttpClientOverride
       )

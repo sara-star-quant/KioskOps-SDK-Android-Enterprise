@@ -20,6 +20,9 @@ This repo prioritizes:
   - allow-listed telemetry keys only
   - tamper-evident audit trail (hash-chain; detects casual tampering)
 - **Retention controls** by days (telemetry/audit/exports, plus queue cleanup)
+- **Queue pressure controls** (max events + max bytes) with configurable overflow strategy
+- **Deterministic idempotency (optional)** via HMAC when caller provides a stableEventId
+- **Poison-event quarantine**: non-retryable or max-attempts events are quarantined and excluded from sync
 
 ### Fleet operations hooks
 - **Policy drift detection**: stores a sanitized config hash (excludes secrets like PIN) and records drift events
@@ -37,6 +40,15 @@ This repo prioritizes:
   - stops retrying events when server responds `retryable=false`
 
 Server contract is defined in `docs/openapi.yaml`.
+
+### Request signing (network plane hardening)
+This milestone adds **optional HMAC request signing** for the batch ingest request.
+
+- Signing is **off by default**.
+- The host app provides the shared secret (and optional key id).
+- The signature covers method, path+query, timestamp, nonce, body digest, and content type.
+
+See `docs/INTEGRATION_STEP_BY_STEP.md` and `docs/SECURITY_COMPLIANCE.md`.
 
 ## Modules
 - `:kiosk-ops-sdk` - the SDK (Android library)
@@ -58,14 +70,13 @@ Server contract is defined in `docs/openapi.yaml`.
 - **JDK 17+**
 - Android Studio (recommended)
 
-## Known limitations 
-- Room uses **destructive migration** (MVP). Before production rollout, add schema migrations.
+## Known limitations
+- Room migrations are provided from schema v2 -> v3 (payloadBytes + quarantineReason).
 - Audit chain is **process-local**: after app restart, the chain restarts from a new GENESIS point.
 - Kiosk/LockTask enforcement is **not** implemented as a full kiosk controller in this snapshot; posture reporting is best-effort.
-- Sync transport is intentionally minimal; for hardened deployments add request signing, mTLS patterns, and server-side signed audit logs.
+- Request signing is implemented on the client. Server-side verification is your responsibility (reference spec included in docs).
 
 ## Roadmap
-- Replace destructive migrations with real migrations
-- Add optional request signing (HMAC) and mTLS guidance
+- Add mTLS patterns / pinning hooks and operational guidance
 - Add schema-based event typing (replace denylist heuristics)
 - Add per-region endpoint routing helpers (EU/US/AU)

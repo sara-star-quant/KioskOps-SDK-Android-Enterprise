@@ -14,7 +14,8 @@ class OkHttpTransport(
   private val client: OkHttpClient,
   private val json: Json,
   private val logs: RingLog,
-  private val authProvider: AuthProvider? = null
+  private val authProvider: AuthProvider? = null,
+  private val requestSigner: RequestSigner? = null,
 ) : Transport {
 
   private val contentType = "application/json; charset=utf-8".toMediaType()
@@ -30,6 +31,7 @@ class OkHttpTransport(
 
     return try {
       val payload = json.encodeToString(request)
+      val payloadBytes = payload.toByteArray(Charsets.UTF_8)
       val body = payload.toRequestBody(contentType)
 
       val rb = Request.Builder()
@@ -40,6 +42,18 @@ class OkHttpTransport(
         .header("X-KioskOps-SDK", com.peterz.kioskops.sdk.KioskOpsSdk.SDK_VERSION)
 
       authProvider?.apply(rb)
+
+      // Optional request signing (host-controlled). Never enabled by default.
+      requestSigner?.let { signer ->
+        val httpUrl = rb.build().url
+        val headers = signer.sign(
+          method = "POST",
+          url = httpUrl,
+          contentType = "application/json",
+          bodyBytes = payloadBytes
+        )
+        headers.forEach { (k, v) -> rb.header(k, v) }
+      }
 
       val resp = client.newCall(rb.build()).execute()
       val code = resp.code

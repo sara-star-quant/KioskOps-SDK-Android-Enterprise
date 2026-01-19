@@ -15,6 +15,37 @@ paths:
   /events/batch:
     post:
       summary: Ingest a batch of operational events
+      parameters:
+        - in: header
+          name: X-KioskOps-Signature-Version
+          required: false
+          schema:
+            type: string
+          description: Optional request signing version ("1") when HMAC request signing is enabled.
+        - in: header
+          name: X-KioskOps-Timestamp
+          required: false
+          schema:
+            type: string
+          description: Optional UNIX epoch seconds used for replay protection.
+        - in: header
+          name: X-KioskOps-Nonce
+          required: false
+          schema:
+            type: string
+          description: Optional nonce (UUID recommended) used for replay protection.
+        - in: header
+          name: X-KioskOps-Key-Id
+          required: false
+          schema:
+            type: string
+          description: Optional key id to support server-side key rotation.
+        - in: header
+          name: X-KioskOps-Signature
+          required: false
+          schema:
+            type: string
+          description: Optional signature string (e.g. "hmac-sha256:<base64url>") over the canonical request string.
       requestBody:
         required: true
         content:
