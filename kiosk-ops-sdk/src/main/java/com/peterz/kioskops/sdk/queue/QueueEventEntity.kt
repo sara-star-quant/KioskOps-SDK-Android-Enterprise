@@ -18,6 +18,8 @@ data class QueueEventEntity(
   val type: String,
   val payloadBlob: ByteArray,
   val payloadEncoding: String,
+  /** Payload size in bytes, stored for fast quota checks. */
+  val payloadBytes: Int,
   val createdAtEpochMs: Long,
   val state: String,
   val attempts: Int,
@@ -36,6 +38,8 @@ data class QueueEventEntity(
    */
   val permanentFailure: Int,
   val lastError: String? = null,
+  /** Set when [permanentFailure] is 1 to explain why the event was quarantined. */
+  val quarantineReason: String? = null,
   val updatedAtEpochMs: Long,
 )
 
@@ -44,4 +48,9 @@ object QueueStates {
   const val SENDING = "SENDING"
   const val SENT = "SENT"
   const val FAILED = "FAILED"
+  /**
+   * Quarantined events are not retried automatically.
+   * They typically indicate validation/schema issues or max-attempt exhaustion.
+   */
+  const val QUARANTINED = "QUARANTINED"
 }

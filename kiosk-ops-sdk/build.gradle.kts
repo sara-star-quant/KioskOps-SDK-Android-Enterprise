@@ -41,6 +41,13 @@ android {
   }
 }
 
+ksp {
+  // Enables schema export for migration testing and enterprise auditability.
+  arg("room.schemaLocation", "$projectDir/schemas")
+  arg("room.incremental", "true")
+  arg("room.expandProjection", "true")
+}
+
 dependencies {
   api(libs.androidx.core.ktx)
 

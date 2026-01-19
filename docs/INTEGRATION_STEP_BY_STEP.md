@@ -88,9 +88,41 @@ Practical pilot tip:
 val ok = KioskOpsSdk.get().enqueue("SCAN", "{\"scan\":\"12345\"}")
 ```
 
+Recommended (enterprise pilots): use the detailed API to get rejection reasons and quota behavior:
+
+```kotlin
+val res = KioskOpsSdk.get().enqueueDetailed(
+  type = "SCAN",
+  payloadJson = "{\"scan\":\"12345\"}",
+  // Optional: stable business id for deterministic idempotency (HMAC)
+  stableEventId = "order_2026_01_19_0001"
+)
+
+when (res) {
+  is EnqueueResult.Accepted -> {
+    // res.droppedOldest > 0 means queue pressure forced eviction of oldest events
+  }
+  is EnqueueResult.Rejected -> {
+    // res contains a typed reason (payload too large, denylisted key, queue full, etc.)
+  }
+}
+```
+
 ### Guardrails (MVP)
 - If payload size exceeds `SecurityPolicy.maxEventPayloadBytes`, enqueue is rejected.
 - If payload contains denylisted JSON keys (e.g., `"email"`, `"phone"`), enqueue is rejected unless `allowRawPayloadStorage = true`.
+
+### Queue pressure controls (Step 7)
+- Enforced before writing payloads to disk: `QueueLimits.maxActiveEvents` + `QueueLimits.maxActiveBytes`.
+- Overflow behavior is configurable: `DROP_OLDEST` (default), `DROP_NEWEST`, or `BLOCK`.
+
+### Poison event quarantine (Step 7)
+- If the server responds `retryable=false`, or if the event hits `SyncPolicy.maxAttemptsPerEvent`, the event is **quarantined**.
+- Quarantined events are excluded from future sync attempts and can be inspected via:
+
+```kotlin
+val quarantined = KioskOpsSdk.get().quarantinedEvents(limit = 50)
+```
 
 ### Encryption-at-rest
 - If `SecurityPolicy.encryptQueuePayloads == true`, payloads are stored encrypted with **AES-GCM** using Android Keystore.
@@ -127,6 +159,7 @@ MainScope().launch {
 
 The diagnostics ZIP contains:
 - `manifest.json` + `health_snapshot.json`
+- `queue/quarantined_summaries.json` (no payloads; metadata only)
 - exported logs (encrypted if enabled)
 - local telemetry files (may be encrypted-at-rest)
 - local audit files (may be encrypted-at-rest)

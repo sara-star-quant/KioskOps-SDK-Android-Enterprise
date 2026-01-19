@@ -111,9 +111,15 @@ class SyncEngine(
           val permanentFlag = if (isPermanent) 1 else 0
 
           val nextAttempt = if (isPermanent) Long.MAX_VALUE else now + Backoff.nextDelayMs(e.attempts)
+          val quarantineReason = when {
+            !ack.retryable -> "server_non_retryable"
+            maxedOut -> "max_attempts_exceeded"
+            else -> null
+          }
           queue.markFailed(
             id = e.id,
             err = ack.error ?: if (maxedOut) "max_attempts_exceeded" else "rejected",
+            quarantineReason = quarantineReason,
             nextAttemptAtMs = nextAttempt,
             permanentFailure = permanentFlag
           )

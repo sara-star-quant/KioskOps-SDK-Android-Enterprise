@@ -10,6 +10,7 @@ import com.peterz.kioskops.sdk.logging.RingLog
 import com.peterz.kioskops.sdk.telemetry.EncryptedTelemetryStore
 import com.peterz.kioskops.sdk.util.Clock
 import com.peterz.kioskops.sdk.util.DeviceId
+import com.peterz.kioskops.sdk.queue.QuarantinedEventSummary
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.BufferedOutputStream
@@ -28,6 +29,7 @@ class DiagnosticsExporter(
   private val clock: Clock,
   private val sdkVersion: String,
   private val queueDepthProvider: suspend () -> Long,
+  private val quarantinedSummaryProvider: suspend () -> List<QuarantinedEventSummary>,
   private val postureProvider: () -> DevicePosture,
   private val policyHashProvider: () -> String,
 ) {
@@ -44,6 +46,7 @@ class DiagnosticsExporter(
 
     val posture = postureProvider()
     val policyHash = policyHashProvider()
+    val quarantined = quarantinedSummaryProvider()
 
     ZipOutputStream(BufferedOutputStream(zipFile.outputStream())).use { zos ->
       // Health snapshot
@@ -60,6 +63,7 @@ class DiagnosticsExporter(
         isInLockTaskMode = posture.isLockTaskPermitted,
         policyHash = policyHash,
         queueDepth = queueDepthProvider(),
+        quarantinedCount = quarantined.size.toLong(),
         locationId = cfg.locationId,
         regionTag = cfg.telemetryPolicy.regionTag,
         includeDeviceId = includeDeviceId,
@@ -81,6 +85,7 @@ class DiagnosticsExporter(
 
       writeEntry(zos, "manifest.json", json.encodeToString(manifest).toByteArray(Charsets.UTF_8))
       writeEntry(zos, "health_snapshot.json", json.encodeToString(snapshot).toByteArray(Charsets.UTF_8))
+      writeEntry(zos, "queue/quarantined_summaries.json", json.encodeToString(quarantined).toByteArray(Charsets.UTF_8))
 
       // Logs (encrypted export if enabled)
       val logFile = logExporter.export()

@@ -15,6 +15,7 @@ data class HealthSnapshot(
   val isInLockTaskMode: Boolean? = null,
   val policyHash: String? = null,
   val queueDepth: Long,
+  val quarantinedCount: Long = 0,
   val locationId: String,
   val regionTag: String? = null,
   val includeDeviceId: Boolean,

@@ -99,8 +99,8 @@ class SyncEngineTest {
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
     // two events
-    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg)).isTrue()
-    assertThat(queue.enqueue("T2", "{\"y\":2}", cfg)).isTrue()
+    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
+    assertThat(queue.enqueue("T2", "{\"y\":2}", cfg).isAccepted).isTrue()
 
     val engine = SyncEngine(
       context = context,
@@ -147,7 +147,7 @@ class SyncEngineTest {
     val audit = AuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
-    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg)).isTrue()
+    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
 
     val clock = TestClock(now = 1_000L)
     val engine = SyncEngine(
@@ -225,7 +225,7 @@ class SyncEngineTest {
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
     val audit = AuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
-    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg)).isTrue()
+    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
 
     val clock = TestClock(now = 1_000L)
     val engine = SyncEngine(
@@ -243,9 +243,82 @@ class SyncEngineTest {
     assertThat(r).isInstanceOf(TransportResult.Success::class.java)
     assertThat(queue.countActive()).isEqualTo(1)
 
-    // Even far in the future, event remains ineligible due to permanentFailure=1
+    val quarantined = queue.quarantinedSummaries(limit = 10)
+    assertThat(quarantined).isNotEmpty()
+    assertThat(quarantined.first().reason).contains("server_non_retryable")
+
+    // Even far in the future, event remains ineligible due to permanentFailure=1 (quarantined)
     clock.now += 365L * 24L * 60L * 60L * 1000L
     val eligible = queue.nextBatch(nowMs = clock.now, limit = 10)
     assertThat(eligible).isEmpty()
+    assertThat(queue.quarantinedSummaries(10)).isNotEmpty()
+  }
+
+  @Test
+  fun `maxAttemptsPerEvent moves event to quarantine even if retryable`() = runTest {
+    server.dispatcher = object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        val body = request.body.readUtf8()
+        val parsed = Json.parseToJsonElement(body).jsonObject
+        val events = parsed["events"]!!.jsonArray
+        val e0 = events[0].jsonObject
+        val resp = buildJsonObject {
+          put("acceptedCount", 0)
+          put(
+            "acks",
+            buildJsonArray {
+              add(
+                buildJsonObject {
+                  put("id", e0["id"]!!.jsonPrimitive.content)
+                  put("idempotencyKey", e0["idempotencyKey"]!!.jsonPrimitive.content)
+                  put("accepted", false)
+                  put("retryable", true)
+                  put("error", "validation_failed")
+                }
+              )
+            }
+          )
+        }
+        return MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody(resp.toString())
+      }
+    }
+
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val logs = RingLog(context)
+    val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+
+    val cfg = KioskOpsConfig(
+      baseUrl = server.url("/").toString(),
+      locationId = "TEST",
+      kioskEnabled = false,
+      syncPolicy = SyncPolicy(enabled = true, endpointPath = "events/batch", batchSize = 50, maxAttemptsPerEvent = 1),
+      securityPolicy = SecurityPolicy.maximalistDefaults().copy(encryptQueuePayloads = false),
+      retentionPolicy = RetentionPolicy.maximalistDefaults(),
+      telemetryPolicy = TelemetryPolicy.maximalistDefaults()
+    )
+
+    val queue = QueueRepository(context, logs, NoopCryptoProvider)
+    val audit = AuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
+
+    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
+
+    val clock = TestClock(now = 1_000L)
+    val engine = SyncEngine(
+      context = context,
+      cfgProvider = { cfg },
+      queue = queue,
+      transport = transport,
+      logs = logs,
+      telemetry = object : TelemetrySink { override fun emit(event: String, fields: Map<String, String>) {} },
+      audit = audit,
+      clock = clock
+    )
+
+    val r = engine.flushOnce()
+    assertThat(r).isInstanceOf(TransportResult.Success::class.java)
+    val quarantined = queue.quarantinedSummaries(limit = 10)
+    assertThat(quarantined).isNotEmpty()
+    assertThat(quarantined.first().reason).contains("max_attempts_exceeded")
   }
 }
