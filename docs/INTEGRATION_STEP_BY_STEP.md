@@ -82,6 +82,8 @@ Practical pilot tip:
 
 ---
 
+
+
 ## 3) Enqueue events (offline-first)
 
 ```kotlin
@@ -245,6 +247,38 @@ KioskOpsSdk.init(
 )
 KioskOpsSdk.get().applySchedulingFromConfig()
 ```
+
+### Optional: HMAC request signing
+
+For hardened deployments, you can add an additional request signature over the batch ingest request.
+This provides defense-in-depth on top of TLS (tamper detection, replay resistance via timestamp + nonce).
+
+**Important:** signing is **off by default**. The host app must provide the shared secret.
+
+```kotlin
+import com.peterz.kioskops.sdk.transport.HmacRequestSigner
+
+val signer = HmacRequestSigner(
+  sharedSecret = "<shared-secret-from-your-server>".toByteArray(),
+  keyId = "key-2026-01" // optional, for server-side key rotation
+)
+
+KioskOpsSdk.init(
+  this,
+  configProvider = { cfg },
+  authProvider = AuthProvider { b -> b.header("Authorization", "Bearer <token>") },
+  requestSigner = signer
+)
+```
+
+Signed headers (v1):
+- `X-KioskOps-Signature-Version: 1`
+- `X-KioskOps-Timestamp: <epoch-seconds>`
+- `X-KioskOps-Nonce: <uuid>`
+- `X-KioskOps-Key-Id: ...` (optional)
+- `X-KioskOps-Signature: hmac-sha256:<base64url>`
+
+The signature covers: method, path+query, timestamp, nonce, SHA-256(body), and content type.
 
 ### Manual sync (for an “Upload now” button)
 

@@ -12,6 +12,12 @@ object Hashing {
     return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
   }
 
+  fun sha256Base64Url(bytes: ByteArray): String {
+    val md = MessageDigest.getInstance("SHA-256")
+    val digest = md.digest(bytes)
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
+  }
+
   fun hmacSha256Base64Url(secret: ByteArray, input: String): String {
     val mac = Mac.getInstance("HmacSHA256")
     mac.init(SecretKeySpec(secret, "HmacSHA256"))

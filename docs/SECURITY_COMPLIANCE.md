@@ -81,9 +81,14 @@ If you enable network sync (`SyncPolicy(enabled = true)`), the host app is respo
 
 The SDK keeps sync **explicit** and **opt-in** to reduce compliance surprises.
 
+### Optional request signing
+For additional defense-in-depth, the host app may provide a `RequestSigner` (e.g. `HmacRequestSigner`) during initialization.
+If configured, the SDK adds a timestamp + nonce + HMAC signature headers to the batch ingest request. This helps detect tampering and reduces replay risk.
+Server-side verification and key rotation are owned by your backend.
+
 ---
 
-## Known limitations (milestone snapshot)
-- Room uses **destructive migration**. Replace with proper migrations before production rollout.
+## Known limitations
+- Room migrations are provided for schema v2 -> v3. Versions < v2 were pre-release snapshots.
 - Audit chain is **process-local**; after app restart, the chain restarts from a new GENESIS point.
-- Sync transport is intentionally minimal (batch ingest + acks). Add request signing, mTLS, and server-side audit hardening as needed.
+- Sync transport is intentionally minimal (batch ingest + acks). Add mTLS patterns / certificate pinning and server-side audit hardening as needed.
