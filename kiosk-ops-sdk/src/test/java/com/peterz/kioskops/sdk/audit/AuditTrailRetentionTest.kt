@@ -6,7 +6,10 @@ import com.peterz.kioskops.sdk.compliance.RetentionPolicy
 import com.peterz.kioskops.sdk.crypto.SoftwareAesGcmCryptoProvider
 import com.peterz.kioskops.sdk.util.Clock
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AuditTrailRetentionTest {
   @Test
   fun purgeOldFiles_deletesOlderThanRetentionWindow() {

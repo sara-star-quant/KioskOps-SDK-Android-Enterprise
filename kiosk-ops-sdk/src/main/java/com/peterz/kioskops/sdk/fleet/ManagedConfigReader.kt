@@ -1,8 +1,8 @@
 package com.peterz.kioskops.sdk.fleet
 
 import android.content.Context
+import android.content.RestrictionsManager
 import android.os.Bundle
-import android.os.RestrictionsManager
 import com.peterz.kioskops.sdk.KioskOpsConfig
 import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
 
@@ -26,8 +26,8 @@ object ManagedConfigReader {
   }
 
   fun read(context: Context, defaults: KioskOpsConfig): KioskOpsConfig {
-    val rm = context.getSystemService(RestrictionsManager::class.java)
-    val bundle = runCatching { rm.applicationRestrictions }.getOrNull() ?: Bundle.EMPTY
+    val rm: RestrictionsManager? = context.getSystemService(RestrictionsManager::class.java)
+    val bundle = rm?.applicationRestrictions ?: Bundle.EMPTY
     return applyBundle(bundle, defaults)
   }
 

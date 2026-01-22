@@ -64,9 +64,10 @@ class QueueRepository(
           var attempts = 0
           var count = beforeCount
           var bytesSum = beforeBytes
-          // Delete in small batches to avoid long transactions.
-          while ((count >= limits.maxActiveEvents || (bytesSum + newBytes) > limits.maxActiveBytes) && attempts < 20) {
-            val deleted = dao.deleteOldestEligible(limit = 50)
+          // Delete only enough to make room for the new event.
+          // Use limit=1 to avoid over-deleting when we just need space for one event.
+          while ((count >= limits.maxActiveEvents || (bytesSum + newBytes) > limits.maxActiveBytes) && attempts < 100) {
+            val deleted = dao.deleteOldestEligible(limit = 1)
             if (deleted <= 0) break
             dropped += deleted
             attempts++

@@ -7,7 +7,10 @@ import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
 import com.peterz.kioskops.sdk.crypto.SoftwareAesGcmCryptoProvider
 import com.peterz.kioskops.sdk.util.Clock
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class TelemetryRetentionTest {
   @Test
   fun purgeOldFiles_deletesOlderThanRetentionWindow() {

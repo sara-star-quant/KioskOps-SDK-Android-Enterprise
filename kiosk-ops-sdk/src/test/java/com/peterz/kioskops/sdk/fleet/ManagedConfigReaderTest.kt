@@ -5,7 +5,10 @@ import com.google.common.truth.Truth.assertThat
 import com.peterz.kioskops.sdk.KioskOpsConfig
 import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class ManagedConfigReaderTest {
 
   @Test

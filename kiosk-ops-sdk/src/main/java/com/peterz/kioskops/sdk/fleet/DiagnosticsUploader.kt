@@ -9,5 +9,7 @@ import java.io.File
  * This makes data residency + consent/legal basis explicit and auditable.
  */
 fun interface DiagnosticsUploader {
-  suspend fun upload(file: File, metadata: Map<String, String> = emptyMap())
+  suspend fun upload(file: File, metadata: Map<String, String>)
 }
+
+suspend fun DiagnosticsUploader.upload(file: File) = upload(file, emptyMap())
