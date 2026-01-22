@@ -27,6 +27,7 @@ data class EventAck(
   val id: String,
   val idempotencyKey: String,
   val accepted: Boolean,
+  val retryable: Boolean = true,
   val error: String? = null,
   val serverEventId: String? = null
 )

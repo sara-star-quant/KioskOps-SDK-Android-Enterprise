@@ -16,20 +16,24 @@ import com.peterz.kioskops.sdk.transport.TransportResult
 import com.peterz.kioskops.sdk.util.Clock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import mockwebserver3.Dispatcher
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
+import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
-import okhttp3.mockwebserver.Dispatcher
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class SyncEngineTest {
   private lateinit var server: MockWebServer
 
@@ -42,8 +46,8 @@ class SyncEngineTest {
     server = MockWebServer()
     server.dispatcher = object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        val body = request.body.readUtf8()
-        val parsed = Json.parseToJsonElement(body).jsonObject
+        val bodyStr = request.body?.utf8() ?: ""
+        val parsed = Json.parseToJsonElement(bodyStr).jsonObject
         val events = parsed["events"]!!.jsonArray
 
         val acks = buildJsonArray {
@@ -51,23 +55,24 @@ class SyncEngineTest {
             val obj = e.jsonObject
             add(
               buildJsonObject {
-                put("id", obj["id"]!!.jsonPrimitive.content)
-                put("idempotencyKey", obj["idempotencyKey"]!!.jsonPrimitive.content)
-                put("accepted", true)
+                put("id", JsonPrimitive(obj["id"]!!.jsonPrimitive.content))
+                put("idempotencyKey", JsonPrimitive(obj["idempotencyKey"]!!.jsonPrimitive.content))
+                put("accepted", JsonPrimitive(true))
               }
             )
           }
         }
 
         val resp = buildJsonObject {
-          put("acceptedCount", events.size)
+          put("acceptedCount", JsonPrimitive(events.size))
           put("acks", acks)
         }
 
-        return MockResponse()
-          .setResponseCode(200)
-          .setHeader("Content-Type", "application/json")
-          .setBody(resp.toString())
+        return MockResponse.Builder()
+          .code(200)
+          .addHeader("Content-Type", "application/json")
+          .body(resp.toString())
+          .build()
       }
     }
     server.start()
@@ -75,7 +80,7 @@ class SyncEngineTest {
 
   @After
   fun tearDown() {
-    server.shutdown()
+    server.close()
   }
 
   @Test
@@ -125,7 +130,7 @@ class SyncEngineTest {
     // Always 500
     server.dispatcher = object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        return MockResponse().setResponseCode(500).setBody("oops")
+        return MockResponse.Builder().code(500).body("oops").build()
       }
     }
 
@@ -169,8 +174,8 @@ class SyncEngineTest {
     val none = queue.nextBatch(nowMs = clock.now, limit = 10)
     assertThat(none).isEmpty()
 
-    // After backoff (>= 5s), it becomes eligible again
-    clock.now += 6_000L
+    // After backoff (>= 10s per Backoff.BASE_S), it becomes eligible again
+    clock.now += 11_000L
     val eligible = queue.nextBatch(nowMs = clock.now, limit = 10)
     assertThat(eligible).isNotEmpty()
   }
@@ -180,31 +185,32 @@ class SyncEngineTest {
     // Respond with a per-event rejection (retryable=false)
     server.dispatcher = object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        val body = request.body.readUtf8()
-        val parsed = Json.parseToJsonElement(body).jsonObject
+        val bodyStr = request.body?.utf8() ?: ""
+        val parsed = Json.parseToJsonElement(bodyStr).jsonObject
         val events = parsed["events"]!!.jsonArray
         val e0 = events[0].jsonObject
         val resp = buildJsonObject {
-          put("acceptedCount", 0)
+          put("acceptedCount", JsonPrimitive(0))
           put(
             "acks",
             buildJsonArray {
               add(
                 buildJsonObject {
-                  put("id", e0["id"]!!.jsonPrimitive.content)
-                  put("idempotencyKey", e0["idempotencyKey"]!!.jsonPrimitive.content)
-                  put("accepted", false)
-                  put("retryable", false)
-                  put("error", "schema_violation")
+                  put("id", JsonPrimitive(e0["id"]!!.jsonPrimitive.content))
+                  put("idempotencyKey", JsonPrimitive(e0["idempotencyKey"]!!.jsonPrimitive.content))
+                  put("accepted", JsonPrimitive(false))
+                  put("retryable", JsonPrimitive(false))
+                  put("error", JsonPrimitive("schema_violation"))
                 }
               )
             }
           )
         }
-        return MockResponse()
-          .setResponseCode(200)
-          .setHeader("Content-Type", "application/json")
-          .setBody(resp.toString())
+        return MockResponse.Builder()
+          .code(200)
+          .addHeader("Content-Type", "application/json")
+          .body(resp.toString())
+          .build()
       }
     }
 
@@ -258,28 +264,28 @@ class SyncEngineTest {
   fun `maxAttemptsPerEvent moves event to quarantine even if retryable`() = runTest {
     server.dispatcher = object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        val body = request.body.readUtf8()
-        val parsed = Json.parseToJsonElement(body).jsonObject
+        val bodyStr = request.body?.utf8() ?: ""
+        val parsed = Json.parseToJsonElement(bodyStr).jsonObject
         val events = parsed["events"]!!.jsonArray
         val e0 = events[0].jsonObject
         val resp = buildJsonObject {
-          put("acceptedCount", 0)
+          put("acceptedCount", JsonPrimitive(0))
           put(
             "acks",
             buildJsonArray {
               add(
                 buildJsonObject {
-                  put("id", e0["id"]!!.jsonPrimitive.content)
-                  put("idempotencyKey", e0["idempotencyKey"]!!.jsonPrimitive.content)
-                  put("accepted", false)
-                  put("retryable", true)
-                  put("error", "validation_failed")
+                  put("id", JsonPrimitive(e0["id"]!!.jsonPrimitive.content))
+                  put("idempotencyKey", JsonPrimitive(e0["idempotencyKey"]!!.jsonPrimitive.content))
+                  put("accepted", JsonPrimitive(false))
+                  put("retryable", JsonPrimitive(true))
+                  put("error", JsonPrimitive("validation_failed"))
                 }
               )
             }
           )
         }
-        return MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody(resp.toString())
+        return MockResponse.Builder().code(200).addHeader("Content-Type", "application/json").body(resp.toString()).build()
       }
     }
 

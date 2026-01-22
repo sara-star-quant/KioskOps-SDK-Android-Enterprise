@@ -4,7 +4,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.peterz.kioskops.sdk.KioskOpsConfig
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class PolicyDriftDetectorTest {
 
   @Test
