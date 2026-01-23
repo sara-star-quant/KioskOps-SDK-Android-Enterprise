@@ -42,6 +42,9 @@ android {
   testOptions {
     unitTests {
       isIncludeAndroidResources = true
+      all { test ->
+        test.useJUnitPlatform()
+      }
     }
   }
 }
@@ -82,8 +85,9 @@ dependencies {
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.kotlinx.coroutines.test)
 
-  // Fuzzing
+  // Fuzzing (JUnit 5)
   testImplementation(libs.junit5.api)
   testRuntimeOnly(libs.junit5.engine)
+  testRuntimeOnly(libs.junit5.vintage) // Run JUnit 4 tests via JUnit Platform
   testImplementation(libs.jazzer.junit)
 }
