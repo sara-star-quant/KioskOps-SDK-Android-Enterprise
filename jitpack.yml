@@ -1,0 +1,12 @@
+# JitPack build configuration
+# https://docs.jitpack.io/building/
+
+jdk:
+  - openjdk17
+
+before_install:
+  - sdk install java 17.0.13-tem
+  - sdk use java 17.0.13-tem
+
+install:
+  - ./gradlew :kiosk-ops-sdk:publishToMavenLocal -PVERSION_NAME=$VERSION -x test

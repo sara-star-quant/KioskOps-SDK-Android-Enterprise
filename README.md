@@ -4,21 +4,28 @@
 [![CodeQL](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml)
 [![Fuzz](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pzverkov/KioskOps-SDK-Android-Enterprise/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pzverkov/KioskOps-SDK-Android-Enterprise)
+[![JitPack](https://jitpack.io/v/pzverkov/KioskOps-SDK-Android-Enterprise.svg)](https://jitpack.io/#pzverkov/KioskOps-SDK-Android-Enterprise)
 [![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.org/projects/jdk/17/)
 
 An **enterprise-grade Android SDK** for **offline-first operational events**, **local diagnostics**, and **fleet-friendly observability**. Designed for kiosk, retail, logistics, and field service deployments with **Samsung Knox / Android Enterprise** integration.
 
-## Quick Start
+## Installation
 
-### 1. Add dependency
+### Option A: GitHub Packages (Recommended)
 
 ```kotlin
 // settings.gradle.kts
 dependencyResolutionManagement {
     repositories {
-        maven { url = uri("https://your-maven-repo/releases") }
+        maven {
+            url = uri("https://maven.pkg.github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
@@ -28,7 +35,25 @@ dependencies {
 }
 ```
 
-### 2. Initialize SDK
+### Option B: JitPack
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+
+// app/build.gradle.kts
+dependencies {
+    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v0.1.0")
+}
+```
+
+## Quick Start
+
+### 1. Initialize SDK
 
 ```kotlin
 class App : Application() {
@@ -48,7 +73,7 @@ class App : Application() {
 }
 ```
 
-### 3. Enqueue events
+### 2. Enqueue events
 
 ```kotlin
 val accepted = KioskOpsSdk.get().enqueue("button_press", """{"screen": "home"}""")
