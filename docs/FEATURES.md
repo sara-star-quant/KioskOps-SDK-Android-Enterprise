@@ -40,7 +40,4 @@ See [Server API Contract](openapi.yaml) for the ingest endpoint specification.
 
 ## Roadmap
 
-- [ ] mTLS patterns and certificate pinning hooks
-- [ ] Schema-based event validation (replace denylist heuristics)
-- [ ] Per-region endpoint routing helpers (EU/US/AU)
-- [ ] Kotlin Multiplatform (iOS) support
+See [ROADMAP.md](../ROADMAP.md) for planned features and improvements.
