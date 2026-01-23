@@ -81,4 +81,9 @@ dependencies {
   testImplementation(libs.androidx.test.core)
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.kotlinx.coroutines.test)
+
+  // Fuzzing
+  testImplementation(libs.junit5.api)
+  testRuntimeOnly(libs.junit5.engine)
+  testImplementation(libs.jazzer.junit)
 }
