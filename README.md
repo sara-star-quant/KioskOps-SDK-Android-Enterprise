@@ -1,82 +1,168 @@
-# Enterprise-oriented KioskOps SDK
+# KioskOps SDK for Android Enterprise
 
-KioskOps is an **enterprise-oriented Android SDK** for **offline-first operational events**, **local diagnostics**, and **fleet-friendly observability**. It is designed to work on any Android device and integrate cleanly with **Samsung Knox / Android Enterprise** managed deployments.
+[![Build](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml)
+[![CodeQL](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pzverkov/KioskOps-SDK-Android-Enterprise/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pzverkov/KioskOps-SDK-Android-Enterprise)
+[![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
+[![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.org/projects/jdk/17/)
 
-This repo prioritizes:
+An **enterprise-grade Android SDK** for **offline-first operational events**, **local diagnostics**, and **fleet-friendly observability**. Designed for kiosk, retail, logistics, and field service deployments with **Samsung Knox / Android Enterprise** integration.
 
-1) **Security/compliance maximalist** defaults (local-first, data minimization, encryption-at-rest)
-2) **Fleet operations** hooks (posture snapshot, policy drift detection, diagnostics export/upload hook)
-3) **Fastest enterprise pilot** via **opt-in network sync** (batch ingest + per-event acks + backoff)
+## Architecture
 
-## What’s in this SDK
+```
++-----------------------------------------------------------------------------------+
+|                                   Host Application                                 |
++-----------------------------------------------------------------------------------+
+        |                    |                    |                    |
+        v                    v                    v                    v
++---------------+    +---------------+    +---------------+    +---------------+
+|   enqueue()   |    |  heartbeat()  |    |   syncOnce()  |    |exportDiag()   |
++---------------+    +---------------+    +---------------+    +---------------+
+        |                    |                    |                    |
+        v                    v                    v                    v
++-----------------------------------------------------------------------------------+
+|                              KioskOpsSdk (Singleton)                               |
++-----------------------------------------------------------------------------------+
+        |                    |                    |                    |
+        v                    v                    v                    v
++---------------+    +---------------+    +---------------+    +---------------+
+|     Queue     |    |   Telemetry   |    |  SyncEngine   |    | Diagnostics   |
+| (Room + AES)  |    | (Encrypted)   |    |  (OkHttp)     |    |  (ZIP Export) |
++---------------+    +---------------+    +---------------+    +---------------+
+        |                    |                    |                    |
+        v                    v                    v                    v
++-----------------------------------------------------------------------------------+
+|                     Android Keystore (AES-GCM Hardware-Backed)                     |
++-----------------------------------------------------------------------------------+
+```
 
-### Security/compliance maximalist posture
-- **Queue guardrails**: payload size cap + denylisted keys (blocks common accidental PII keys unless explicitly allowed)
-- **Encryption at rest** (Android Keystore AES-GCM):
-  - queued event payloads (DB BLOB)
-  - telemetry and audit files (encrypted-at-rest when enabled)
-  - optional encryption for exported logs
-- **Local-first observability**:
-  - allow-listed telemetry keys only
-  - tamper-evident audit trail (hash-chain; detects casual tampering)
-- **Retention controls** by days (telemetry/audit/exports, plus queue cleanup)
-- **Queue pressure controls** (max events + max bytes) with configurable overflow strategy
-- **Deterministic idempotency (optional)** via HMAC when caller provides a stableEventId
-- **Poison-event quarantine**: non-retryable or max-attempts events are quarantined and excluded from sync
+## Quick Start
 
-### Fleet operations hooks
-- **Policy drift detection**: stores a sanitized config hash (excludes secrets like PIN) and records drift events
-- **Device posture snapshot**: minimal posture fields (device owner indicator, lock-task mode best-effort, OS/model/manufacturer/security patch)
-- **Diagnostics**:
-  - export a ZIP bundle locally
-  - optional **host-controlled** upload via `DiagnosticsUploader` (SDK never auto-uploads)
+### 1. Add dependency
 
-### Opt-in network sync (enterprise pilot)
-- **Disabled by default** to avoid silent off-device transfer
-- When enabled, the SDK:
-  - sends batches to `${baseUrl}/${syncPolicy.endpointPath}`
-  - expects per-event acknowledgements (`accepted`, `retryable`)
-  - applies exponential backoff for transient failures
-  - stops retrying events when server responds `retryable=false`
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        maven { url = uri("https://your-maven-repo/releases") }
+    }
+}
 
-Server contract is defined in `docs/openapi.yaml`.
+// app/build.gradle.kts
+dependencies {
+    implementation("com.peterz.kioskops:kiosk-ops-sdk:0.1.0")
+}
+```
 
-### Request signing (network plane hardening)
-This milestone adds **optional HMAC request signing** for the batch ingest request.
+### 2. Initialize SDK
 
-- Signing is **off by default**.
-- The host app provides the shared secret (and optional key id).
-- The signature covers method, path+query, timestamp, nonce, body digest, and content type.
+```kotlin
+class App : Application() {
+    override fun onCreate() {
+        super.onCreate()
 
-See `docs/INTEGRATION_STEP_BY_STEP.md` and `docs/SECURITY_COMPLIANCE.md`.
+        KioskOpsSdk.init(
+            context = this,
+            configProvider = {
+                KioskOpsConfig(
+                    baseUrl = "https://api.example.com/",
+                    locationId = "STORE-001",
+                    kioskEnabled = true,
+                    securityPolicy = SecurityPolicy.maximalistDefaults(),
+                    syncPolicy = SyncPolicy(enabled = true)
+                )
+            }
+        )
+    }
+}
+```
+
+### 3. Enqueue events
+
+```kotlin
+// Simple API (returns boolean)
+val accepted = KioskOpsSdk.get().enqueue("button_press", """{"screen": "home"}""")
+
+// Detailed API (returns rejection reason)
+when (val result = KioskOpsSdk.get().enqueueDetailed("transaction", payload)) {
+    is EnqueueResult.Accepted -> Log.d(TAG, "Queued: ${result.id}")
+    is EnqueueResult.Rejected.PayloadTooLarge -> Log.w(TAG, "Payload too large")
+    is EnqueueResult.Rejected.DenylistedKey -> Log.w(TAG, "PII detected: ${result.key}")
+    is EnqueueResult.Rejected.QueueFull -> Log.w(TAG, "Queue at capacity")
+}
+```
+
+## Features
+
+### Security & Compliance
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Encryption at rest | On | AES-256-GCM via Android Keystore |
+| PII denylist | On | Blocks common PII keys (email, phone, ssn, etc.) |
+| Payload size limit | 64 KB | Configurable per deployment |
+| Queue pressure control | 10K events / 50 MB | DROP_OLDEST, DROP_NEWEST, or BLOCK |
+| Tamper-evident audit | On | Hash-chain with SHA-256 |
+| Retention controls | 7-30 days | Configurable per data type |
+
+### Fleet Operations
+
+- **Policy drift detection** - Detects config changes with hash comparison
+- **Device posture snapshot** - Device owner, lock-task mode, security patch level
+- **Diagnostics export** - ZIP bundle with health snapshot, logs, telemetry, audit trail
+- **Host-controlled upload** - SDK never auto-uploads; you control when/where
+
+### Network Sync (Opt-in)
+
+- **Disabled by default** - No silent off-device transfer
+- **Batch ingest** - Configurable batch size with per-event acknowledgements
+- **Exponential backoff** - 10s base, 6h max, with jitter
+- **HMAC request signing** - Optional integrity protection
+- **Poison event quarantine** - Non-retryable events excluded from sync
 
 ## Modules
-- `:kiosk-ops-sdk` - the SDK (Android library)
-- `:sample-app` - minimal host app (initialization + enqueue)
 
-## Quick start
+| Module | Description |
+|--------|-------------|
+| `:kiosk-ops-sdk` | Core SDK (Android library AAR) |
+| `:sample-app` | Reference integration |
 
-1) Open the project in Android Studio.
-2) Run `:sample-app` on an emulator or device.
-3) Check that events are accepted locally (queue) and that diagnostics can be exported.
+## Requirements
 
-## Integration docs
-- `docs/INTEGRATION_STEP_BY_STEP.md` - practical integration guide
-- `docs/SECURITY_COMPLIANCE.md` - threat model stance, defaults, limitations
-- `docs/SDK_TARGET.md` - intended use cases / non-goals
-- `docs/openapi.yaml` - server API contract for batch ingest
+| Requirement | Version |
+|-------------|---------|
+| Android API | 26+ (Android 8.0) |
+| Java | 17+ |
+| Kotlin | 2.1+ |
+| Gradle | 8.11+ |
 
-## Build requirements
-- **JDK 17+**
-- Android Studio (recommended)
+## Documentation
 
-## Known limitations
-- Room migrations are provided from schema v2 -> v3 (payloadBytes + quarantineReason).
-- Audit chain is **process-local**: after app restart, the chain restarts from a new GENESIS point.
-- Kiosk/LockTask enforcement is **not** implemented as a full kiosk controller in this snapshot; posture reporting is best-effort.
-- Request signing is implemented on the client. Server-side verification is your responsibility (reference spec included in docs).
+| Document | Description |
+|----------|-------------|
+| [Integration Guide](docs/INTEGRATION_STEP_BY_STEP.md) | Step-by-step setup |
+| [Security & Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model, defaults, limitations |
+| [Target Use Cases](docs/SDK_TARGET.md) | What this SDK is (and isn't) for |
+| [Server API Contract](docs/openapi.yaml) | OpenAPI spec for batch ingest |
+
+## Known Limitations
+
+- **Audit chain is process-local**: Restarts from GENESIS on app initialization
+- **Lock-task mode**: Best-effort detection; not a full kiosk controller
+- **Request signing**: Client-side only; server verification is your responsibility
+- **Room migrations**: Provided for v2 -> v3 schema
 
 ## Roadmap
-- Add mTLS patterns / pinning hooks and operational guidance
-- Add schema-based event typing (replace denylist heuristics)
-- Add per-region endpoint routing helpers (EU/US/AU)
+
+- [ ] mTLS patterns and certificate pinning hooks
+- [ ] Schema-based event validation (replace denylist heuristics)
+- [ ] Per-region endpoint routing helpers (EU/US/AU)
+- [ ] Kotlin Multiplatform (iOS) support
+
+## License
+
+Business Source License 1.1 - Copyright (c) 2026 Petro Zverkov
+
+Converts to Apache License 2.0 on January 1, 2032. See [LICENSE](LICENSE) for details.

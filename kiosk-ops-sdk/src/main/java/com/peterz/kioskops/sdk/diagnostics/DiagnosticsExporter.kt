@@ -70,14 +70,16 @@ class DiagnosticsExporter(
         sdkDeviceId = if (includeDeviceId) DeviceId.get(context) else null,
       )
 
+      // Note: telemetry and audit share the same encryption setting (encryptTelemetryAtRest).
+      // This is intentional—they are both local observability stores with the same threat model.
+      val observabilityEncrypted = cfg.securityPolicy.encryptTelemetryAtRest
       val manifest = mapOf(
         "createdAtEpochMs" to ts.toString(),
         "sdkVersion" to sdkVersion,
         "locationId" to cfg.locationId,
         "regionTag" to (cfg.telemetryPolicy.regionTag ?: ""),
         "policyHash" to policyHash,
-        "telemetryEncryptedAtRest" to cfg.securityPolicy.encryptTelemetryAtRest.toString(),
-        "auditEncryptedAtRest" to cfg.securityPolicy.encryptTelemetryAtRest.toString(),
+        "observabilityEncryptedAtRest" to observabilityEncrypted.toString(),
         "queueEncryptedAtRest" to cfg.securityPolicy.encryptQueuePayloads.toString(),
         "logExportEncrypted" to cfg.securityPolicy.encryptExportedLogs.toString(),
         "bundleContainsEncryptedEntries" to cfg.securityPolicy.encryptDiagnosticsBundle.toString(),
