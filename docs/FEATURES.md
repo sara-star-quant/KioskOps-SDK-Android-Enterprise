@@ -1,0 +1,46 @@
+# Features
+
+## Security & Compliance
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Encryption at rest | On | AES-256-GCM via Android Keystore |
+| PII denylist | On | Blocks common PII keys (email, phone, ssn, etc.) |
+| Payload size limit | 64 KB | Configurable per deployment |
+| Queue pressure control | 10K events / 50 MB | DROP_OLDEST, DROP_NEWEST, or BLOCK |
+| Tamper-evident audit | On | Hash-chain with SHA-256 |
+| Retention controls | 7-30 days | Configurable per data type |
+
+See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
+
+## Fleet Operations
+
+- **Policy drift detection** - Detects config changes with hash comparison
+- **Device posture snapshot** - Device owner, lock-task mode, security patch level
+- **Diagnostics export** - ZIP bundle with health snapshot, logs, telemetry, audit trail
+- **Host-controlled upload** - SDK never auto-uploads; you control when/where
+
+## Network Sync (Opt-in)
+
+Network synchronization is **disabled by default**. When enabled:
+
+- **Batch ingest** - Configurable batch size with per-event acknowledgements
+- **Exponential backoff** - 10s base, 6h max, with jitter
+- **HMAC request signing** - Optional integrity protection
+- **Poison event quarantine** - Non-retryable events excluded from sync
+
+See [Server API Contract](openapi.yaml) for the ingest endpoint specification.
+
+## Known Limitations
+
+- **Audit chain is process-local**: Restarts from GENESIS on app initialization
+- **Lock-task mode**: Best-effort detection; not a full kiosk controller
+- **Request signing**: Client-side only; server verification is your responsibility
+- **Room migrations**: Provided for v2 -> v3 schema
+
+## Roadmap
+
+- [ ] mTLS patterns and certificate pinning hooks
+- [ ] Schema-based event validation (replace denylist heuristics)
+- [ ] Per-region endpoint routing helpers (EU/US/AU)
+- [ ] Kotlin Multiplatform (iOS) support

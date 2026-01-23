@@ -2,41 +2,13 @@
 
 [![Build](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml)
 [![CodeQL](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml)
+[![Fuzz](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pzverkov/KioskOps-SDK-Android-Enterprise/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pzverkov/KioskOps-SDK-Android-Enterprise)
 [![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.org/projects/jdk/17/)
 
 An **enterprise-grade Android SDK** for **offline-first operational events**, **local diagnostics**, and **fleet-friendly observability**. Designed for kiosk, retail, logistics, and field service deployments with **Samsung Knox / Android Enterprise** integration.
-
-## Architecture
-
-```
-+-----------------------------------------------------------------------------------+
-|                                   Host Application                                 |
-+-----------------------------------------------------------------------------------+
-        |                    |                    |                    |
-        v                    v                    v                    v
-+---------------+    +---------------+    +---------------+    +---------------+
-|   enqueue()   |    |  heartbeat()  |    |   syncOnce()  |    |exportDiag()   |
-+---------------+    +---------------+    +---------------+    +---------------+
-        |                    |                    |                    |
-        v                    v                    v                    v
-+-----------------------------------------------------------------------------------+
-|                              KioskOpsSdk (Singleton)                               |
-+-----------------------------------------------------------------------------------+
-        |                    |                    |                    |
-        v                    v                    v                    v
-+---------------+    +---------------+    +---------------+    +---------------+
-|     Queue     |    |   Telemetry   |    |  SyncEngine   |    | Diagnostics   |
-| (Room + AES)  |    | (Encrypted)   |    |  (OkHttp)     |    |  (ZIP Export) |
-+---------------+    +---------------+    +---------------+    +---------------+
-        |                    |                    |                    |
-        v                    v                    v                    v
-+-----------------------------------------------------------------------------------+
-|                     Android Keystore (AES-GCM Hardware-Backed)                     |
-+-----------------------------------------------------------------------------------+
-```
 
 ## Quick Start
 
@@ -62,16 +34,13 @@ dependencies {
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-
         KioskOpsSdk.init(
             context = this,
             configProvider = {
                 KioskOpsConfig(
                     baseUrl = "https://api.example.com/",
                     locationId = "STORE-001",
-                    kioskEnabled = true,
-                    securityPolicy = SecurityPolicy.maximalistDefaults(),
-                    syncPolicy = SyncPolicy(enabled = true)
+                    securityPolicy = SecurityPolicy.maximalistDefaults()
                 )
             }
         )
@@ -82,52 +51,18 @@ class App : Application() {
 ### 3. Enqueue events
 
 ```kotlin
-// Simple API (returns boolean)
 val accepted = KioskOpsSdk.get().enqueue("button_press", """{"screen": "home"}""")
-
-// Detailed API (returns rejection reason)
-when (val result = KioskOpsSdk.get().enqueueDetailed("transaction", payload)) {
-    is EnqueueResult.Accepted -> Log.d(TAG, "Queued: ${result.id}")
-    is EnqueueResult.Rejected.PayloadTooLarge -> Log.w(TAG, "Payload too large")
-    is EnqueueResult.Rejected.DenylistedKey -> Log.w(TAG, "PII detected: ${result.key}")
-    is EnqueueResult.Rejected.QueueFull -> Log.w(TAG, "Queue at capacity")
-}
 ```
 
 ## Features
 
-### Security & Compliance
+- **Encryption at rest** - AES-256-GCM via Android Keystore
+- **PII filtering** - Automatic denylist for common PII keys
+- **Tamper-evident audit** - SHA-256 hash-chain
+- **Fleet operations** - Policy drift detection, device posture, diagnostics export
+- **Network sync** - Opt-in batch sync with exponential backoff
 
-| Feature | Default | Description |
-|---------|---------|-------------|
-| Encryption at rest | On | AES-256-GCM via Android Keystore |
-| PII denylist | On | Blocks common PII keys (email, phone, ssn, etc.) |
-| Payload size limit | 64 KB | Configurable per deployment |
-| Queue pressure control | 10K events / 50 MB | DROP_OLDEST, DROP_NEWEST, or BLOCK |
-| Tamper-evident audit | On | Hash-chain with SHA-256 |
-| Retention controls | 7-30 days | Configurable per data type |
-
-### Fleet Operations
-
-- **Policy drift detection** - Detects config changes with hash comparison
-- **Device posture snapshot** - Device owner, lock-task mode, security patch level
-- **Diagnostics export** - ZIP bundle with health snapshot, logs, telemetry, audit trail
-- **Host-controlled upload** - SDK never auto-uploads; you control when/where
-
-### Network Sync (Opt-in)
-
-- **Disabled by default** - No silent off-device transfer
-- **Batch ingest** - Configurable batch size with per-event acknowledgements
-- **Exponential backoff** - 10s base, 6h max, with jitter
-- **HMAC request signing** - Optional integrity protection
-- **Poison event quarantine** - Non-retryable events excluded from sync
-
-## Modules
-
-| Module | Description |
-|--------|-------------|
-| `:kiosk-ops-sdk` | Core SDK (Android library AAR) |
-| `:sample-app` | Reference integration |
+See [Features](docs/FEATURES.md) for the complete list.
 
 ## Requirements
 
@@ -143,23 +78,12 @@ when (val result = KioskOpsSdk.get().enqueueDetailed("transaction", payload)) {
 | Document | Description |
 |----------|-------------|
 | [Integration Guide](docs/INTEGRATION_STEP_BY_STEP.md) | Step-by-step setup |
-| [Security & Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model, defaults, limitations |
+| [Architecture](docs/ARCHITECTURE.md) | System design and modules |
+| [Features](docs/FEATURES.md) | Full feature list, limitations, roadmap |
+| [Security & Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model and security controls |
 | [Target Use Cases](docs/SDK_TARGET.md) | What this SDK is (and isn't) for |
 | [Server API Contract](docs/openapi.yaml) | OpenAPI spec for batch ingest |
-
-## Known Limitations
-
-- **Audit chain is process-local**: Restarts from GENESIS on app initialization
-- **Lock-task mode**: Best-effort detection; not a full kiosk controller
-- **Request signing**: Client-side only; server verification is your responsibility
-- **Room migrations**: Provided for v2 -> v3 schema
-
-## Roadmap
-
-- [ ] mTLS patterns and certificate pinning hooks
-- [ ] Schema-based event validation (replace denylist heuristics)
-- [ ] Per-region endpoint routing helpers (EU/US/AU)
-- [ ] Kotlin Multiplatform (iOS) support
+| [Contributing](CONTRIBUTING.md) | Development setup and guidelines |
 
 ## License
 
