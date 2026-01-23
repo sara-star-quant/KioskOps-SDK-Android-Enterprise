@@ -79,10 +79,12 @@ See [Features](docs/FEATURES.md) for the complete list.
 |----------|-------------|
 | [Integration Guide](docs/INTEGRATION_STEP_BY_STEP.md) | Step-by-step setup |
 | [Architecture](docs/ARCHITECTURE.md) | System design and modules |
-| [Features](docs/FEATURES.md) | Full feature list, limitations, roadmap |
+| [Features](docs/FEATURES.md) | Full feature list and limitations |
 | [Security & Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model and security controls |
 | [Target Use Cases](docs/SDK_TARGET.md) | What this SDK is (and isn't) for |
 | [Server API Contract](docs/openapi.yaml) | OpenAPI spec for batch ingest |
+| [Changelog](CHANGELOG.md) | Version history |
+| [Roadmap](ROADMAP.md) | Planned features |
 | [Contributing](CONTRIBUTING.md) | Development setup and guidelines |
 
 ## License
