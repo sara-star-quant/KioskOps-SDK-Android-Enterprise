@@ -36,7 +36,7 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Run fuzz tests
-        run: ./gradlew :kiosk-ops-sdk:testDebugUnitTest --tests "*FuzzTest*" --no-daemon
+        run: ./gradlew :kiosk-ops-sdk:fuzzTest --no-daemon
         env:
           JAZZER_FUZZ: "1"
 
