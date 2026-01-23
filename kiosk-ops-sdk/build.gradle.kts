@@ -44,6 +44,10 @@ android {
       isIncludeAndroidResources = true
       all { test ->
         test.useJUnitPlatform()
+        // Exclude fuzz tests from regular test runs.
+        // Jazzer's JUnit extension conflicts with Robolectric's sandbox classloader.
+        // Run fuzz tests separately: ./gradlew :kiosk-ops-sdk:fuzzTest
+        test.filter.excludeTestsMatching("com.peterz.kioskops.sdk.fuzz.*")
       }
     }
   }
@@ -53,6 +57,19 @@ android {
 // Debug unit tests provide full coverage; release artifacts are validated via instrumented tests.
 tasks.matching { it.name == "testReleaseUnitTest" }.configureEach {
   enabled = false
+}
+
+// Fuzz testing task - runs only fuzz tests, avoiding Robolectric conflicts.
+// Usage: ./gradlew :kiosk-ops-sdk:fuzzTest
+tasks.register<Test>("fuzzTest") {
+  description = "Runs Jazzer fuzz tests"
+  group = "verification"
+
+  testClassesDirs = sourceSets["test"].output.classesDirs
+  classpath = sourceSets["test"].runtimeClasspath
+
+  useJUnitPlatform()
+  filter.includeTestsMatching("com.peterz.kioskops.sdk.fuzz.*")
 }
 
 ksp {
