@@ -31,6 +31,17 @@ class AuditTrail(
 
   @Volatile private var lastHash: String = "GENESIS"
 
+  /**
+   * Records an audit event with hash-chain linking.
+   *
+   * Note: The hash chain is **process-local**. After app restart, the chain restarts from "GENESIS".
+   * This is intentional and documents process lifetime boundaries. Cross-restart chain continuity
+   * would require persisting `lastHash`, which adds complexity without significant security benefit
+   * (an attacker who can modify files can also modify the persisted hash).
+   *
+   * @param name Event name (e.g., "sync_batch_success", "enqueue_rejected")
+   * @param fields Optional key-value pairs for event context (avoid PII)
+   */
   fun record(name: String, fields: Map<String, String> = emptyMap()) {
     val ts = clock.nowMs()
     val prev = lastHash
@@ -62,6 +73,10 @@ class AuditTrail(
     return dir.listFiles()?.sortedBy { it.name }?.toList() ?: emptyList()
   }
 
+  /**
+   * Deletes audit files older than the configured retention period.
+   * Files are retained for [RetentionPolicy.retainAuditDays] full days.
+   */
   fun purgeOldFiles() {
     val retention = retentionProvider()
     val cutoffMs = clock.nowMs() - retention.retainAuditDays.toLong() * 24 * 60 * 60 * 1000
@@ -70,7 +85,8 @@ class AuditTrail(
     for (f in files) {
       val day = parseDayFromName(f.name) ?: continue
       val dayStartMs = Instant.parse("${day}T00:00:00Z").toEpochMilli()
-      if (dayStartMs < cutoffMs) {
+      // Use <= to ensure files are deleted on the exact retention boundary, not one day late.
+      if (dayStartMs <= cutoffMs) {
         f.delete()
       }
     }

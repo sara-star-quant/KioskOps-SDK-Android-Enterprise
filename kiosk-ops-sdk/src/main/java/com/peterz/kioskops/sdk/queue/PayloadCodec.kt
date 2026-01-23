@@ -24,5 +24,13 @@ object PayloadCodec {
     return String(plain, Charsets.UTF_8)
   }
 
-  data class Encoded(val blob: ByteArray, val encoding: String)
+  /**
+   * Encoded payload with explicit equals/hashCode for ByteArray content comparison.
+   */
+  data class Encoded(val blob: ByteArray, val encoding: String) {
+    override fun equals(other: Any?): Boolean =
+      other is Encoded && blob.contentEquals(other.blob) && encoding == other.encoding
+
+    override fun hashCode(): Int = blob.contentHashCode() * 31 + encoding.hashCode()
+  }
 }
