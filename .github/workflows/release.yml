@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write  # Required for Sigstore keyless signing
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Build release AAR
+        run: ./gradlew :kiosk-ops-sdk:assembleRelease -PVERSION_NAME=${{ steps.version.outputs.VERSION }}
+
+      - name: Run tests
+        run: ./gradlew :kiosk-ops-sdk:testDebugUnitTest
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
+      - name: Sign release artifacts with Sigstore
+        run: |
+          cd kiosk-ops-sdk/build/outputs/aar
+          for file in *.aar; do
+            cosign sign-blob --yes "$file" \
+              --output-signature "${file}.sig" \
+              --output-certificate "${file}.pem"
+          done
+
+      - name: Publish to GitHub Packages
+        run: ./gradlew :kiosk-ops-sdk:publishReleasePublicationToGitHubPackagesRepository -PVERSION_NAME=${{ steps.version.outputs.VERSION }}
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          if grep -q "## \[${VERSION}\]" CHANGELOG.md; then
+            # Extract release notes from CHANGELOG.md
+            sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | sed '1d;$d' > release_notes.md
+          else
+            echo "Release ${VERSION}" > release_notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          body_path: release_notes.md
+          files: |
+            kiosk-ops-sdk/build/outputs/aar/*.aar
+            kiosk-ops-sdk/build/outputs/aar/*.sig
+            kiosk-ops-sdk/build/outputs/aar/*.pem
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## Release ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Packages**: \`com.peterz.kioskops:kiosk-ops-sdk:${{ steps.version.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **JitPack**: \`com.github.pzverkov:KioskOps-SDK-Android-Enterprise:${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Signature Verification" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "cosign verify-blob kiosk-ops-sdk-release.aar \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --signature kiosk-ops-sdk-release.aar.sig \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --certificate kiosk-ops-sdk-release.aar.pem \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --certificate-identity-regexp 'https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise' \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
+  `maven-publish`
 }
 
 kotlin {
@@ -111,4 +112,56 @@ dependencies {
   testRuntimeOnly(libs.junit5.engine)
   testRuntimeOnly(libs.junit5.vintage) // Run JUnit 4 tests via JUnit Platform
   testImplementation(libs.jazzer.junit)
+}
+
+// Publishing configuration for GitHub Packages and JitPack
+afterEvaluate {
+  publishing {
+    publications {
+      create<MavenPublication>("release") {
+        from(components["release"])
+
+        groupId = "com.peterz.kioskops"
+        artifactId = "kiosk-ops-sdk"
+        version = findProperty("VERSION_NAME")?.toString() ?: "0.1.0-SNAPSHOT"
+
+        pom {
+          name.set("KioskOps SDK")
+          description.set("Enterprise-grade Android SDK for offline-first operational events, local diagnostics, and fleet-friendly observability")
+          url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+
+          licenses {
+            license {
+              name.set("Business Source License 1.1")
+              url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/blob/main/LICENSE")
+            }
+          }
+
+          developers {
+            developer {
+              id.set("pzverkov")
+              name.set("Petro Zverkov")
+            }
+          }
+
+          scm {
+            url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+            connection.set("scm:git:git://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
+            developerConnection.set("scm:git:ssh://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
+          }
+        }
+      }
+    }
+
+    repositories {
+      maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+        credentials {
+          username = System.getenv("GITHUB_ACTOR") ?: findProperty("gpr.user")?.toString()
+          password = System.getenv("GITHUB_TOKEN") ?: findProperty("gpr.token")?.toString()
+        }
+      }
+    }
+  }
 }
