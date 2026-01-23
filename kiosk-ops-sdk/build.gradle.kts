@@ -61,15 +61,19 @@ tasks.matching { it.name == "testReleaseUnitTest" }.configureEach {
 
 // Fuzz testing task - runs only fuzz tests, avoiding Robolectric conflicts.
 // Usage: ./gradlew :kiosk-ops-sdk:fuzzTest
-tasks.register<Test>("fuzzTest") {
-  description = "Runs Jazzer fuzz tests"
-  group = "verification"
+// Configured after evaluation to access Android test task properties.
+afterEvaluate {
+  tasks.register<Test>("fuzzTest") {
+    description = "Runs Jazzer fuzz tests"
+    group = "verification"
 
-  testClassesDirs = sourceSets["test"].output.classesDirs
-  classpath = sourceSets["test"].runtimeClasspath
+    val debugUnitTest = tasks.named<Test>("testDebugUnitTest").get()
+    testClassesDirs = debugUnitTest.testClassesDirs
+    classpath = debugUnitTest.classpath
 
-  useJUnitPlatform()
-  filter.includeTestsMatching("com.peterz.kioskops.sdk.fuzz.*")
+    useJUnitPlatform()
+    filter.includeTestsMatching("com.peterz.kioskops.sdk.fuzz.*")
+  }
 }
 
 ksp {

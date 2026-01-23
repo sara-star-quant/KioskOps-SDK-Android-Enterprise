@@ -24,7 +24,7 @@ cd KioskOps-SDK-Android-Enterprise
 |------|---------|
 | Build SDK | `./gradlew :kiosk-ops-sdk:assembleRelease` |
 | Run unit tests | `./gradlew testDebugUnitTest` |
-| Run fuzz tests | `./gradlew :kiosk-ops-sdk:testDebugUnitTest --tests "*FuzzTest*"` |
+| Run fuzz tests | `./gradlew :kiosk-ops-sdk:fuzzTest` |
 | Run lint | `./gradlew lintDebug` |
 | Run all checks | `./gradlew check` |
 
@@ -42,10 +42,10 @@ Test reports: `kiosk-ops-sdk/build/reports/tests/`
 
 ### Fuzz Tests
 
-Fuzz tests use [Jazzer](https://github.com/CodeIntelligenceTesting/jazzer) to find crashes and edge cases:
+Fuzz tests use [Jazzer](https://github.com/CodeIntelligenceTesting/jazzer) to find crashes and edge cases. They run in a separate task to avoid conflicts with Robolectric's classloader:
 
 ```bash
-./gradlew :kiosk-ops-sdk:testDebugUnitTest --tests "*FuzzTest*"
+./gradlew :kiosk-ops-sdk:fuzzTest
 ```
 
 Fuzz targets:
