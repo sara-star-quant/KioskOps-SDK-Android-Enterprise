@@ -7,6 +7,9 @@ import com.peterz.kioskops.sdk.compliance.QueueLimits
 import com.peterz.kioskops.sdk.compliance.IdempotencyConfig
 import com.peterz.kioskops.sdk.diagnostics.DiagnosticsSchedulePolicy
 import com.peterz.kioskops.sdk.fleet.config.RemoteConfigPolicy
+import com.peterz.kioskops.sdk.geofence.GeofencePolicy
+import com.peterz.kioskops.sdk.geofence.PolicyProfile
+import com.peterz.kioskops.sdk.observability.ObservabilityPolicy
 import com.peterz.kioskops.sdk.sync.SyncPolicy
 import com.peterz.kioskops.sdk.transport.security.TransportSecurityPolicy
 
@@ -37,4 +40,12 @@ data class KioskOpsConfig(
   val remoteConfigPolicy: RemoteConfigPolicy = RemoteConfigPolicy.disabledDefaults(),
   /** Diagnostics scheduling policy for automated collection and remote triggers. */
   val diagnosticsSchedulePolicy: DiagnosticsSchedulePolicy = DiagnosticsSchedulePolicy.disabledDefaults(),
+
+  // v0.4.0 Observability & Developer Experience
+  /** Observability configuration for logging, tracing, and metrics. */
+  val observabilityPolicy: ObservabilityPolicy = ObservabilityPolicy.disabledDefaults(),
+  /** Geofence-aware policy switching configuration. */
+  val geofencePolicy: GeofencePolicy = GeofencePolicy.disabledDefaults(),
+  /** Named policy profiles for geofence-based configuration switching. */
+  val policyProfiles: Map<String, PolicyProfile> = emptyMap(),
 )

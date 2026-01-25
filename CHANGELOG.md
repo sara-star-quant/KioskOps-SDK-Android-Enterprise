@@ -5,6 +5,100 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-01-25
+
+Observability and developer experience release with geofence-aware policy switching.
+
+### Added
+
+#### Observability Infrastructure
+- **ObservabilityPolicy** for centralized observability configuration
+  - Configurable logging, tracing, and metrics collection
+  - Development, production, and full observability presets
+  - Trace sampling rate control (ISO 27001 A.12.4)
+- **CorrelationContext** for distributed tracing correlation
+  - Thread-local correlation ID propagation
+  - W3C Trace Context compatible trace/span IDs
+  - Cross-thread context propagation helpers
+- **Correlated operations** with automatic timing and metadata
+  - `correlatedOperation()` for suspending operations
+  - `correlatedBlock()` for blocking operations
+  - `trackedOperation()` with success/failure callbacks
+
+#### Structured Logging
+- **Multi-sink StructuredLogger** with automatic context enrichment
+  - Correlation IDs, trace IDs, thread info auto-included
+  - Level filtering per sink (BSI SYS.3.2.2.A12)
+- **LogcatSink** for Android Logcat output
+  - Configurable tag prefix and min level
+  - Key fields visible in log output
+- **FileSink** for in-memory ring buffer logging
+  - Configurable max lines with automatic rotation
+  - JSON and text export formats
+  - Filter by level, tag, or correlation ID
+
+#### Distributed Tracing
+- **OpenTelemetry-compatible tracing API**
+  - TracerProvider, Tracer, SpanBuilder, Span interfaces
+  - SpanContext with W3C traceparent support
+  - Span events and exception recording
+- **KioskOpsTracer** implementation
+  - Configurable sampling rate
+  - Automatic correlation context integration
+  - No-op fallback when tracing disabled
+
+#### Metrics Collection
+- **OpenTelemetry-compatible metrics API**
+  - MeterProvider, Meter interfaces
+  - Counter, Gauge, Histogram instruments
+- **MetricRegistry** for in-memory metric storage
+  - Thread-safe concurrent data structures
+  - Histogram bucket distribution
+- **PrometheusExporter** for metrics export
+  - Standard Prometheus text format
+  - Debug builds only
+
+#### Debug Features
+- **EventInspector** for queue debugging (debug builds only)
+  - Paginated event listing with metadata
+  - Queue statistics and state breakdown
+  - Quarantine management (retry, clear)
+- **NetworkLoggingInterceptor** for HTTP debugging
+  - Request/response logging with correlation
+  - Sensitive header redaction
+  - Duration timing
+
+#### Geofence-Aware Policy Switching
+- **GeofencePolicy** for location-based configuration
+  - Circular geofence regions with Haversine distance
+  - Priority-based region overlap handling
+  - Dwell time and accuracy configuration
+  - Privacy-preserving (no coordinate storage - GDPR Art. 5)
+- **GeofenceRegion** with validation and containment checks
+  - W3C-compliant coordinate validation
+  - Min/max radius enforcement (Android limits)
+- **PolicyProfile** for named configuration profiles
+  - Sync, telemetry, diagnostics policy overrides
+  - Factory methods for common profiles (high connectivity, battery saver, offline-first)
+- **GeofenceManager** for monitoring lifecycle
+  - Permission and location service checks
+  - Region transition handling with audit logging
+  - Listener interface for callbacks
+
+### Changed
+
+- `KioskOpsConfig` now includes `observabilityPolicy`, `geofencePolicy`, `policyProfiles`
+- `gradle.properties` VERSION_NAME updated to "0.4.0-SNAPSHOT"
+
+### Security
+
+- All observability features are opt-in with secure defaults
+- Remote logging/tracing endpoints require HTTPS
+- Debug features restricted to debug builds via `@RequiresDebugBuild`
+- Geofence location processing is local-only (no transmission)
+
+---
+
 ## [0.3.0] - 2026-01-25
 
 Fleet operations release focused on enhanced tooling for managing device fleets at scale.
@@ -175,6 +269,7 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[0.4.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.4.0
 [0.3.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.3.0
 [0.2.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.2.0
 [0.1.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.1.0

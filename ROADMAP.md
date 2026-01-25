@@ -43,29 +43,34 @@ Focus: Enhanced tooling for managing device fleets at scale.
 
 ### Device Management
 - [x] Enhanced device posture reporting (battery, storage, connectivity)
-- [ ] Geofence-aware policy switching (deferred to v0.4.0)
+- [x] Geofence-aware policy switching (completed in v0.4.0)
 - [x] Device group tagging for fleet segmentation
 
 ---
 
-## v0.4.0 — Observability & Developer Experience
+## v0.4.0 — Observability & Developer Experience [RELEASED]
 
 Focus: Better debugging, monitoring, and integration options.
 
 ### Logging & Tracing
-- [ ] OpenTelemetry integration for distributed tracing
-- [ ] Structured logging with configurable sinks (Logcat, file, remote)
-- [ ] Correlation IDs across SDK operations
+- [x] OpenTelemetry integration for distributed tracing
+- [x] Structured logging with configurable sinks (Logcat, file, remote)
+- [x] Correlation IDs across SDK operations
 
 ### Debugging
-- [ ] SDK debug overlay for development builds
-- [ ] Event inspector (view queued events in debug builds)
-- [ ] Network request/response logging (debug only)
+- [ ] SDK debug overlay for development builds (deferred to v0.5.0)
+- [x] Event inspector (view queued events in debug builds)
+- [x] Network request/response logging (debug only)
 
 ### Metrics
-- [ ] Prometheus-compatible metrics endpoint
-- [ ] Custom metrics API for host app instrumentation
-- [ ] Performance profiling hooks
+- [x] Prometheus-compatible metrics endpoint
+- [x] Custom metrics API for host app instrumentation
+- [ ] Performance profiling hooks (deferred to v0.5.0)
+
+### Geofencing (from v0.3.0)
+- [x] Geofence-aware policy switching
+- [x] Policy profiles for location-based configuration
+- [x] Privacy-preserving location handling (no coordinate storage)
 
 ---
 
