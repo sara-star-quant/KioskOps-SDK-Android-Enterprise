@@ -5,6 +5,9 @@ import android.app.admin.DevicePolicyManager
 import android.content.Context
 import com.peterz.kioskops.sdk.crypto.KeyAttestationReporter
 import com.peterz.kioskops.sdk.crypto.SecurityLevel
+import com.peterz.kioskops.sdk.fleet.posture.BatteryCollector
+import com.peterz.kioskops.sdk.fleet.posture.ConnectivityCollector
+import com.peterz.kioskops.sdk.fleet.posture.StorageCollector
 
 /**
  * Collects a minimal device posture snapshot suitable for fleet ops.
@@ -13,11 +16,35 @@ import com.peterz.kioskops.sdk.crypto.SecurityLevel
  * - Intentionally avoids stable identifiers (IMEI/serial/SSAID).
  * - Device Owner status is a key signal for kiosk reliability.
  * - Includes key attestation status for security compliance reporting.
+ * - v0.3.0: Extended with battery, storage, connectivity, and device groups.
+ *
+ * Privacy (GDPR Art. 5): No PII is collected. Only aggregate device state.
+ * Power Efficiency (BSI SYS.3.2.2.A8): Uses cached values, no wake locks.
  */
-class DevicePostureCollector(private val context: Context) {
+class DevicePostureCollector(
+  private val context: Context,
+  private val deviceGroupProvider: DeviceGroupProvider? = null,
+) {
 
   private val attestationReporter: KeyAttestationReporter by lazy {
     KeyAttestationReporter(context)
+  }
+
+  // v0.3.0 Extended collectors
+  private val batteryCollector: BatteryCollector by lazy {
+    BatteryCollector(context)
+  }
+
+  private val storageCollector: StorageCollector by lazy {
+    StorageCollector(context)
+  }
+
+  private val connectivityCollector: ConnectivityCollector by lazy {
+    ConnectivityCollector(context)
+  }
+
+  private val groupProvider: DeviceGroupProvider by lazy {
+    deviceGroupProvider ?: DefaultDeviceGroupProvider(context)
   }
 
   fun collect(): DevicePosture {
@@ -57,6 +84,12 @@ class DevicePostureCollector(private val context: Context) {
       supportsHardwareAttestation = supportsHwAttestation,
       keySecurityLevel = keySecurityLevel,
       keysAreHardwareBacked = keysHardwareBacked,
+
+      // v0.3.0 Extended posture
+      battery = batteryCollector.collect(),
+      storage = storageCollector.collect(),
+      connectivity = connectivityCollector.collect(),
+      deviceGroups = groupProvider.getDeviceGroups(),
     )
   }
 }

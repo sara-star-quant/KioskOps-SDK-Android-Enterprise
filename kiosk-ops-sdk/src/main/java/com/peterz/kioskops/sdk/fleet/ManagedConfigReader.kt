@@ -23,6 +23,20 @@ object ManagedConfigReader {
 
     const val TELEMETRY_REGION_TAG = "kioskops_regionTag"
     const val TELEMETRY_INCLUDE_DEVICE_ID = "kioskops_includeDeviceId"
+
+    // v0.3.0 Remote Configuration
+    const val CONFIG_VERSION = "kioskops_config_version"
+    const val CONFIG_SIGNATURE = "kioskops_config_signature"
+    const val AB_VARIANT = "kioskops_ab_variant"
+    const val AB_EXPERIMENT_ID = "kioskops_ab_experiment_id"
+    const val AB_VARIANTS = "kioskops_ab_variants"
+
+    // v0.3.0 Device Groups
+    const val DEVICE_GROUPS = "kioskops_device_groups"
+
+    // v0.3.0 Remote Diagnostics Trigger
+    const val DIAGNOSTICS_TRIGGER = "kioskops_diagnostics_trigger"
+    const val DIAGNOSTICS_TRIGGER_ID = "kioskops_diagnostics_trigger_id"
   }
 
   fun read(context: Context, defaults: KioskOpsConfig): KioskOpsConfig {

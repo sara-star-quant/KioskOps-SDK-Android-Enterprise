@@ -5,6 +5,75 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-01-25
+
+Fleet operations release focused on enhanced tooling for managing device fleets at scale.
+
+### Added
+
+#### Remote Configuration
+- **Push-based config refresh** via managed config or FCM (`RemoteConfigManager`)
+  - Version monotonicity enforcement prevents rollback attacks (BSI APP.4.4.A5)
+  - Optional ECDSA P-256 signature verification for config bundles
+  - Cooldown period prevents rapid config cycling attacks
+- **Config versioning and rollback support** (`ConfigVersion`, `ConfigRollbackResult`)
+  - Retained version history for safe rollback
+  - Minimum version floor prevents security downgrades
+  - Audit logging of all version transitions
+- **A/B testing configuration support**
+  - Deterministic variant assignment based on device ID
+  - Sticky assignment across config updates (optional)
+
+#### Diagnostics Scheduling
+- **Scheduled diagnostics collection** (`DiagnosticsSchedulerWorker`)
+  - Daily or weekly schedule with configurable time (BSI SYS.3.2.2.A8)
+  - Power-efficient WorkManager integration
+  - Prefers idle device and unmetered network
+- **Remote diagnostics trigger** via managed config (`RemoteDiagnosticsTrigger`)
+  - Rate limiting (maxRemoteTriggersPerDay) prevents abuse (BSI APP.4.4.A7)
+  - Cooldown period between triggers
+  - Deduplication of trigger requests
+  - All triggers (accepted/rejected) are audit logged
+- **Auto-upload option** for scheduled diagnostics (requires uploader configuration)
+
+#### Extended Device Posture
+- **Battery status** (`BatteryStatus`)
+  - Level, charging state, health, power saver mode
+  - Critical/low battery detection
+  - No PII collected (GDPR compliant)
+- **Storage status** (`StorageStatus`)
+  - Internal/external storage metrics
+  - Low storage and critical storage detection
+  - Human-readable formatting helper
+- **Connectivity status** (`ConnectivityStatus`)
+  - Network type, validation, metered status
+  - WiFi signal level, cellular type
+  - VPN and airplane mode detection
+  - No IP addresses, MAC addresses, or network identifiers (GDPR compliant)
+
+#### Device Groups
+- **Device group tagging** for fleet segmentation (`DeviceGroupProvider`)
+  - Groups assignable via managed config or programmatic API
+  - Merged view of managed + local assignments
+  - ISO 27001 A.8 asset classification support
+  - Group-based policy targeting in fleet management
+
+### Changed
+
+- `KioskOpsConfig` now includes `remoteConfigPolicy` and `diagnosticsSchedulePolicy`
+- `DevicePosture` now includes `battery`, `storage`, `connectivity`, `deviceGroups` fields
+- `KioskOpsSdk.SDK_VERSION` updated to "0.3.0"
+- `applySchedulingFromConfig()` now schedules diagnostics collection
+
+### Security
+
+- Config version monotonicity prevents rollback attacks
+- Remote trigger rate limiting prevents DoS attacks
+- All policy-relevant operations are audit logged
+- Extended posture collection follows GDPR privacy principles
+
+---
+
 ## [0.2.0] - 2025-01-25
 
 Security hardening release focused on certification readiness (SOC 2, FedRAMP preparation).
@@ -106,5 +175,6 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[0.3.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.3.0
 [0.2.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.2.0
 [0.1.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.1.0

@@ -27,24 +27,24 @@ Focus: Strengthen security posture for high-compliance deployments.
 
 ---
 
-## v0.3.0 — Fleet Operations
+## v0.3.0 — Fleet Operations [RELEASED]
 
 Focus: Enhanced tooling for managing device fleets at scale.
 
 ### Remote Configuration
-- [ ] Push-based config refresh via managed config or FCM
-- [ ] Config versioning and rollback support
-- [ ] A/B testing configuration support
+- [x] Push-based config refresh via managed config or FCM
+- [x] Config versioning and rollback support
+- [x] A/B testing configuration support
 
 ### Diagnostics
-- [ ] Batch diagnostics collection for fleet-wide analysis
-- [ ] Remote diagnostics trigger via managed config
-- [ ] Diagnostic report scheduling (daily/weekly summaries)
+- [x] Batch diagnostics collection for fleet-wide analysis
+- [x] Remote diagnostics trigger via managed config
+- [x] Diagnostic report scheduling (daily/weekly summaries)
 
 ### Device Management
-- [ ] Enhanced device posture reporting (battery, storage, connectivity)
-- [ ] Geofence-aware policy switching
-- [ ] Device group tagging for fleet segmentation
+- [x] Enhanced device posture reporting (battery, storage, connectivity)
+- [ ] Geofence-aware policy switching (deferred to v0.4.0)
+- [x] Device group tagging for fleet segmentation
 
 ---
 
