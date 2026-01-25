@@ -20,4 +20,10 @@ data class HealthSnapshot(
   val regionTag: String? = null,
   val includeDeviceId: Boolean,
   val sdkDeviceId: String? = null,
+  /** Whether the device supports hardware-backed key attestation. */
+  val supportsHardwareAttestation: Boolean = false,
+  /** Security level of SDK encryption keys (SOFTWARE, TEE, STRONGBOX). */
+  val keySecurityLevel: String? = null,
+  /** Whether encryption keys are stored in secure hardware. */
+  val keysAreHardwareBacked: Boolean = false,
 )

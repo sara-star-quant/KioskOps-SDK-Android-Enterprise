@@ -2,9 +2,9 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.x.x   | :white_check_mark: |
+| Version | Supported |
+| ------- | --------- |
+| 0.x.x   | Yes       |
 
 ## Reporting a Vulnerability
 
@@ -60,8 +60,24 @@ When using KioskOps SDK in production:
 
 KioskOps SDK includes enterprise security features:
 
+### Data Protection
 - AES-256-GCM encryption at rest (Android Keystore backed)
 - PII denylist filtering
-- Tamper-evident audit chain (SHA-256)
 - Payload size limits and queue pressure controls
+
+### Transport Security (v0.2.0)
+- Certificate pinning with SHA-256 pins
+- mTLS client certificate support
+- Certificate Transparency validation
+
+### Key Management (v0.2.0)
+- Key rotation with versioned encryption
+- Hardware-backed key attestation (TEE/StrongBox)
+- Configurable key derivation (OWASP 2023)
+
+### Audit & Compliance (v0.2.0)
+- Tamper-evident audit chain (SHA-256)
+- Persistent audit across app restarts (Room-backed)
+- Signed audit entries with device attestation
+- Audit chain integrity verification API
 - Optional HMAC request signing

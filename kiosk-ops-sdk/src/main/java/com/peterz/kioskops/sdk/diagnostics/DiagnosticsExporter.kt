@@ -68,6 +68,9 @@ class DiagnosticsExporter(
         regionTag = cfg.telemetryPolicy.regionTag,
         includeDeviceId = includeDeviceId,
         sdkDeviceId = if (includeDeviceId) DeviceId.get(context) else null,
+        supportsHardwareAttestation = posture.supportsHardwareAttestation,
+        keySecurityLevel = posture.keySecurityLevel.name,
+        keysAreHardwareBacked = posture.keysAreHardwareBacked,
       )
 
       // Note: telemetry and audit share the same encryption setting (encryptTelemetryAtRest).

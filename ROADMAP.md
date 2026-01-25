@@ -6,24 +6,24 @@ This document outlines planned features and improvements for KioskOps SDK, organ
 
 ---
 
-## v0.2.0 — Security Hardening
+## v0.2.0 — Security Hardening [RELEASED]
 
 Focus: Strengthen security posture for high-compliance deployments.
 
 ### Transport Security
-- [ ] Certificate pinning with configurable pin sets
-- [ ] mTLS client certificate support
-- [ ] Certificate transparency log validation (optional)
+- [x] Certificate pinning with configurable pin sets
+- [x] mTLS client certificate support
+- [x] Certificate transparency log validation (optional)
 
 ### Cryptography
-- [ ] Key rotation support with versioned encryption
-- [ ] Hardware-backed key attestation reporting
-- [ ] Configurable key derivation parameters
+- [x] Key rotation support with versioned encryption
+- [x] Hardware-backed key attestation reporting
+- [x] Configurable key derivation parameters
 
 ### Audit Trail
-- [ ] Persistent audit chain across app restarts (Room-backed)
-- [ ] Signed audit entries with device attestation
-- [ ] Audit trail integrity verification API
+- [x] Persistent audit chain across app restarts (Room-backed)
+- [x] Signed audit entries with device attestation
+- [x] Audit trail integrity verification API
 
 ---
 

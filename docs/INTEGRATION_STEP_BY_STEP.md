@@ -313,7 +313,96 @@ See `docs/openapi.yaml`.
 
 ---
 
-## 9) Testing
+## 9) Transport Security (v0.2.0)
+
+### Certificate Pinning
+
+```kotlin
+val cfg = KioskOpsConfig(
+  baseUrl = "https://api.example.com/",
+  locationId = "STORE-001",
+  transportSecurityPolicy = TransportSecurityPolicy(
+    certificatePins = listOf(
+      CertificatePin(
+        hostname = "api.example.com",
+        sha256Pins = listOf(
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", // Primary
+          "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=", // Backup
+        )
+      )
+    )
+  )
+)
+```
+
+### mTLS (Client Certificates)
+
+```kotlin
+val cfg = KioskOpsConfig(
+  baseUrl = "https://api.example.com/",
+  locationId = "STORE-001",
+  transportSecurityPolicy = TransportSecurityPolicy(
+    mtlsConfig = MtlsConfig(
+      clientCertificateProvider = MyKeystoreProvider(context)
+    )
+  )
+)
+```
+
+See [Transport Security Guide](TRANSPORT_SECURITY.md) for detailed configuration.
+
+---
+
+## 10) Key Attestation (v0.2.0)
+
+### Check Key Security Level
+
+```kotlin
+val posture = KioskOpsSdk.get().devicePosture()
+if (posture.keysAreHardwareBacked) {
+  // Keys are protected by TEE or StrongBox
+}
+```
+
+### Enable Signed Audit Entries
+
+```kotlin
+val securityPolicy = SecurityPolicy.maximalistDefaults().copy(
+  signAuditEntries = true
+)
+```
+
+See [Key Management Guide](KEY_MANAGEMENT.md) for key rotation and attestation.
+
+---
+
+## 11) Audit Trail Verification (v0.2.0)
+
+### Verify Chain Integrity
+
+```kotlin
+when (val result = KioskOpsSdk.get().verifyAuditIntegrity()) {
+  is ChainVerificationResult.Valid -> {
+    // Chain is valid
+  }
+  is ChainVerificationResult.Broken -> {
+    // Chain has been tampered with or corrupted
+  }
+}
+```
+
+### Export for Compliance
+
+```kotlin
+val file = KioskOpsSdk.get().exportSignedAuditRange(startOfMonth, endOfMonth)
+// Gzipped JSONL with signatures for external verification
+```
+
+See [Audit Integrity Guide](AUDIT_INTEGRITY.md) for verification details.
+
+---
+
+## 12) Testing
 
 The SDK includes JVM tests for:
 - payload guardrails (size cap / denylist)

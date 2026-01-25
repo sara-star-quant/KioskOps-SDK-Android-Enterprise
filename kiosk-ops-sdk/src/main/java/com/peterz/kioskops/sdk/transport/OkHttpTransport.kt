@@ -2,6 +2,8 @@ package com.peterz.kioskops.sdk.transport
 
 import com.peterz.kioskops.sdk.KioskOpsConfig
 import com.peterz.kioskops.sdk.logging.RingLog
+import com.peterz.kioskops.sdk.transport.security.CertificatePinningException
+import com.peterz.kioskops.sdk.transport.security.CertificateTransparencyException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -72,6 +74,14 @@ class OkHttpTransport(
           TransportResult.PermanentFailure(message = msg, httpStatus = code)
         }
       }
+    } catch (e: CertificatePinningException) {
+      logs.w("Transport", "Certificate pinning validation failed", e)
+      // Certificate pinning failures are permanent - the server certificate doesn't match
+      TransportResult.PermanentFailure("certificate_pinning_failed: ${e.message}", cause = e)
+    } catch (e: CertificateTransparencyException) {
+      logs.w("Transport", "Certificate transparency validation failed", e)
+      // CT failures are permanent - certificate wasn't logged to CT
+      TransportResult.PermanentFailure("certificate_transparency_failed: ${e.message}", cause = e)
     } catch (t: Throwable) {
       logs.w("Transport", "Network/serialization error", t)
       TransportResult.TransientFailure("exception: ${t.javaClass.simpleName}", cause = t)
