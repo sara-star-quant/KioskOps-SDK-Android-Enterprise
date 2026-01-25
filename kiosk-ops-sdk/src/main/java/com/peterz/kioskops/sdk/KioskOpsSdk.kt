@@ -6,7 +6,11 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Constraints
 import androidx.work.NetworkType
+import com.peterz.kioskops.sdk.audit.AuditStatistics
 import com.peterz.kioskops.sdk.audit.AuditTrail
+import com.peterz.kioskops.sdk.audit.ChainVerificationResult
+import com.peterz.kioskops.sdk.audit.KeystoreAttestationProvider
+import com.peterz.kioskops.sdk.audit.PersistentAuditTrail
 import com.peterz.kioskops.sdk.compliance.DataRightsManager
 import com.peterz.kioskops.sdk.crypto.AesGcmKeystoreCryptoProvider
 import com.peterz.kioskops.sdk.crypto.ConditionalCryptoProvider
@@ -31,6 +35,9 @@ import com.peterz.kioskops.sdk.transport.OkHttpTransport
 import com.peterz.kioskops.sdk.transport.RequestSigner
 import com.peterz.kioskops.sdk.transport.Transport
 import com.peterz.kioskops.sdk.transport.TransportResult
+import com.peterz.kioskops.sdk.transport.security.CertificatePinningInterceptor
+import com.peterz.kioskops.sdk.transport.security.CertificateTransparencyValidator
+import com.peterz.kioskops.sdk.transport.security.MtlsClientBuilder
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import java.io.File
@@ -86,7 +93,7 @@ class KioskOpsSdk private constructor(
     explicitNulls = false
   }
 
-  private val okHttpClient = okHttpClientOverride ?: OkHttpClient.Builder().build()
+  private val okHttpClient: OkHttpClient = okHttpClientOverride ?: buildSecureHttpClient()
 
   private val telemetry = EncryptedTelemetryStore(
     context = appContext,
@@ -102,6 +109,21 @@ class KioskOpsSdk private constructor(
     clock = clock,
     crypto = telemetryCrypto
   )
+
+  // Persistent audit trail with Room database and optional signing
+  private val persistentAudit: PersistentAuditTrail by lazy {
+    PersistentAuditTrail(
+      context = appContext,
+      retentionProvider = { cfg().retentionPolicy },
+      clock = clock,
+      crypto = telemetryCrypto,
+      attestationProvider = if (cfg().securityPolicy.signAuditEntries) {
+        { KeystoreAttestationProvider(appContext) }
+      } else {
+        null
+      }
+    )
+  }
 
   private val transport: Transport = transportOverride ?: OkHttpTransport(
     client = okHttpClient,
@@ -294,6 +316,7 @@ class KioskOpsSdk private constructor(
     queue.applyRetention(cfg)
     telemetry.purgeOldFiles()
     audit.purgeOldFiles()
+    persistentAudit.applyRetention()
     purgeOldExports(cfg)
   }
 
@@ -331,6 +354,48 @@ class KioskOpsSdk private constructor(
     audit.record("diagnostics_upload_completed")
     telemetry.emit("diagnostics_upload_completed", mapOf("sdkVersion" to SDK_VERSION))
     return true
+  }
+
+  /**
+   * Verify the integrity of the persistent audit trail.
+   *
+   * Checks that the hash chain is unbroken and all event hashes are valid.
+   * For high-security deployments with signed entries, also verifies signatures.
+   *
+   * @param fromTs Optional start timestamp (inclusive).
+   * @param toTs Optional end timestamp (inclusive).
+   * @return Verification result indicating chain validity or location of break.
+   */
+  suspend fun verifyAuditIntegrity(
+    fromTs: Long? = null,
+    toTs: Long? = null,
+  ): ChainVerificationResult {
+    return persistentAudit.verifyChainIntegrity(fromTs, toTs)
+  }
+
+  /**
+   * Get statistics about the persistent audit trail.
+   *
+   * @return Statistics including event counts, time range, and chain generation.
+   */
+  suspend fun getAuditStatistics(): AuditStatistics {
+    return persistentAudit.getStatistics()
+  }
+
+  /**
+   * Export a range of signed audit events to a file.
+   *
+   * The exported file is a gzipped JSONL file containing all audit events
+   * in the specified time range, including signatures and chain metadata.
+   *
+   * @param fromTs Start timestamp.
+   * @param toTs End timestamp.
+   * @return The exported file.
+   */
+  suspend fun exportSignedAuditRange(fromTs: Long, toTs: Long): File {
+    audit.record("audit_export_requested", mapOf("fromTs" to fromTs.toString(), "toTs" to toTs.toString()))
+    telemetry.emit("audit_export_requested", mapOf("sdkVersion" to SDK_VERSION))
+    return persistentAudit.exportSignedAuditRange(fromTs, toTs)
   }
 
   /**
@@ -382,8 +447,45 @@ class KioskOpsSdk private constructor(
     }
   }
 
+  /**
+   * Build OkHttpClient with transport security features.
+   *
+   * Applies certificate pinning, mTLS, and CT validation based on
+   * the transport security policy from the initial config.
+   */
+  private fun buildSecureHttpClient(): OkHttpClient {
+    val policy = cfg().transportSecurityPolicy
+
+    var client = OkHttpClient.Builder().build()
+
+    // Apply certificate pinning interceptor
+    CertificatePinningInterceptor.fromPolicy(policy) { hostname, reason ->
+      logs.w("TransportSecurity", "Certificate pinning failed for $hostname: $reason")
+      audit.record("certificate_pin_failure", mapOf("hostname" to hostname, "reason" to reason))
+    }?.let { interceptor ->
+      client = client.newBuilder()
+        .addInterceptor(interceptor)
+        .build()
+    }
+
+    // Apply Certificate Transparency validation
+    CertificateTransparencyValidator.fromPolicy(policy) { hostname, reason ->
+      logs.w("TransportSecurity", "CT validation failed for $hostname: $reason")
+      audit.record("certificate_transparency_failure", mapOf("hostname" to hostname, "reason" to reason))
+    }?.let { validator ->
+      client = client.newBuilder()
+        .addInterceptor(validator)
+        .build()
+    }
+
+    // Apply mTLS configuration
+    client = MtlsClientBuilder.fromPolicy(client, policy)
+
+    return client
+  }
+
   companion object {
-    const val SDK_VERSION = "0.1.0-step8"
+    const val SDK_VERSION = "0.2.0"
 
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 

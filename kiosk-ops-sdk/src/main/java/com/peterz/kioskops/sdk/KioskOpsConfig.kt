@@ -6,6 +6,7 @@ import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
 import com.peterz.kioskops.sdk.compliance.QueueLimits
 import com.peterz.kioskops.sdk.compliance.IdempotencyConfig
 import com.peterz.kioskops.sdk.sync.SyncPolicy
+import com.peterz.kioskops.sdk.transport.security.TransportSecurityPolicy
 
 data class KioskOpsConfig(
   val baseUrl: String,
@@ -20,4 +21,6 @@ data class KioskOpsConfig(
   val idempotencyConfig: IdempotencyConfig = IdempotencyConfig.maximalistDefaults(),
   /** Network sync is opt-in. Default is disabled to avoid silent off-device transfer. */
   val syncPolicy: SyncPolicy = SyncPolicy.disabledDefaults(),
+  /** Transport layer security: certificate pinning, mTLS, and CT validation. */
+  val transportSecurityPolicy: TransportSecurityPolicy = TransportSecurityPolicy(),
 )

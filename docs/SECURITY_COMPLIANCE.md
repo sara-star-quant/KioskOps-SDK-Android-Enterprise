@@ -31,6 +31,20 @@ The audit trail stores a simple hash-chain (`prevHash -> hash`) per recorded eve
 - makes casual tampering obvious
 - is **not** a substitute for server-side signed audit logs
 
+**v0.2.0**: Audit trail is now Room-backed and persistent across app restarts. Optional device attestation signing provides stronger non-repudiation guarantees.
+
+### Transport security (v0.2.0)
+When enabled via `TransportSecurityPolicy`:
+- **Certificate pinning**: Validates server certificates against pre-configured SHA-256 pins
+- **mTLS**: Presents client certificates for mutual authentication
+- **Certificate Transparency**: Validates certificates against CT logs (optional)
+
+### Key management (v0.2.0)
+When enabled via `SecurityPolicy`:
+- **Key rotation**: `VersionedCryptoProvider` supports multiple key versions for seamless rotation
+- **Key attestation**: `KeyAttestationReporter` provides hardware-backed key attestation reporting
+- **Configurable derivation**: `KeyDerivationConfig` follows OWASP 2023 recommendations
+
 ### Retention controls
 Retention is configured via `RetentionPolicy` (by days) for:
 - telemetry files
@@ -90,5 +104,7 @@ Server-side verification and key rotation are owned by your backend.
 
 ## Known limitations
 - Room migrations are provided for schema v2 -> v3. Versions < v2 were pre-release snapshots.
-- Audit chain is **process-local**; after app restart, the chain restarts from a new GENESIS point.
-- Sync transport is intentionally minimal (batch ingest + acks). Add mTLS patterns / certificate pinning and server-side audit hardening as needed.
+- ~~Audit chain is **process-local**; after app restart, the chain restarts from a new GENESIS point.~~ **Fixed in v0.2.0**: Audit chain is now Room-backed and persistent.
+- ~~Sync transport is intentionally minimal (batch ingest + acks). Add mTLS patterns / certificate pinning and server-side audit hardening as needed.~~ **Fixed in v0.2.0**: Certificate pinning and mTLS are now supported.
+- Key attestation requires Android API 24+ for full functionality.
+- StrongBox security level requires hardware support (not all devices).

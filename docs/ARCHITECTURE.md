@@ -80,4 +80,54 @@ On-demand export for troubleshooting and support:
 
 ## Security Architecture
 
+```
++-----------------------------------------------------------------------------------+
+|                               Transport Security (v0.2.0)                          |
++-----------------------------------------------------------------------------------+
+|  Certificate Pinning  |    mTLS Client Certs   |  Certificate Transparency       |
++-----------------------------------------------------------------------------------+
+                                       |
+                                       v
++-----------------------------------------------------------------------------------+
+|                                 Cryptography Layer                                 |
++-----------------------------------------------------------------------------------+
+|    VersionedCryptoProvider    |   KeyAttestationReporter   |  SecureKeyDerivation |
++-----------------------------------------------------------------------------------+
+                                       |
+                                       v
++-----------------------------------------------------------------------------------+
+|                     Android Keystore (AES-GCM Hardware-Backed)                     |
++-----------------------------------------------------------------------------------+
+                                       |
+                                       v
++-----------------------------------------------------------------------------------+
+|                           Secure Hardware (TEE/StrongBox)                          |
++-----------------------------------------------------------------------------------+
+```
+
+### Transport Security (v0.2.0)
+
+| Component | Purpose |
+|-----------|---------|
+| `CertificatePinningInterceptor` | Validates server certs against SHA-256 pins |
+| `MtlsClientBuilder` | Configures client cert for mutual TLS |
+| `CertificateTransparencyValidator` | Checks certs against CT logs |
+
+### Key Management (v0.2.0)
+
+| Component | Purpose |
+|-----------|---------|
+| `VersionedCryptoProvider` | Multi-version encryption for key rotation |
+| `KeyMetadataStore` | Tracks key versions and creation times |
+| `KeyAttestationReporter` | Reports hardware-backed key status |
+| `SecureKeyDerivation` | PBKDF2 with OWASP 2023 defaults |
+
+### Audit Trail (v0.2.0)
+
+| Component | Purpose |
+|-----------|---------|
+| `PersistentAuditTrail` | Room-backed audit with chain continuity |
+| `KeystoreAttestationProvider` | Signs audit entries with device attestation |
+| `ChainVerificationResult` | Integrity verification result types |
+
 See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model and security controls.
