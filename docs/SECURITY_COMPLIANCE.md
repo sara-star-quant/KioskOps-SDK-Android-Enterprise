@@ -45,6 +45,28 @@ When enabled via `SecurityPolicy`:
 - **Key attestation**: `KeyAttestationReporter` provides hardware-backed key attestation reporting
 - **Configurable derivation**: `KeyDerivationConfig` follows OWASP 2023 recommendations
 
+### Remote configuration security (v0.3.0)
+When enabled via `RemoteConfigPolicy`:
+- **Version monotonicity**: Prevents rollback attacks by enforcing strictly increasing version numbers (BSI APP.4.4.A5)
+- **Minimum version floor**: Blocks rollback below a configured threshold for security updates
+- **Signature verification**: Optional ECDSA P-256 signature validation for config bundles (BSI APP.4.4.A3)
+- **Cooldown period**: Prevents rapid config cycling attacks
+- **Audit logging**: All config transitions are recorded (ISO 27001 A.12.4)
+
+### Remote diagnostics security (v0.3.0)
+When enabled via `DiagnosticsSchedulePolicy`:
+- **Rate limiting**: Maximum triggers per day prevents abuse (BSI APP.4.4.A7)
+- **Cooldown period**: Minimum interval between triggers
+- **Deduplication**: Prevents replay of trigger requests
+- **Audit logging**: All triggers (accepted/rejected) are recorded
+
+### Extended posture privacy (v0.3.0)
+Extended device posture collection follows GDPR data minimization:
+- **Battery**: Level, status, health only - no device identifiers
+- **Storage**: Aggregate metrics only - no file listings or content
+- **Connectivity**: Network type and signal level only - no IP addresses, MAC addresses, SSIDs, or cell tower IDs
+- **Device groups**: Opaque string identifiers only - no PII in group names
+
 ### Retention controls
 Retention is configured via `RetentionPolicy` (by days) for:
 - telemetry files
@@ -108,3 +130,5 @@ Server-side verification and key rotation are owned by your backend.
 - ~~Sync transport is intentionally minimal (batch ingest + acks). Add mTLS patterns / certificate pinning and server-side audit hardening as needed.~~ **Fixed in v0.2.0**: Certificate pinning and mTLS are now supported.
 - Key attestation requires Android API 24+ for full functionality.
 - StrongBox security level requires hardware support (not all devices).
+- Remote diagnostics trigger requires ACCESS_NETWORK_STATE permission for connectivity status (normal permission, auto-granted).
+- Cellular network type detection requires READ_PHONE_STATE permission; gracefully returns UNKNOWN if not granted.

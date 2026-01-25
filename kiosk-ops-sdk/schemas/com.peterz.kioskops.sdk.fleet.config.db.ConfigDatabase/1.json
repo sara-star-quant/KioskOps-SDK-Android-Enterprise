@@ -1,0 +1,82 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "e72536a7ae2427b675e1da67f295d7b0",
+    "entities": [
+      {
+        "tableName": "config_versions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`version` INTEGER NOT NULL, `createdAtMs` INTEGER NOT NULL, `contentHash` TEXT NOT NULL, `source` TEXT NOT NULL, `abVariant` TEXT, `signature` TEXT, `configJson` TEXT NOT NULL, `isActive` INTEGER NOT NULL, PRIMARY KEY(`version`))",
+        "fields": [
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtMs",
+            "columnName": "createdAtMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "contentHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "abVariant",
+            "columnName": "abVariant",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "signature",
+            "columnName": "signature",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "configJson",
+            "columnName": "configJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "version"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_config_versions_version",
+            "unique": true,
+            "columnNames": [
+              "version"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_config_versions_version` ON `${TABLE_NAME}` (`version`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e72536a7ae2427b675e1da67f295d7b0')"
+    ]
+  }
+}

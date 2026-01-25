@@ -16,9 +16,16 @@ import com.peterz.kioskops.sdk.crypto.AesGcmKeystoreCryptoProvider
 import com.peterz.kioskops.sdk.crypto.ConditionalCryptoProvider
 import com.peterz.kioskops.sdk.crypto.CryptoProvider
 import com.peterz.kioskops.sdk.diagnostics.DiagnosticsExporter
+import com.peterz.kioskops.sdk.diagnostics.RemoteDiagnosticsTrigger
+import com.peterz.kioskops.sdk.diagnostics.TriggerResult
+import com.peterz.kioskops.sdk.fleet.DefaultDeviceGroupProvider
+import com.peterz.kioskops.sdk.fleet.DeviceGroupProvider
 import com.peterz.kioskops.sdk.fleet.DevicePostureCollector
 import com.peterz.kioskops.sdk.fleet.DiagnosticsUploader
 import com.peterz.kioskops.sdk.fleet.PolicyDriftDetector
+import com.peterz.kioskops.sdk.fleet.config.ConfigRollbackResult
+import com.peterz.kioskops.sdk.fleet.config.ConfigVersion
+import com.peterz.kioskops.sdk.fleet.config.RemoteConfigManager
 import com.peterz.kioskops.sdk.logging.LogExporter
 import com.peterz.kioskops.sdk.logging.RingLog
 import com.peterz.kioskops.sdk.queue.QueueRepository
@@ -26,6 +33,7 @@ import com.peterz.kioskops.sdk.telemetry.EncryptedTelemetryStore
 import com.peterz.kioskops.sdk.util.Clock
 import com.peterz.kioskops.sdk.util.DeviceId
 import com.peterz.kioskops.sdk.util.Hashing
+import com.peterz.kioskops.sdk.work.DiagnosticsSchedulerWorker
 import com.peterz.kioskops.sdk.work.KioskOpsSyncWorker
 import com.peterz.kioskops.sdk.work.KioskOpsEventSyncWorker
 import com.peterz.kioskops.sdk.sync.SyncEngine
@@ -59,7 +67,14 @@ class KioskOpsSdk private constructor(
   private fun cfg(): KioskOpsConfig = configProvider()
 
   private val driftDetector = PolicyDriftDetector(appContext)
-  private val postureCollector = DevicePostureCollector(appContext)
+
+  // v0.3.0 Fleet Operations
+  /** Device group provider for fleet segmentation. */
+  val deviceGroupProvider: DeviceGroupProvider by lazy {
+    DefaultDeviceGroupProvider(appContext)
+  }
+
+  private val postureCollector = DevicePostureCollector(appContext, deviceGroupProvider)
 
   @Volatile private var diagnosticsUploader: DiagnosticsUploader? = null
 
@@ -122,6 +137,27 @@ class KioskOpsSdk private constructor(
       } else {
         null
       }
+    )
+  }
+
+  // v0.3.0 Remote Configuration Manager
+  /** Remote configuration manager for config versioning and A/B testing. */
+  val remoteConfigManager: RemoteConfigManager by lazy {
+    RemoteConfigManager.create(
+      context = appContext,
+      policyProvider = { cfg().remoteConfigPolicy },
+      auditTrail = audit,
+      clock = clock,
+    )
+  }
+
+  // v0.3.0 Remote Diagnostics Trigger
+  private val diagnosticsTrigger: RemoteDiagnosticsTrigger by lazy {
+    RemoteDiagnosticsTrigger(
+      context = appContext,
+      policyProvider = { cfg().diagnosticsSchedulePolicy },
+      auditTrail = audit,
+      clock = clock,
     )
   }
 
@@ -398,6 +434,79 @@ class KioskOpsSdk private constructor(
     return persistentAudit.exportSignedAuditRange(fromTs, toTs)
   }
 
+  // ========================================================================
+  // v0.3.0 Fleet Operations APIs
+  // ========================================================================
+
+  /**
+   * Get available config versions for rollback.
+   *
+   * @return List of available config versions, newest first.
+   * @since 0.3.0
+   */
+  suspend fun getConfigVersionHistory(): List<ConfigVersion> =
+    remoteConfigManager.getAvailableVersions()
+
+  /**
+   * Rollback to a previous configuration version.
+   *
+   * Security (BSI APP.4.4.A5): Rollback is blocked if target version
+   * is below the minimum allowed version configured in RemoteConfigPolicy.
+   *
+   * @param targetVersion The version number to restore.
+   * @return Result indicating success or failure reason.
+   * @since 0.3.0
+   */
+  suspend fun rollbackConfig(targetVersion: Long): ConfigRollbackResult =
+    remoteConfigManager.rollbackToVersion(targetVersion)
+
+  /**
+   * Get A/B test variant for an experiment.
+   *
+   * Assignment is deterministic based on device ID and experiment ID
+   * to ensure consistent experience across app restarts.
+   *
+   * @param experimentId Unique experiment identifier.
+   * @param variants List of variant names.
+   * @return Assigned variant name.
+   * @since 0.3.0
+   */
+  fun getAbTestVariant(experimentId: String, variants: List<String>): String =
+    remoteConfigManager.getAbVariant(experimentId, variants)
+
+  /**
+   * Process a remote diagnostics trigger request.
+   *
+   * Security (BSI APP.4.4.A7):
+   * - Rate limited by maxRemoteTriggersPerDay
+   * - Cooldown enforced between triggers
+   * - All triggers are audit logged
+   *
+   * @param triggerId Unique identifier for this trigger.
+   * @param metadata Additional context.
+   * @return Result indicating acceptance or rejection.
+   * @since 0.3.0
+   */
+  suspend fun processRemoteDiagnosticsTrigger(
+    triggerId: String,
+    metadata: Map<String, String> = emptyMap(),
+  ): TriggerResult {
+    val result = diagnosticsTrigger.processTrigger(triggerId, metadata)
+    if (result is TriggerResult.Accepted) {
+      exportDiagnostics()
+    }
+    return result
+  }
+
+  /**
+   * Get remaining remote diagnostics triggers allowed today.
+   *
+   * @return Number of triggers remaining.
+   * @since 0.3.0
+   */
+  fun getRemainingDiagnosticsTriggersToday(): Int =
+    diagnosticsTrigger.getRemainingTriggersToday()
+
   /**
    * Schedules periodic heartbeat work.
    * The worker intentionally does NOT upload data; it only maintains local observability.
@@ -425,6 +534,9 @@ class KioskOpsSdk private constructor(
 
       wm.enqueueUniquePeriodicWork(KioskOpsEventSyncWorker.WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, netSync)
     }
+
+    // v0.3.0: Schedule diagnostics collection based on policy
+    DiagnosticsSchedulerWorker.schedule(appContext, cfg.diagnosticsSchedulePolicy)
   }
 
   fun logger(): RingLog = logs
@@ -485,7 +597,7 @@ class KioskOpsSdk private constructor(
   }
 
   companion object {
-    const val SDK_VERSION = "0.2.0"
+    const val SDK_VERSION = "0.3.0"
 
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 

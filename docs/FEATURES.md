@@ -44,6 +44,33 @@ See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
 - **Diagnostics export** - ZIP bundle with health snapshot, logs, telemetry, audit trail
 - **Host-controlled upload** - SDK never auto-uploads; you control when/where
 
+### Remote Configuration (v0.3.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Config refresh | Off | Push-based via managed config or FCM |
+| Version monotonicity | On | Prevents rollback attacks (BSI APP.4.4.A5) |
+| Signed config | Off | ECDSA P-256 signature verification |
+| A/B testing | Off | Deterministic variant assignment |
+| Rollback support | Available | Version history with minimum floor |
+
+### Diagnostics Scheduling (v0.3.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Scheduled collection | Off | Daily/weekly with WorkManager |
+| Remote trigger | Off | Rate-limited with cooldown (BSI APP.4.4.A7) |
+| Auto-upload | Off | Requires uploader configuration |
+
+### Extended Device Posture (v0.3.0)
+
+| Feature | Privacy | Description |
+|---------|---------|-------------|
+| Battery status | No PII | Level, charging, health, power saver |
+| Storage status | No PII | Internal/external metrics, low storage detection |
+| Connectivity status | No PII | Network type, signal level (no IP/MAC/SSID) |
+| Device groups | Opaque IDs | Fleet segmentation (ISO 27001 A.8.1) |
+
 ## Network Sync (Opt-in)
 
 Network synchronization is **disabled by default**. When enabled:

@@ -5,9 +5,17 @@ import com.peterz.kioskops.sdk.compliance.SecurityPolicy
 import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
 import com.peterz.kioskops.sdk.compliance.QueueLimits
 import com.peterz.kioskops.sdk.compliance.IdempotencyConfig
+import com.peterz.kioskops.sdk.diagnostics.DiagnosticsSchedulePolicy
+import com.peterz.kioskops.sdk.fleet.config.RemoteConfigPolicy
 import com.peterz.kioskops.sdk.sync.SyncPolicy
 import com.peterz.kioskops.sdk.transport.security.TransportSecurityPolicy
 
+/**
+ * Main configuration for KioskOps SDK.
+ *
+ * Security (ISO 27001 A.5): All security-relevant settings are explicitly configured
+ * with secure defaults. No silent data transfer occurs without explicit opt-in.
+ */
 data class KioskOpsConfig(
   val baseUrl: String,
   val locationId: String,
@@ -23,4 +31,10 @@ data class KioskOpsConfig(
   val syncPolicy: SyncPolicy = SyncPolicy.disabledDefaults(),
   /** Transport layer security: certificate pinning, mTLS, and CT validation. */
   val transportSecurityPolicy: TransportSecurityPolicy = TransportSecurityPolicy(),
+
+  // v0.3.0 Fleet Operations
+  /** Remote configuration policy for managed config and FCM updates. */
+  val remoteConfigPolicy: RemoteConfigPolicy = RemoteConfigPolicy.disabledDefaults(),
+  /** Diagnostics scheduling policy for automated collection and remote triggers. */
+  val diagnosticsSchedulePolicy: DiagnosticsSchedulePolicy = DiagnosticsSchedulePolicy.disabledDefaults(),
 )
