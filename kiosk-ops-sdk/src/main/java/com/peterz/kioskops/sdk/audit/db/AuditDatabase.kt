@@ -52,7 +52,7 @@ abstract class AuditDatabase : RoomDatabase() {
         AuditDatabase::class.java,
         DATABASE_NAME
       )
-        .fallbackToDestructiveMigration()
+        .fallbackToDestructiveMigration(dropAllTables = true)
         .build()
     }
 

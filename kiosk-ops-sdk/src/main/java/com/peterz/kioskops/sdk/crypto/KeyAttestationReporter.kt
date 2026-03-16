@@ -62,8 +62,15 @@ class KeyAttestationReporter(
       val factory = SecretKeyFactory.getInstance(key.algorithm, "AndroidKeyStore")
       val keyInfo = factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo
 
+      val isHwBacked = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
+      } else {
+        @Suppress("DEPRECATION")
+        keyInfo.isInsideSecureHardware
+      }
+
       KeyAttestationStatus(
-        isHardwareBacked = keyInfo.isInsideSecureHardware,
+        isHardwareBacked = isHwBacked,
         securityLevel = determineSecurityLevel(keyInfo),
         keyCreatedAt = getKeyCreationTime(keyInfo),
         attestationChain = null, // Symmetric keys don't have attestation chains
@@ -219,6 +226,7 @@ class KeyAttestationReporter(
           else -> SecurityLevel.UNKNOWN
         }
       }
+      @Suppress("DEPRECATION")
       keyInfo.isInsideSecureHardware -> SecurityLevel.TEE
       else -> SecurityLevel.SOFTWARE
     }
