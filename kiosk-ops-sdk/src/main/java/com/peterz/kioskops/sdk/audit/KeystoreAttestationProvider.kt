@@ -205,15 +205,16 @@ class KeystoreAttestationProvider(
     return try {
       val key = keyStore.getKey(keyAlias, null) ?: return false
 
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        val factory = java.security.KeyFactory.getInstance(
-          key.algorithm,
-          "AndroidKeyStore"
-        )
-        val keyInfo = factory.getKeySpec(key, KeyInfo::class.java)
-        keyInfo.isInsideSecureHardware
+      val factory = java.security.KeyFactory.getInstance(
+        key.algorithm,
+        "AndroidKeyStore"
+      )
+      val keyInfo = factory.getKeySpec(key, KeyInfo::class.java)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
       } else {
-        false
+        @Suppress("DEPRECATION")
+        keyInfo.isInsideSecureHardware
       }
     } catch (e: Exception) {
       false

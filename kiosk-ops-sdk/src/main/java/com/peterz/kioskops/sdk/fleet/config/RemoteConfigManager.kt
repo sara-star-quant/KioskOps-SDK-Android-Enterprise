@@ -261,9 +261,10 @@ class RemoteConfigManager internal constructor(
   private fun serializeBundle(bundle: Bundle): String {
     val map = mutableMapOf<String, String>()
     for (key in bundle.keySet()) {
-      val value = bundle.get(key)
+      @Suppress("DEPRECATION")
+      val value = bundle.getString(key) ?: bundle.get(key)?.toString()
       if (value != null) {
-        map[key] = value.toString()
+        map[key] = value
       }
     }
     return json.encodeToString(kotlinx.serialization.serializer(), map)

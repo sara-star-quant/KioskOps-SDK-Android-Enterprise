@@ -61,6 +61,7 @@ internal class ConnectivityCollector(private val context: Context) {
 
   private fun getWifiSignalLevel(): String? = runCatching {
     val wifiManager = context.applicationContext.getSystemService<WifiManager>()
+    @Suppress("DEPRECATION")
     val rssi = wifiManager?.connectionInfo?.rssi ?: return@runCatching null
 
     // Calculate signal level (0-4)
@@ -87,6 +88,7 @@ internal class ConnectivityCollector(private val context: Context) {
       telephonyManager?.networkType
     } ?: return@runCatching null
 
+    @Suppress("DEPRECATION")
     when (networkType) {
       TelephonyManager.NETWORK_TYPE_NR -> ConnectivityStatus.CELLULAR_5G
       TelephonyManager.NETWORK_TYPE_LTE -> ConnectivityStatus.CELLULAR_LTE

@@ -6,6 +6,7 @@
 package com.peterz.kioskops.sdk.crypto
 
 import android.content.Context
+import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
@@ -239,7 +240,12 @@ class VersionedCryptoProvider(
     return try {
       val factory = SecretKeyFactory.getInstance(key.algorithm, "AndroidKeyStore")
       val keyInfo = factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo
-      keyInfo.isInsideSecureHardware
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
+      } else {
+        @Suppress("DEPRECATION")
+        keyInfo.isInsideSecureHardware
+      }
     } catch (e: Exception) {
       false
     }
