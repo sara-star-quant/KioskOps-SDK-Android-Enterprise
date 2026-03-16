@@ -3,6 +3,10 @@ plugins {
   alias(libs.plugins.kotlin.android)
 }
 
+kotlin {
+  jvmToolchain(17)
+}
+
 android {
   namespace = "com.peterz.kioskops.sample"
   compileSdk = 36
@@ -15,14 +19,6 @@ android {
     versionName = "0.1.0"
   }
 
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-  }
-
-  kotlinOptions {
-    jvmTarget = "17"
-  }
 }
 
 dependencies {

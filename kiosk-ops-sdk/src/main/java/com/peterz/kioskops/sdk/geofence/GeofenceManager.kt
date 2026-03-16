@@ -273,7 +273,7 @@ class GeofenceManager(
    * Register geofences with the system.
    * Override in subclass for actual implementation with GeofencingClient.
    */
-  protected open fun registerGeofences(regions: List<GeofenceRegion>) {
+  protected fun registerGeofences(regions: List<GeofenceRegion>) {
     // Base implementation is a no-op
     // Real implementation would use Google Play Services GeofencingClient
   }
@@ -282,7 +282,7 @@ class GeofenceManager(
    * Unregister all geofences.
    * Override in subclass for actual implementation.
    */
-  protected open fun unregisterGeofences() {
+  protected fun unregisterGeofences() {
     // Base implementation is a no-op
   }
 }

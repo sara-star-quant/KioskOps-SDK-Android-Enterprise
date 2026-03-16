@@ -19,7 +19,7 @@ class QueueRepository(
   private val db = Room.databaseBuilder(appContext, QueueDatabase::class.java, "kiosk_ops_queue.db")
     .addMigrations(QueueDatabase.MIGRATION_2_3)
     // v1 was an internal pre-release snapshot; allow destructive migration from it.
-    .fallbackToDestructiveMigrationFrom(1)
+    .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1)
     .build()
 
   private val dao = db.queueDao()

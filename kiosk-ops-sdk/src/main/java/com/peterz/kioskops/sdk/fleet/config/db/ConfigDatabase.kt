@@ -42,7 +42,7 @@ abstract class ConfigDatabase : RoomDatabase() {
         ConfigDatabase::class.java,
         DATABASE_NAME
       )
-        .fallbackToDestructiveMigration()
+        .fallbackToDestructiveMigration(dropAllTables = true)
         .build()
     }
 
