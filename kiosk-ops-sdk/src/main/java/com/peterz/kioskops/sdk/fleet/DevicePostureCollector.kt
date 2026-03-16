@@ -54,7 +54,9 @@ class DevicePostureCollector(
     val isDeviceOwner = runCatching { dpm.isDeviceOwnerApp(context.packageName) }.getOrDefault(false)
 
     // ActivityManager#isInLockTaskMode is API 23; on newer devices it can be restricted.
-    val lockTaskPermitted = runCatching { am.isInLockTaskMode }.getOrDefault(false)
+    val lockTaskPermitted = runCatching {
+      am.lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE
+    }.getOrDefault(false)
 
     val sdkInt = android.os.Build.VERSION.SDK_INT
     val model = android.os.Build.MODEL ?: "unknown"
