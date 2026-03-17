@@ -9,6 +9,7 @@ data class SecurityPolicy(
   val encryptDiagnosticsBundle: Boolean,
   val encryptExportedLogs: Boolean,
   val maxEventPayloadBytes: Int,
+  @Deprecated("Use PiiPolicy for structured PII detection. Kept for backward compatibility.", replaceWith = ReplaceWith("PiiPolicy"))
   val denylistJsonKeys: Set<String>,
   val allowRawPayloadStorage: Boolean,
   /** Key rotation policy for encryption keys. */

@@ -21,7 +21,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
   entities = [AuditEventEntity::class, AuditChainState::class],
-  version = 1,
+  version = 2,
   exportSchema = true,
 )
 abstract class AuditDatabase : RoomDatabase() {
@@ -52,7 +52,7 @@ abstract class AuditDatabase : RoomDatabase() {
         AuditDatabase::class.java,
         DATABASE_NAME
       )
-        .fallbackToDestructiveMigration(dropAllTables = true)
+        .addMigrations(AuditMigrations.MIGRATION_1_2)
         .build()
     }
 

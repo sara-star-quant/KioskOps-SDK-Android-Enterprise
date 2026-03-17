@@ -2,7 +2,7 @@ package com.peterz.kioskops.sdk.sync
 
 import android.content.Context
 import com.peterz.kioskops.sdk.KioskOpsConfig
-import com.peterz.kioskops.sdk.audit.AuditTrail
+import com.peterz.kioskops.sdk.audit.PersistentAuditTrail
 import com.peterz.kioskops.sdk.logging.RingLog
 import com.peterz.kioskops.sdk.queue.QueueRepository
 import com.peterz.kioskops.sdk.telemetry.TelemetrySink
@@ -30,7 +30,7 @@ class SyncEngine(
   private val transport: Transport,
   private val logs: RingLog,
   private val telemetry: TelemetrySink,
-  private val audit: AuditTrail,
+  private val audit: PersistentAuditTrail,
   private val clock: Clock,
 ) {
   suspend fun flushOnce(): TransportResult<SyncOnceResult> {

@@ -118,6 +118,20 @@ interface AuditDao {
    */
   @Query("SELECT * FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs ORDER BY ts ASC, id ASC")
   suspend fun getEventsForVerification(fromTs: Long, toTs: Long): List<AuditEventEntity>
+
+  /**
+   * Delete all events for a specific user.
+   * @since 0.5.0
+   */
+  @Query("DELETE FROM audit_events WHERE userId = :userId")
+  suspend fun deleteEventsByUserId(userId: String): Int
+
+  /**
+   * Get all events for a specific user.
+   * @since 0.5.0
+   */
+  @Query("SELECT * FROM audit_events WHERE userId = :userId ORDER BY ts ASC")
+  suspend fun getEventsByUserId(userId: String): List<AuditEventEntity>
 }
 
 /**
