@@ -87,6 +87,18 @@ interface QueueDao {
 
   @Query("DELETE FROM queue_events WHERE state = 'QUARANTINED' AND updatedAtEpochMs < :cutoffMs")
   suspend fun deleteQuarantinedOlderThan(cutoffMs: Long): Int
+
+  /** @since 0.5.0 */
+  @Query("DELETE FROM queue_events WHERE userId = :userId")
+  suspend fun deleteByUserId(userId: String): Int
+
+  /** @since 0.5.0 */
+  @Query("SELECT * FROM queue_events WHERE userId = :userId ORDER BY createdAtEpochMs ASC")
+  suspend fun getByUserId(userId: String): List<QueueEventEntity>
+
+  /** @since 0.5.0 */
+  @Query("SELECT * FROM queue_events WHERE anomalyScore IS NOT NULL AND anomalyScore >= :threshold ORDER BY anomalyScore DESC")
+  suspend fun getAnomalous(threshold: Float): List<QueueEventEntity>
 }
 
 /** Lightweight projection to avoid pulling encrypted payload blobs. */

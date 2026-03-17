@@ -3,7 +3,7 @@ package com.peterz.kioskops.sdk.sync
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.peterz.kioskops.sdk.KioskOpsConfig
-import com.peterz.kioskops.sdk.audit.AuditTrail
+import com.peterz.kioskops.sdk.audit.PersistentAuditTrail
 import com.peterz.kioskops.sdk.compliance.RetentionPolicy
 import com.peterz.kioskops.sdk.compliance.SecurityPolicy
 import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
@@ -100,7 +100,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = AuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = com.peterz.kioskops.sdk.util.Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = com.peterz.kioskops.sdk.util.Clock.SYSTEM, crypto = NoopCryptoProvider)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
     // two events
@@ -149,7 +149,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = AuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
     assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
@@ -229,7 +229,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = AuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
     assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
 
@@ -304,7 +304,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = AuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
     assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()

@@ -6,6 +6,8 @@ data class RetentionPolicy(
   val retainTelemetryDays: Int,
   val retainAuditDays: Int,
   val retainLogsDays: Int,
+  /** NIST AU-11: Minimum audit retention. Overrides retainAuditDays if higher. @since 0.5.0 */
+  val minimumAuditRetentionDays: Int = 365,
 ) {
   companion object {
     fun maximalistDefaults() = RetentionPolicy(
@@ -13,7 +15,8 @@ data class RetentionPolicy(
       retainFailedEventsDays = 14,
       retainTelemetryDays = 7,
       retainAuditDays = 30,
-      retainLogsDays = 7
+      retainLogsDays = 7,
+      minimumAuditRetentionDays = 365,
     )
   }
 }

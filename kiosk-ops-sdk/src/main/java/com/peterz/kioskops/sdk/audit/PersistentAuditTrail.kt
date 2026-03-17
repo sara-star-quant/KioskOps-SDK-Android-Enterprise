@@ -67,11 +67,14 @@ class PersistentAuditTrail(
    * @param name Event name (e.g., "sdk_initialized").
    * @param fields Additional key-value context.
    * @param sign If true and attestation provider is available, sign the entry.
+   * @param userId Optional user identifier for GDPR data subject tracking.
+   * @since 0.5.0 userId parameter added
    */
   suspend fun record(
     name: String,
     fields: Map<String, String> = emptyMap(),
     sign: Boolean = false,
+    userId: String? = null,
   ) {
     mutex.withLock {
       val ts = clock.nowMs()
@@ -109,6 +112,7 @@ class PersistentAuditTrail(
         signature = signature,
         deviceAttestationBlob = attestationBlob,
         chainGeneration = chainState.chainGeneration,
+        userId = userId,
       )
 
       // Update chain state
@@ -271,6 +275,22 @@ class PersistentAuditTrail(
    */
   suspend fun getEventsInRange(fromTs: Long, toTs: Long): List<AuditEventEntity> {
     return dao.getEventsInRange(fromTs, toTs)
+  }
+
+  /**
+   * Get all events for a specific user.
+   * @since 0.5.0
+   */
+  suspend fun getEventsByUserId(userId: String): List<AuditEventEntity> {
+    return dao.getEventsByUserId(userId)
+  }
+
+  /**
+   * Delete all events for a specific user.
+   * @since 0.5.0
+   */
+  suspend fun deleteEventsByUserId(userId: String): Int {
+    return dao.deleteEventsByUserId(userId)
   }
 
   private suspend fun initializeChainState(): AuditChainState {
