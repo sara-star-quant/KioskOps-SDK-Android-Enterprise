@@ -85,7 +85,23 @@ class PolicyDriftDetector(context: Context) {
       append("syncEndpointPath=").append(p.endpointPath).append('|')
       append("syncBatchSize=").append(p.batchSize).append('|')
       append("syncRequireUnmetered=").append(p.requireUnmeteredNetwork).append('|')
-      append("syncMaxAttemptsPerEvent=").append(p.maxAttemptsPerEvent)
+      append("syncMaxAttemptsPerEvent=").append(p.maxAttemptsPerEvent).append('|')
+
+      // v0.5.0 validation knobs
+      val v = cfg.validationPolicy
+      append("validationEnabled=").append(v.enabled).append('|')
+      append("validationStrict=").append(v.strictMode).append('|')
+      append("validationUnknownAction=").append(v.unknownEventTypeAction).append('|')
+
+      // v0.5.0 PII knobs
+      val pii = cfg.piiPolicy
+      append("piiEnabled=").append(pii.enabled).append('|')
+      append("piiAction=").append(pii.action).append('|')
+
+      // v0.5.0 anomaly knobs
+      val an = cfg.anomalyPolicy
+      append("anomalyEnabled=").append(an.enabled).append('|')
+      append("anomalySensitivity=").append(an.sensitivityLevel)
     }
   }
 

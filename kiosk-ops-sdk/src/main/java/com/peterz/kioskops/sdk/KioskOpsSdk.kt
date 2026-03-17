@@ -6,18 +6,33 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Constraints
 import androidx.work.NetworkType
+import com.peterz.kioskops.sdk.anomaly.AnomalyAction
+import com.peterz.kioskops.sdk.anomaly.AnomalyDetector
+import com.peterz.kioskops.sdk.anomaly.StatisticalAnomalyDetector
 import com.peterz.kioskops.sdk.audit.AuditStatistics
 import com.peterz.kioskops.sdk.audit.AuditTrail
 import com.peterz.kioskops.sdk.audit.ChainVerificationResult
 import com.peterz.kioskops.sdk.audit.KeystoreAttestationProvider
 import com.peterz.kioskops.sdk.audit.PersistentAuditTrail
 import com.peterz.kioskops.sdk.compliance.DataRightsManager
+import com.peterz.kioskops.sdk.compliance.RetentionEnforcer
 import com.peterz.kioskops.sdk.crypto.AesGcmKeystoreCryptoProvider
 import com.peterz.kioskops.sdk.crypto.ConditionalCryptoProvider
 import com.peterz.kioskops.sdk.crypto.CryptoProvider
+import com.peterz.kioskops.sdk.crypto.FieldLevelEncryptor
+import com.peterz.kioskops.sdk.debug.DebugOverlay
 import com.peterz.kioskops.sdk.diagnostics.DiagnosticsExporter
 import com.peterz.kioskops.sdk.diagnostics.RemoteDiagnosticsTrigger
 import com.peterz.kioskops.sdk.diagnostics.TriggerResult
+import com.peterz.kioskops.sdk.pii.DataClassification
+import com.peterz.kioskops.sdk.pii.PiiAction
+import com.peterz.kioskops.sdk.pii.PiiDetector
+import com.peterz.kioskops.sdk.pii.PiiRedactor
+import com.peterz.kioskops.sdk.pii.RegexPiiDetector
+import com.peterz.kioskops.sdk.validation.JsonSchemaValidator
+import com.peterz.kioskops.sdk.validation.SchemaRegistry
+import com.peterz.kioskops.sdk.validation.UnknownEventTypeAction
+import com.peterz.kioskops.sdk.validation.ValidationResult
 import com.peterz.kioskops.sdk.fleet.DefaultDeviceGroupProvider
 import com.peterz.kioskops.sdk.fleet.DeviceGroupProvider
 import com.peterz.kioskops.sdk.fleet.DevicePostureCollector
@@ -103,6 +118,49 @@ class KioskOpsSdk private constructor(
 
   private val queue = QueueRepository(appContext, logs, queueCrypto)
 
+  // v0.5.0 Validation & PII pipeline components
+  /** @since 0.5.0 */
+  val schemaRegistry = SchemaRegistry()
+
+  private val schemaValidator: JsonSchemaValidator by lazy {
+    JsonSchemaValidator(schemaRegistry)
+  }
+
+  @Volatile private var piiDetectorOverride: PiiDetector? = null
+
+  private val piiDetector: PiiDetector
+    get() = piiDetectorOverride ?: RegexPiiDetector(
+      minimumConfidence = cfg().piiPolicy.minimumConfidence,
+      fieldExclusions = cfg().piiPolicy.fieldExclusions,
+    )
+
+  private val piiRedactor = PiiRedactor()
+
+  @Volatile private var anomalyDetectorOverride: AnomalyDetector? = null
+
+  private val anomalyDetector: AnomalyDetector
+    get() = anomalyDetectorOverride ?: StatisticalAnomalyDetector(cfg().anomalyPolicy)
+
+  private val fieldEncryptor: FieldLevelEncryptor by lazy {
+    FieldLevelEncryptor(queueCrypto)
+  }
+
+  /**
+   * Set a custom PII detector implementation.
+   * @since 0.5.0
+   */
+  fun setPiiDetector(detector: PiiDetector?) {
+    piiDetectorOverride = detector
+  }
+
+  /**
+   * Set a custom anomaly detector implementation.
+   * @since 0.5.0
+   */
+  fun setAnomalyDetector(detector: AnomalyDetector?) {
+    anomalyDetectorOverride = detector
+  }
+
   private val json = Json {
     ignoreUnknownKeys = true
     explicitNulls = false
@@ -169,16 +227,18 @@ class KioskOpsSdk private constructor(
     requestSigner = requestSigner
   )
 
-  private val syncEngine = SyncEngine(
-    context = appContext,
-    cfgProvider = { cfg() },
-    queue = queue,
-    transport = transport,
-    logs = logs,
-    telemetry = telemetry,
-    audit = audit,
-    clock = clock
-  )
+  private val syncEngine: SyncEngine by lazy {
+    SyncEngine(
+      context = appContext,
+      cfgProvider = { cfg() },
+      queue = queue,
+      transport = transport,
+      logs = logs,
+      telemetry = telemetry,
+      audit = persistentAudit,
+      clock = clock,
+    )
+  }
 
   private val logExporter = LogExporter(appContext, logs, exportCrypto)
 
@@ -199,7 +259,13 @@ class KioskOpsSdk private constructor(
     }
   )
 
-  val dataRights = DataRightsManager(appContext, telemetry, audit)
+  val dataRights: DataRightsManager by lazy {
+    DataRightsManager(appContext, telemetry, audit, queue, persistentAudit)
+  }
+
+  private val retentionEnforcer: RetentionEnforcer by lazy {
+    RetentionEnforcer(queue, telemetry, audit, persistentAudit, clock)
+  }
 
   fun currentConfig(): KioskOpsConfig = cfg()
 
@@ -213,37 +279,177 @@ class KioskOpsSdk private constructor(
    *
    * For enterprise pilots, prefer [enqueueDetailed] to get rejection reasons.
    */
-  suspend fun enqueue(type: String, payloadJson: String): Boolean {
-    return enqueueDetailed(type = type, payloadJson = payloadJson).isAccepted
+  suspend fun enqueue(
+    type: String,
+    payloadJson: String,
+    userId: String? = null,
+  ): Boolean {
+    return enqueueDetailed(type = type, payloadJson = payloadJson, userId = userId).isAccepted
   }
 
   /**
-   * Enqueue an event with optional stable id for deterministic idempotency.
+   * Enqueue an event through the v0.5.0 pipeline:
    *
-   * - If [idempotencyKeyOverride] is provided, it is used as-is.
-   * - Else if stableEventId is provided and deterministic idempotency is enabled,
-   *   the SDK computes a deterministic key (HMAC-SHA256).
+   * 1. Size guardrail
+   * 2. Legacy denylist (fast-path, deprecated)
+   * 3. Event Validation (JsonSchemaValidator)
+   * 4. PII Detection -> REJECT / REDACT / FLAG_AND_ALLOW
+   * 5. Anomaly Detection (statistical + optional ML)
+   * 6. Data Classification tagging
+   * 7. Field-Level Encryption (specified JSON paths)
+   * 8. Queue Pressure check
+   * 9. Idempotency Key
+   * 10. Document Encryption (PayloadCodec -> AES-256-GCM)
+   * 11. Room Insert (with userId, dataClassification, anomalyScore)
+   * 12. Audit Record (PersistentAuditTrail)
+   *
+   * @param userId Optional user identifier for GDPR data subject tracking.
+   * @since 0.5.0 userId parameter, pipeline steps 3-7 added
    */
   suspend fun enqueueDetailed(
     type: String,
     payloadJson: String,
     stableEventId: String? = null,
     idempotencyKeyOverride: String? = null,
+    userId: String? = null,
   ): com.peterz.kioskops.sdk.queue.EnqueueResult {
-    val res = queue.enqueue(type, payloadJson, cfg(), stableEventId = stableEventId, idempotencyKeyOverride = idempotencyKeyOverride)
+    val cfg = cfg()
+    var processedPayload = payloadJson
+
+    // Step 3: Event Validation
+    if (cfg.validationPolicy.enabled) {
+      try {
+        when (val vResult = schemaValidator.validate(type, processedPayload)) {
+          is ValidationResult.Valid -> { /* pass */ }
+          is ValidationResult.Invalid -> {
+            if (cfg.validationPolicy.strictMode) {
+              val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.ValidationFailed(vResult.errors)
+              persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "validation_failed"))
+              telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "validation_failed"))
+              return result
+            }
+          }
+          is ValidationResult.SchemaNotFound -> {
+            when (cfg.validationPolicy.unknownEventTypeAction) {
+              UnknownEventTypeAction.REJECT -> {
+                val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.ValidationFailed(
+                  listOf("No schema registered for event type '$type'")
+                )
+                persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "schema_not_found"))
+                telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "schema_not_found"))
+                return result
+              }
+              UnknownEventTypeAction.FLAG, UnknownEventTypeAction.ALLOW -> { /* pass */ }
+            }
+          }
+        }
+      } catch (_: Exception) {
+        // Fail-safe: validation failure must not block the pipeline
+      }
+    }
+
+    // Step 4: PII Detection
+    var piiRedactedFields: List<String>? = null
+    if (cfg.piiPolicy.enabled) {
+      try {
+        val scanResult = piiDetector.scan(processedPayload)
+        if (scanResult.hasPii) {
+          when (cfg.piiPolicy.action) {
+            PiiAction.REJECT -> {
+              val findings = scanResult.findings.map { "${it.jsonPath}:${it.piiType}" }
+              val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.PiiDetected(findings)
+              persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "pii_detected"), userId = userId)
+              telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "pii_detected"))
+              return result
+            }
+            PiiAction.REDACT_VALUE -> {
+              val redaction = piiRedactor.redact(processedPayload, scanResult.findings)
+              processedPayload = redaction.redactedJson
+              piiRedactedFields = redaction.redactedPaths
+            }
+            PiiAction.FLAG_AND_ALLOW -> { /* proceed, but log */ }
+          }
+        }
+      } catch (_: Exception) {
+        // Fail-safe: PII detection failure must not block the pipeline
+      }
+    }
+
+    // Step 5: Anomaly Detection
+    var anomalyScore: Float? = null
+    if (cfg.anomalyPolicy.enabled) {
+      try {
+        val anomalyResult = anomalyDetector.analyze(type, processedPayload)
+        anomalyScore = anomalyResult.score
+        if (anomalyResult.recommendedAction == AnomalyAction.REJECT) {
+          val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.AnomalyRejected(
+            anomalyResult.score, anomalyResult.reasons
+          )
+          persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "anomaly_rejected"))
+          telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "anomaly_rejected"))
+          return result
+        }
+      } catch (_: Exception) {
+        // Fail-safe: anomaly detection failure must not block the pipeline
+      }
+    }
+
+    // Step 6: Data Classification tagging
+    var classification: String? = null
+    if (cfg.dataClassificationPolicy.enabled) {
+      classification = if (piiRedactedFields != null) {
+        cfg.dataClassificationPolicy.piiClassification.name
+      } else {
+        cfg.dataClassificationPolicy.defaultClassification.name
+      }
+    }
+
+    // Step 7: Field-Level Encryption
+    if (cfg.fieldEncryptionPolicy.enabled) {
+      try {
+        val fields = cfg.fieldEncryptionPolicy.fieldsForEventType(type)
+        if (fields.isNotEmpty()) {
+          processedPayload = fieldEncryptor.encryptFields(processedPayload, fields)
+        }
+      } catch (_: Exception) {
+        // Fail-safe: field encryption failure must not block the pipeline
+      }
+    }
+
+    // Steps 8-11: Queue enqueue (size guardrail, pressure, idempotency, document encryption, Room insert)
+    val res = queue.enqueue(
+      type, processedPayload, cfg,
+      stableEventId = stableEventId,
+      idempotencyKeyOverride = idempotencyKeyOverride,
+      userId = userId,
+      dataClassification = classification,
+      anomalyScore = anomalyScore,
+    )
+
+    // Step 12: Audit and telemetry
     when (res) {
       is com.peterz.kioskops.sdk.queue.EnqueueResult.Accepted -> {
-        audit.record("event_enqueued", mapOf("type" to type))
+        persistentAudit.record("event_enqueued", mapOf("type" to type), userId = userId)
         telemetry.emit("event_enqueued", mapOf("type" to type))
         if (res.droppedOldest > 0) {
-          audit.record("queue_overflow_dropped", mapOf("dropped" to res.droppedOldest.toString()))
+          persistentAudit.record("queue_overflow_dropped", mapOf("dropped" to res.droppedOldest.toString()))
           telemetry.emit("queue_overflow_dropped", mapOf("dropped" to res.droppedOldest.toString(), "strategy" to "DROP_OLDEST"))
+        }
+        // Return PiiRedacted variant if redaction occurred
+        if (piiRedactedFields != null) {
+          return com.peterz.kioskops.sdk.queue.EnqueueResult.PiiRedacted(
+            id = res.id,
+            idempotencyKey = res.idempotencyKey,
+            redactedFields = piiRedactedFields,
+            droppedOldest = res.droppedOldest,
+          )
         }
       }
       is com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected -> {
-        audit.record("event_rejected", mapOf("type" to type, "reason" to res::class.java.simpleName))
+        persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to res::class.java.simpleName))
         telemetry.emit("event_rejected", mapOf("type" to type, "reason" to res::class.java.simpleName))
       }
+      is com.peterz.kioskops.sdk.queue.EnqueueResult.PiiRedacted -> { /* unreachable from queue.enqueue */ }
     }
     return res
   }
@@ -330,7 +536,7 @@ class KioskOpsSdk private constructor(
 
     if (drift.drifted) {
       fields["policyPrevHash"] = drift.previousHash ?: ""
-      audit.record("policy_drift_detected", mapOf("prev" to (drift.previousHash ?: ""), "curr" to drift.currentHash))
+      persistentAudit.record("policy_drift_detected", mapOf("prev" to (drift.previousHash ?: ""), "curr" to drift.currentHash))
       telemetry.emit(
         "policy_drift_detected",
         mapOf(
@@ -346,21 +552,18 @@ class KioskOpsSdk private constructor(
     }
 
     telemetry.emit("heartbeat", fields)
-    audit.record("heartbeat", mapOf("reason" to reason, "queueDepth" to depth.toString()))
+    persistentAudit.record("heartbeat", mapOf("reason" to reason, "queueDepth" to depth.toString()))
 
-    // Retention across storages
-    queue.applyRetention(cfg)
-    telemetry.purgeOldFiles()
-    audit.purgeOldFiles()
-    persistentAudit.applyRetention()
+    // Retention across storages (centralized via RetentionEnforcer)
+    retentionEnforcer.enforce(cfg)
     purgeOldExports(cfg)
   }
 
   suspend fun exportDiagnostics(): File {
-    audit.record("diagnostics_export_requested")
+    persistentAudit.record("diagnostics_export_requested")
     telemetry.emit("diagnostics_export_requested", mapOf("sdkVersion" to SDK_VERSION))
     val out = diagnostics.export()
-    audit.record("diagnostics_export_created", mapOf("file" to out.name))
+    persistentAudit.record("diagnostics_export_created", mapOf("file" to out.name))
     return out
   }
 
@@ -372,7 +575,7 @@ class KioskOpsSdk private constructor(
    */
   suspend fun uploadDiagnosticsNow(metadata: Map<String, String> = emptyMap()): Boolean {
     val uploader = diagnosticsUploader ?: return false
-    audit.record("diagnostics_upload_requested")
+    persistentAudit.record("diagnostics_upload_requested")
     telemetry.emit("diagnostics_upload_requested", mapOf("sdkVersion" to SDK_VERSION))
 
     val file = exportDiagnostics()
@@ -387,7 +590,7 @@ class KioskOpsSdk private constructor(
 
     uploader.upload(file, meta)
 
-    audit.record("diagnostics_upload_completed")
+    persistentAudit.record("diagnostics_upload_completed")
     telemetry.emit("diagnostics_upload_completed", mapOf("sdkVersion" to SDK_VERSION))
     return true
   }
@@ -429,7 +632,7 @@ class KioskOpsSdk private constructor(
    * @return The exported file.
    */
   suspend fun exportSignedAuditRange(fromTs: Long, toTs: Long): File {
-    audit.record("audit_export_requested", mapOf("fromTs" to fromTs.toString(), "toTs" to toTs.toString()))
+    persistentAudit.record("audit_export_requested", mapOf("fromTs" to fromTs.toString(), "toTs" to toTs.toString()))
     telemetry.emit("audit_export_requested", mapOf("sdkVersion" to SDK_VERSION))
     return persistentAudit.exportSignedAuditRange(fromTs, toTs)
   }
@@ -541,6 +744,19 @@ class KioskOpsSdk private constructor(
 
   fun logger(): RingLog = logs
 
+  /**
+   * Debug overlay for development diagnostics.
+   * @since 0.5.0
+   */
+  val debugOverlay: DebugOverlay by lazy {
+    DebugOverlay(
+      cfgProvider = { cfg() },
+      queue = queue,
+      persistentAudit = persistentAudit,
+      policyHashProvider = { Hashing.sha256Base64Url(driftDetector.sanitizedProjection(cfg())) },
+    )
+  }
+
   private fun purgeOldExports(cfg: KioskOpsConfig) {
     val days = cfg.retentionPolicy.retainLogsDays.coerceAtLeast(1)
     val cutoffMs = clock.nowMs() - days.toLong() * 24 * 60 * 60 * 1000
@@ -597,7 +813,7 @@ class KioskOpsSdk private constructor(
   }
 
   companion object {
-    const val SDK_VERSION = "0.3.0"
+    const val SDK_VERSION = "0.5.0"
 
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 

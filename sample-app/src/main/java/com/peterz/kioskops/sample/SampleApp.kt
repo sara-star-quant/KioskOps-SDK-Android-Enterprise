@@ -8,8 +8,10 @@ import com.peterz.kioskops.sdk.compliance.RetentionPolicy
 import com.peterz.kioskops.sdk.compliance.SecurityPolicy
 import com.peterz.kioskops.sdk.compliance.TelemetryPolicy
 import com.peterz.kioskops.sdk.fleet.DiagnosticsUploader
+import com.peterz.kioskops.sdk.pii.PiiPolicy
 import com.peterz.kioskops.sdk.sync.SyncPolicy
 import com.peterz.kioskops.sdk.transport.AuthProvider
+import com.peterz.kioskops.sdk.validation.ValidationPolicy
 
 class SampleApp : Application() {
   override fun onCreate() {
@@ -24,7 +26,10 @@ class SampleApp : Application() {
       syncPolicy = SyncPolicy.disabledDefaults(),
       securityPolicy = SecurityPolicy.maximalistDefaults(),
       retentionPolicy = RetentionPolicy.maximalistDefaults(),
-      telemetryPolicy = TelemetryPolicy.maximalistDefaults()
+      telemetryPolicy = TelemetryPolicy.maximalistDefaults(),
+      // v0.5.0: Enable validation and PII redaction
+      validationPolicy = ValidationPolicy.permissiveDefaults(),
+      piiPolicy = PiiPolicy.redactDefaults(),
     )
 
     val sdk = KioskOpsSdk.init(
@@ -35,6 +40,17 @@ class SampleApp : Application() {
         builder.header("Authorization", "Bearer <token>")
       }
     )
+
+    // v0.5.0: Register event schemas for validation
+    sdk.schemaRegistry.register("SCAN", """
+      {
+        "type": "object",
+        "required": ["scan"],
+        "properties": {
+          "scan": {"type": "string", "minLength": 1}
+        }
+      }
+    """.trimIndent())
 
     // Demonstrates host-controlled diagnostics upload wiring.
     sdk.setDiagnosticsUploader(

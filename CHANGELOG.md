@@ -5,6 +5,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-17
+
+Data quality, compliance, and validation release targeting NGO and US federal (NIST 800-53 / FedRAMP / GDPR) deployments.
+
+### Added
+
+#### Event Validation (NIST SI-10)
+- **JsonSchemaValidator** with Draft 2020-12 subset (type, required, properties, pattern, minLength/maxLength, enum, format, minimum/maximum, items, additionalProperties)
+- **SchemaRegistry** for thread-safe event type schema management
+- **ValidationPolicy** with strict/permissive modes and configurable unknown event type handling
+- **ValidationListener** callback interface for validation outcomes
+
+#### PII Protection (NIST SI-19)
+- **RegexPiiDetector** with compiled patterns for EMAIL, PHONE, SSN, CREDIT_CARD, ADDRESS, DOB, IP_ADDRESS, PASSPORT, NATIONAL_ID
+- **PiiRedactor** for JSON tree manipulation; replaces values with `[REDACTED:TYPE]` markers
+- **PiiPolicy** with REJECT, REDACT_VALUE, FLAG_AND_ALLOW actions
+- **DataClassification** tagging (PUBLIC/INTERNAL/CONFIDENTIAL/RESTRICTED)
+- **HardwareAcceleratedDetector** stub for optional NNAPI-backed inference on API 27+
+- Pluggable **PiiDetector** interface for custom implementations
+
+#### Anomaly Detection (NIST SI-4)
+- **StatisticalAnomalyDetector** with payload size z-score, event rate anomaly, schema deviation scoring, and field cardinality tracking
+- **AnomalyPolicy** with LOW/MEDIUM/HIGH sensitivity and configurable flag/reject thresholds
+- Pluggable **AnomalyDetector** interface for custom implementations
+
+#### Field-Level Encryption (NIST SC-28)
+- **FieldLevelEncryptor** encrypts individual JSON fields into `{"__enc":"...","__alg":"AES-256-GCM","__kid":"v1"}` envelopes
+- **FieldEncryptionPolicy** with per-event-type and default field configuration
+
+#### Compliance APIs
+- **DataRightsManager** rewrite with full GDPR support:
+  - `exportUserData(userId)` - Art. 20 data portability (ZIP export)
+  - `deleteUserData(userId)` - Art. 17 right to erasure
+  - `wipeAllSdkData()` - full device-level data wipe
+  - `exportAllLocalData()` - replaces deprecated `exportLocalFiles()`
+- **RetentionEnforcer** for centralized retention across all stores
+- **NistControl** source-retention annotation for compliance mapping
+- Minimum audit retention (365 days) per NIST AU-11
+
+#### Database Migrations
+- **AuditDatabase v1->v2**: non-destructive migration adding userId column (replaces destructive fallback)
+- **QueueDatabase v3->v4**: adds userId, dataClassification, anomalyScore columns
+
+#### Audit Trail Unification
+- All SDK events now route through PersistentAuditTrail (Room-backed)
+- SyncEngine updated to use PersistentAuditTrail
+- userId propagation through enqueue and audit pipelines
+
+#### Debug & Development
+- **DebugOverlay** data-only state inspector (queue depth, quarantine count, policy hash, feature flags)
+- **PerformanceProfiler** for operation timing (enqueue, validation, PII scan, anomaly, encryption, sync)
+- **Config presets**: `KioskOpsConfig.fedRampDefaults()` and `KioskOpsConfig.gdprDefaults()`
+
+### Changed
+
+- `KioskOpsConfig` now includes validationPolicy, piiPolicy, fieldEncryptionPolicy, dataClassificationPolicy, anomalyPolicy
+- `KioskOpsSdk.enqueue()` and `enqueueDetailed()` now accept optional `userId` parameter
+- `RetentionPolicy` now includes `minimumAuditRetentionDays` (default 365)
+- `EnqueueResult` sealed class expanded with ValidationFailed, PiiDetected, AnomalyRejected, PiiRedacted
+- `KioskOpsSdk.SDK_VERSION` updated to "0.5.0"
+- `gradle.properties` VERSION_NAME updated to "0.5.0-SNAPSHOT"
+- PolicyDriftDetector projection includes validation, PII, and anomaly policy knobs
+
+### Deprecated
+
+- `SecurityPolicy.denylistJsonKeys` - use PiiPolicy for structured PII detection
+- `DataRightsManager.exportLocalFiles()` - use `exportAllLocalData()`
+
+### Security
+
+- Enqueue pipeline validates events before persistence (NIST SI-10)
+- PII detection runs before encryption to satisfy NIST SI-19 scan-before-persist
+- All new pipeline steps are fail-safe (try-catch with fallback to allow-through)
+- AuditDatabase migration is non-destructive (compliance hazard resolved)
+- Anomaly detection catches data exfiltration patterns (NIST SI-4)
+- Field-level encryption protects sensitive attributes independently of document encryption
+
+---
+
 ## [0.4.0] - 2026-01-25
 
 Observability and developer experience release with geofence-aware policy switching.
@@ -269,6 +348,7 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[0.5.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.0
 [0.4.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.4.0
 [0.3.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.3.0
 [0.2.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.2.0

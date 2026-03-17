@@ -9,7 +9,8 @@ import androidx.room.PrimaryKey
   indices = [
     Index(value = ["state"]),
     Index(value = ["createdAtEpochMs"]),
-    Index(value = ["idempotencyKey"], unique = true)
+    Index(value = ["idempotencyKey"], unique = true),
+    Index(value = ["userId"]),
   ]
 )
 data class QueueEventEntity(
@@ -41,6 +42,12 @@ data class QueueEventEntity(
   /** Set when [permanentFailure] is 1 to explain why the event was quarantined. */
   val quarantineReason: String? = null,
   val updatedAtEpochMs: Long,
+  /** @since 0.5.0 */
+  val userId: String? = null,
+  /** @since 0.5.0 */
+  val dataClassification: String? = null,
+  /** @since 0.5.0 */
+  val anomalyScore: Float? = null,
 )
 
 object QueueStates {
