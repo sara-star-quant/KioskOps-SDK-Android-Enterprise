@@ -19,8 +19,25 @@ sealed class EnqueueResult {
     data class DenylistedKey(val key: String) : Rejected()
     data class QueueFull(val reason: String) : Rejected()
     data class DuplicateIdempotency(val reason: String) : Rejected()
+    /** @since 0.5.0 */
+    data class ValidationFailed(val errors: List<String>) : Rejected()
+    /** @since 0.5.0 */
+    data class PiiDetected(val findings: List<String>) : Rejected()
+    /** @since 0.5.0 */
+    data class AnomalyRejected(val score: Float, val reasons: List<String>) : Rejected()
     data class Unknown(val reason: String) : Rejected()
   }
+
+  /**
+   * Event was accepted but PII was redacted from the payload.
+   * @since 0.5.0
+   */
+  data class PiiRedacted(
+    val id: String,
+    val idempotencyKey: String,
+    val redactedFields: List<String>,
+    val droppedOldest: Int = 0,
+  ) : EnqueueResult()
 
   val isAccepted: Boolean get() = this is Accepted
 }

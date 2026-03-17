@@ -58,14 +58,14 @@ Focus: Better debugging, monitoring, and integration options.
 - [x] Correlation IDs across SDK operations
 
 ### Debugging
-- [ ] SDK debug overlay for development builds (deferred to v0.5.0)
+- [x] SDK debug overlay for development builds (completed in v0.5.0)
 - [x] Event inspector (view queued events in debug builds)
 - [x] Network request/response logging (debug only)
 
 ### Metrics
 - [x] Prometheus-compatible metrics endpoint
 - [x] Custom metrics API for host app instrumentation
-- [ ] Performance profiling hooks (deferred to v0.5.0)
+- [x] Performance profiling hooks (completed in v0.5.0)
 
 ### Geofencing (from v0.3.0)
 - [x] Geofence-aware policy switching
@@ -74,24 +74,37 @@ Focus: Better debugging, monitoring, and integration options.
 
 ---
 
-## v0.5.0 — Data & Validation
+## v0.5.0 — Data & Validation [RELEASED]
 
 Focus: Stronger data quality and compliance tooling.
 
 ### Event Validation
-- [ ] JSON Schema-based event validation
-- [ ] Schema registry integration (optional)
-- [ ] Validation failure callbacks and metrics
+- [x] JSON Schema-based event validation (Draft 2020-12 subset)
+- [x] Schema registry integration (SchemaRegistry)
+- [x] Validation failure callbacks and metrics (ValidationListener)
 
 ### PII Protection
-- [ ] ML-assisted PII detection (on-device, opt-in)
-- [ ] Field-level encryption for sensitive attributes
-- [ ] Data classification tagging
+- [x] Regex-based PII detection (RegexPiiDetector) with pluggable interface
+- [x] ML-assisted PII detection stub (HardwareAcceleratedDetector, NNAPI API 27+)
+- [x] Field-level encryption for sensitive attributes (FieldLevelEncryptor)
+- [x] Data classification tagging (DataClassification)
+- [x] PII redaction with configurable actions (REJECT/REDACT/FLAG)
+
+### Anomaly Detection
+- [x] Statistical anomaly detector (payload size, event rate, schema deviation, cardinality)
+- [x] Pluggable AnomalyDetector interface
 
 ### Compliance APIs
-- [ ] GDPR data export API (`dataRights.exportUserData()`)
-- [ ] GDPR deletion API (`dataRights.deleteUserData()`)
-- [ ] Data retention policy enforcement with audit logging
+- [x] GDPR data export API (`dataRights.exportUserData()`)
+- [x] GDPR deletion API (`dataRights.deleteUserData()`)
+- [x] Full device wipe (`dataRights.wipeAllSdkData()`)
+- [x] Data retention policy enforcement with audit logging (RetentionEnforcer)
+- [x] NIST compliance annotations (@NistControl)
+
+### Debug & Development
+- [x] SDK debug overlay (DebugOverlay)
+- [x] Performance profiling hooks (PerformanceProfiler)
+- [x] Config presets (fedRampDefaults, gdprDefaults)
 
 ---
 

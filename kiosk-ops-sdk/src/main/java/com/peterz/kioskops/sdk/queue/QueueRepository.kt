@@ -17,7 +17,7 @@ class QueueRepository(
 ) {
   private val appContext = context.applicationContext
   private val db = Room.databaseBuilder(appContext, QueueDatabase::class.java, "kiosk_ops_queue.db")
-    .addMigrations(QueueDatabase.MIGRATION_2_3)
+    .addMigrations(QueueDatabase.MIGRATION_2_3, QueueDatabase.MIGRATION_3_4)
     // v1 was an internal pre-release snapshot; allow destructive migration from it.
     .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1)
     .build()
@@ -30,6 +30,9 @@ class QueueRepository(
     cfg: KioskOpsConfig,
     stableEventId: String? = null,
     idempotencyKeyOverride: String? = null,
+    userId: String? = null,
+    dataClassification: String? = null,
+    anomalyScore: Float? = null,
   ): EnqueueResult {
     // Step 2 guardrails
     val bytes = payloadJson.toByteArray(Charsets.UTF_8)
@@ -98,7 +101,10 @@ class QueueRepository(
             cfg = cfg,
             stableEventId = stableEventId,
             idempotencyKeyOverride = idempotencyKeyOverride,
-            droppedOldest = acceptedDroppedOldest
+            droppedOldest = acceptedDroppedOldest,
+            userId = userId,
+            dataClassification = dataClassification,
+            anomalyScore = anomalyScore,
           )
         }
       }
@@ -112,7 +118,10 @@ class QueueRepository(
       cfg = cfg,
       stableEventId = stableEventId,
       idempotencyKeyOverride = idempotencyKeyOverride,
-      droppedOldest = 0
+      droppedOldest = 0,
+      userId = userId,
+      dataClassification = dataClassification,
+      anomalyScore = anomalyScore,
     )
   }
 
@@ -125,6 +134,9 @@ class QueueRepository(
     stableEventId: String?,
     idempotencyKeyOverride: String?,
     droppedOldest: Int,
+    userId: String? = null,
+    dataClassification: String? = null,
+    anomalyScore: Float? = null,
   ): EnqueueResult {
     val id = Ids.uuid()
     val now = nowOverrideMs ?: System.currentTimeMillis()
@@ -154,7 +166,10 @@ class QueueRepository(
           permanentFailure = 0,
           lastError = null,
           quarantineReason = null,
-          updatedAtEpochMs = now
+          updatedAtEpochMs = now,
+          userId = userId,
+          dataClassification = dataClassification,
+          anomalyScore = anomalyScore,
         )
       )
       EnqueueResult.Accepted(id = id, idempotencyKey = idempotencyKey, droppedOldest = droppedOldest)
@@ -182,6 +197,15 @@ class QueueRepository(
 
   suspend fun quarantinedSummaries(limit: Int = 50): List<QuarantinedEventSummary> =
     dao.loadQuarantinedSummaries(limit).map { it.toSummary() }
+
+  /** @since 0.5.0 */
+  suspend fun deleteByUserId(userId: String): Int = dao.deleteByUserId(userId)
+
+  /** @since 0.5.0 */
+  suspend fun getByUserId(userId: String): List<QueueEventEntity> = dao.getByUserId(userId)
+
+  /** @since 0.5.0 */
+  suspend fun getAnomalous(threshold: Float): List<QueueEventEntity> = dao.getAnomalous(threshold)
 
   /**
    * Retention: delete SENT and FAILED events older than the configured window.

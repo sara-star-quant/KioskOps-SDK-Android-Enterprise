@@ -31,6 +31,7 @@ import androidx.room.PrimaryKey
     Index(value = ["ts"]),
     Index(value = ["name"]),
     Index(value = ["chainGeneration", "ts"]),
+    Index(value = ["userId"]),
   ]
 )
 data class AuditEventEntity(
@@ -44,6 +45,8 @@ data class AuditEventEntity(
   val signature: String? = null,
   val deviceAttestationBlob: ByteArray? = null,
   val chainGeneration: Int = 1,
+  /** @since 0.5.0 */
+  val userId: String? = null,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -56,7 +59,8 @@ data class AuditEventEntity(
       hash == other.hash &&
       signature == other.signature &&
       (deviceAttestationBlob?.contentEquals(other.deviceAttestationBlob) ?: (other.deviceAttestationBlob == null)) &&
-      chainGeneration == other.chainGeneration
+      chainGeneration == other.chainGeneration &&
+      userId == other.userId
   }
 
   override fun hashCode(): Int {
@@ -69,6 +73,7 @@ data class AuditEventEntity(
     result = 31 * result + (signature?.hashCode() ?: 0)
     result = 31 * result + (deviceAttestationBlob?.contentHashCode() ?: 0)
     result = 31 * result + chainGeneration
+    result = 31 * result + (userId?.hashCode() ?: 0)
     return result
   }
 }
