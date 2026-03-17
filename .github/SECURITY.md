@@ -11,7 +11,11 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 0.x.x   | Yes       |
+| >= 0.5.x | Yes      |
+| < 0.5.0  | No       |
+
+Versions prior to 0.5.0 are not supported and will not receive security fixes.
+Please upgrade to the latest release.
 
 ## Reporting a Vulnerability
 
