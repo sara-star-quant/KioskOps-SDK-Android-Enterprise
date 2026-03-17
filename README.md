@@ -126,7 +126,7 @@ See [Features](docs/FEATURES.md) for the complete list.
 
 ## License
 
-Business Source License 1.1 - Copyright (c) 2026 Petro Zverkov
+Business Source License 1.1 - Copyright (c) 2026 SARA STAR QUANT LLC
 
 Converts to Apache License 2.0 on January 1, 2032. See [LICENSE](LICENSE) for details.
 
