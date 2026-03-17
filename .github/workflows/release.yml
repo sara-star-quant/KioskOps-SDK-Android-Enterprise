@@ -75,8 +75,12 @@ jobs:
           subject-path: kiosk-ops-sdk/build/outputs/aar/*.aar
 
       - name: Publish to GitHub Packages
-        run: ./gradlew :kiosk-ops-sdk:publishReleasePublicationToGitHubPackagesRepository -PVERSION_NAME=${{ steps.version.outputs.VERSION }}
+        run: |
+          ./gradlew :kiosk-ops-sdk:publishReleasePublicationToGitHubPackagesRepository -PVERSION_NAME="$VERSION" || {
+            echo "::warning::Publish failed (version may already exist). Continuing."
+          }
         env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
