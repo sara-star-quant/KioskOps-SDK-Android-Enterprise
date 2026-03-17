@@ -813,7 +813,7 @@ class KioskOpsSdk private constructor(
   }
 
   companion object {
-    const val SDK_VERSION = "0.5.1"
+    const val SDK_VERSION = "0.5.2"
 
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 
