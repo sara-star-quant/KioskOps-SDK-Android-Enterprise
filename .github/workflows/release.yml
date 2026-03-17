@@ -14,6 +14,7 @@ jobs:
       contents: write
       packages: write
       id-token: write  # Required for Sigstore keyless signing
+      attestations: write  # Required for SLSA provenance attestations
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -48,6 +49,11 @@ jobs:
               --output-signature "${file}.sig" \
               --output-certificate "${file}.pem"
           done
+
+      - name: Attest build provenance (SLSA)
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: kiosk-ops-sdk/build/outputs/aar/*.aar
 
       - name: Publish to GitHub Packages
         run: ./gradlew :kiosk-ops-sdk:publishReleasePublicationToGitHubPackagesRepository -PVERSION_NAME=${{ steps.version.outputs.VERSION }}
