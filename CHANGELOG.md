@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-03-17
+
+Patch release with documentation and project governance updates.
+
+### Changed
+
+- Copyright holder updated to SARA STAR QUANT LLC across all source files and LICENSE
+- Added legal and security disclaimers to README, SECURITY.md, SECURITY_COMPLIANCE.md, FEATURES.md
+- Updated documentation with v0.5.0 feature coverage
+- Release workflow updated for immutable release compatibility
+- Branch protection enabled on main (PR reviews required, build status check)
+
+---
+
 ## [0.5.0] - 2026-03-17
 
 Data quality, compliance, and validation release targeting NGO and US federal (NIST 800-53 / FedRAMP / GDPR) deployments.
@@ -348,6 +362,7 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[0.5.1]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.1
 [0.5.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.0
 [0.4.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.4.0
 [0.3.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.3.0
