@@ -1,5 +1,10 @@
 # Features
 
+> References to regulatory frameworks and security standards are engineering
+> context only and do not constitute compliance claims, legal advice, or
+> certification. See [Security & Compliance](SECURITY_COMPLIANCE.md) for full
+> disclaimers.
+
 ## Security & Compliance
 
 | Feature | Default | Description |
@@ -34,6 +39,35 @@
 | Persistent audit | On | Room-backed, survives restarts |
 | Signed entries | Off | Device attestation signatures |
 | Integrity verification | Available | Chain verification API |
+
+### Data Quality & Validation (v0.5.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Event validation | Off | JSON Schema Draft 2020-12 subset |
+| PII detection | Off | Regex-based scanner; REJECT/REDACT/FLAG actions |
+| PII redaction | Off | Replaces values with `[REDACTED:TYPE]` markers |
+| Field encryption | Off | Per-field AES-256-GCM encryption envelopes |
+| Data classification | Off | PUBLIC/INTERNAL/CONFIDENTIAL/RESTRICTED tagging |
+| Anomaly detection | Off | Statistical payload, rate, schema, cardinality analysis |
+
+### Compliance APIs (v0.5.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| User data export | Available | GDPR Art. 20 data portability (ZIP) |
+| User data deletion | Available | GDPR Art. 17 right to erasure |
+| Full device wipe | Available | Removes all SDK data from device |
+| Retention enforcement | On | Centralized with 365-day minimum audit retention |
+| NIST annotations | Available | @NistControl source-retention markers |
+| Config presets | Available | fedRampDefaults(), gdprDefaults() |
+
+### Debug & Development (v0.5.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Debug overlay | Available | Data-only SDK state snapshot |
+| Performance profiler | Available | Operation timing for enqueue, validation, PII, etc. |
 
 See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
 
@@ -87,9 +121,12 @@ See [Server API Contract](openapi.yaml) for the ingest endpoint specification.
 - ~~**Audit chain is process-local**: Restarts from GENESIS on app initialization~~ **Fixed in v0.2.0**
 - **Lock-task mode**: Best-effort detection; not a full kiosk controller
 - **Request signing**: Client-side only; server verification is your responsibility
-- **Room migrations**: Provided for v2 -> v3 schema
+- **Room migrations**: Provided for Queue v2->v3->v4 and Audit v1->v2
 - **Key attestation**: Requires Android API 24+ for full functionality
 - **StrongBox**: Hardware support varies by device
+- **PII detection** (v0.5.0): Regex-based; not exhaustive; may produce false positives
+- **Anomaly detection** (v0.5.0): Requires baseline period; initial events will not trigger flags
+- **GDPR APIs** (v0.5.0): Cover SDK-local data only; host app and backend data is out of scope
 
 ## Roadmap
 

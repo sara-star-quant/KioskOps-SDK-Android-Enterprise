@@ -11,6 +11,14 @@
 
 An **enterprise-grade Android SDK** for **offline-first operational events**, **local diagnostics**, and **fleet-friendly observability**. Designed for kiosk, retail, logistics, and field service deployments with **Samsung Knox / Android Enterprise** integration.
 
+> **Disclaimer:** This SDK provides security controls and references regulatory frameworks
+> (NIST 800-53, FedRAMP, GDPR, ISO 27001) as engineering aids only. It is not legal,
+> compliance, or security advice. The authors assume no responsibility for regulatory
+> outcomes. You are solely responsible for evaluating whether this software meets your
+> organization's legal, security, and compliance requirements. Consult qualified
+> professionals before deploying in regulated environments. See [LICENSE](LICENSE) for
+> warranty and liability terms.
+
 ## Installation
 
 ### Option A: GitHub Packages (Recommended)
@@ -31,7 +39,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.peterz.kioskops:kiosk-ops-sdk:0.3.0")
+    implementation("com.peterz.kioskops:kiosk-ops-sdk:0.5.0")
 }
 ```
 
@@ -47,7 +55,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v0.3.0")
+    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v0.5.0")
 }
 ```
 
@@ -81,11 +89,15 @@ val accepted = KioskOpsSdk.get().enqueue("button_press", """{"screen": "home"}""
 
 ## Features
 
-- **Encryption at rest** - AES-256-GCM via Android Keystore
-- **PII filtering** - Automatic denylist for common PII keys
-- **Tamper-evident audit** - SHA-256 hash-chain
-- **Fleet operations** - Policy drift detection, device posture, diagnostics export
+- **Encryption at rest** - AES-256-GCM via Android Keystore; field-level encryption for sensitive attributes
+- **PII detection and redaction** - Regex-based scanner with REJECT/REDACT/FLAG actions; pluggable detector interface
+- **Event validation** - JSON Schema-based validation with strict/permissive modes
+- **Anomaly detection** - Statistical detector for payload size, event rate, schema deviation, and cardinality tracking
+- **Tamper-evident audit** - SHA-256 hash-chain, Room-backed, persistent across restarts
+- **GDPR compliance APIs** - User data export (Art. 20), deletion (Art. 17), full device wipe
+- **Fleet operations** - Policy drift detection, device posture, diagnostics export, remote config
 - **Network sync** - Opt-in batch sync with exponential backoff
+- **Config presets** - `fedRampDefaults()` and `gdprDefaults()` for common compliance profiles
 
 See [Features](docs/FEATURES.md) for the complete list.
 
@@ -117,3 +129,7 @@ See [Features](docs/FEATURES.md) for the complete list.
 Business Source License 1.1 - Copyright (c) 2026 Petro Zverkov
 
 Converts to Apache License 2.0 on January 1, 2032. See [LICENSE](LICENSE) for details.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+The authors and contributors shall not be held liable for any damages arising from
+the use of this software. See LICENSE for full terms.

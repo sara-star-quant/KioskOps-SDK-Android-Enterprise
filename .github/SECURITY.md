@@ -1,5 +1,12 @@
 # Security Policy
 
+> **Important:** This document describes the security features and vulnerability
+> reporting process for KioskOps SDK. It is not security advice, and the authors
+> make no guarantees about the fitness of this software for any particular
+> security requirement. You are responsible for your own security assessments,
+> penetration testing, and compliance validation. The authors accept no liability
+> for security incidents arising from the use of this software.
+
 ## Supported Versions
 
 | Version | Supported |
@@ -52,9 +59,13 @@ When using KioskOps SDK in production:
 
 1. **Keep the SDK updated** to the latest version
 2. **Enable all security defaults** (`SecurityPolicy.maximalistDefaults()`)
-3. **Never disable PII filtering** without understanding the implications
+3. **Enable PII detection** (`PiiPolicy.rejectDefaults()` or `PiiPolicy.redactDefaults()`)
 4. **Use certificate pinning** for network sync endpoints
 5. **Review audit trails** regularly for anomalies
+6. **Enable anomaly detection** for production workloads
+
+These recommendations are general guidance. They do not constitute a security
+audit or guarantee compliance with any regulation or standard.
 
 ## Security Features
 
@@ -81,3 +92,20 @@ KioskOps SDK includes enterprise security features:
 - Signed audit entries with device attestation
 - Audit chain integrity verification API
 - Optional HMAC request signing
+
+### Data Quality & Validation (v0.5.0)
+- Event validation with JSON Schema (Draft 2020-12 subset)
+- PII detection via regex patterns (EMAIL, PHONE, SSN, CREDIT_CARD, etc.)
+- PII redaction with configurable REJECT/REDACT/FLAG actions
+- Field-level encryption for sensitive JSON attributes
+- Statistical anomaly detection (payload size, event rate, schema deviation)
+- GDPR data export (Art. 20) and deletion (Art. 17) APIs
+- Data classification tagging (PUBLIC/INTERNAL/CONFIDENTIAL/RESTRICTED)
+
+### Disclaimer
+
+References to regulatory frameworks (NIST 800-53, FedRAMP, GDPR, ISO 27001,
+BSI) throughout the SDK documentation and source code are engineering references
+only. They do not imply certification, endorsement, or compliance. The SDK has
+not been independently audited or certified against any standard. Organizations
+must conduct their own assessments to determine regulatory applicability.
