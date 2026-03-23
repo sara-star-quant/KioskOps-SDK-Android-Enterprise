@@ -1,8 +1,8 @@
 [versions]
 agp = "8.10.1"
 ksp = "2.1.0-1.0.29"
-kotlin = "2.1.0"
-serializationJson = "1.8.0"
+kotlin = "2.3.20"
+serializationJson = "1.10.0"
 jazzer = "0.22.1"
 junit5 = "5.11.4"
 
