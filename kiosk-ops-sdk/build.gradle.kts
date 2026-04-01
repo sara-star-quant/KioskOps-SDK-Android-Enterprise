@@ -13,6 +13,18 @@ kotlin {
   jvmToolchain(17)
 }
 
+// Force patched jackson for Dokka's build-time classpath (GHSA-h46c-h94j-95f3)
+configurations.matching { it.name.startsWith("dokka") }.configureEach {
+  resolutionStrategy.eachDependency {
+    if (requested.group == "com.fasterxml.jackson.core") {
+      useVersion("2.15.4")
+    }
+    if (requested.group == "com.fasterxml.jackson.module") {
+      useVersion("2.15.4")
+    }
+  }
+}
+
 android {
   namespace = "com.peterz.kioskops.sdk"
   compileSdk = 36
