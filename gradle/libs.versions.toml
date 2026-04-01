@@ -8,8 +8,8 @@ junit5 = "5.14.3"
 
 coreKtx = "1.18.0"
 startup = "1.2.0"
-work = "2.11.1"
-room = "2.7.1"
+work = "2.11.2"
+room = "2.8.4"
 datastore = "1.2.1"
 
 okhttp = "5.3.2"
