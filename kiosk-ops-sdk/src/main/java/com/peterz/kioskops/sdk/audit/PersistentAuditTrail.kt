@@ -10,7 +10,6 @@ import com.peterz.kioskops.sdk.audit.db.AuditChainState
 import com.peterz.kioskops.sdk.audit.db.AuditDatabase
 import com.peterz.kioskops.sdk.audit.db.AuditEventEntity
 import com.peterz.kioskops.sdk.compliance.RetentionPolicy
-import com.peterz.kioskops.sdk.crypto.CryptoProvider
 import com.peterz.kioskops.sdk.util.Clock
 import com.peterz.kioskops.sdk.util.Hashing
 import kotlinx.coroutines.sync.Mutex
@@ -33,14 +32,12 @@ import java.util.zip.GZIPOutputStream
  * @property context Android context.
  * @property retentionProvider Provider for retention policy.
  * @property clock Time provider for testability.
- * @property crypto Optional crypto provider for encryption (currently unused, reserved for future).
  * @property attestationProvider Optional provider for signing audit entries.
  */
 class PersistentAuditTrail(
   private val context: Context,
   private val retentionProvider: () -> RetentionPolicy,
   private val clock: Clock = Clock.SYSTEM,
-  private val crypto: CryptoProvider? = null,
   private val attestationProvider: (() -> DeviceAttestationProvider)? = null,
 ) {
 

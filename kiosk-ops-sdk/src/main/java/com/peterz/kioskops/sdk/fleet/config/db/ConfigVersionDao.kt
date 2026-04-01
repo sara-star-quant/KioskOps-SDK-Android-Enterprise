@@ -5,6 +5,7 @@
 
 package com.peterz.kioskops.sdk.fleet.config.db
 
+import androidx.annotation.RestrictTo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -16,6 +17,7 @@ import androidx.room.Transaction
  *
  * Thread Safety: All methods are suspend functions for safe coroutine usage.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Dao
 interface ConfigVersionDao {
   /**

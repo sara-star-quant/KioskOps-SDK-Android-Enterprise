@@ -16,7 +16,6 @@ sealed class EnqueueResult {
 
   sealed class Rejected : EnqueueResult() {
     data class PayloadTooLarge(val bytes: Int, val max: Int) : Rejected()
-    data class DenylistedKey(val key: String) : Rejected()
     data class QueueFull(val reason: String) : Rejected()
     data class DuplicateIdempotency(val reason: String) : Rejected()
     /** @since 0.5.0 */

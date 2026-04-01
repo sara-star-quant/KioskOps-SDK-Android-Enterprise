@@ -70,7 +70,6 @@ class PolicyDriftDetector(context: Context) {
       append("encryptDiagnosticsBundle=").append(s.encryptDiagnosticsBundle).append('|')
       append("encryptExportedLogs=").append(s.encryptExportedLogs).append('|')
       append("maxEventPayloadBytes=").append(s.maxEventPayloadBytes).append('|')
-      append("allowRawPayloadStorage=").append(s.allowRawPayloadStorage).append('|')
 
       // retention knobs
       append("retainSentEventsDays=").append(r.retainSentEventsDays).append('|')

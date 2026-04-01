@@ -6,6 +6,7 @@
 package com.peterz.kioskops.sdk.fleet.config.db
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -16,6 +17,7 @@ import androidx.room.RoomDatabase
  * Security: Stored separately from event queue and audit databases
  * for isolation (defense in depth).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Database(
   entities = [ConfigVersionEntity::class],
   version = 1,

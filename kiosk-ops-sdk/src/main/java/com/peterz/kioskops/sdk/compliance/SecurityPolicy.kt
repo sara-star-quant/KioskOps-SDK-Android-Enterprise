@@ -9,9 +9,6 @@ data class SecurityPolicy(
   val encryptDiagnosticsBundle: Boolean,
   val encryptExportedLogs: Boolean,
   val maxEventPayloadBytes: Int,
-  @Deprecated("Use PiiPolicy for structured PII detection. Kept for backward compatibility.", replaceWith = ReplaceWith("PiiPolicy"))
-  val denylistJsonKeys: Set<String>,
-  val allowRawPayloadStorage: Boolean,
   /** Key rotation policy for encryption keys. */
   val keyRotationPolicy: KeyRotationPolicy = KeyRotationPolicy.default(),
   /** Key derivation parameters for password-based operations. */
@@ -28,8 +25,6 @@ data class SecurityPolicy(
       encryptDiagnosticsBundle = true,
       encryptExportedLogs = true,
       maxEventPayloadBytes = 64 * 1024,
-      denylistJsonKeys = setOf("email", "phone", "address", "name", "ssn", "id_number"),
-      allowRawPayloadStorage = false,
       keyRotationPolicy = KeyRotationPolicy.default(),
       keyDerivationConfig = KeyDerivationConfig.default(),
       useRoomBackedAudit = true,
@@ -46,8 +41,6 @@ data class SecurityPolicy(
       encryptDiagnosticsBundle = true,
       encryptExportedLogs = true,
       maxEventPayloadBytes = 64 * 1024,
-      denylistJsonKeys = setOf("email", "phone", "address", "name", "ssn", "id_number", "dob", "credit_card"),
-      allowRawPayloadStorage = false,
       keyRotationPolicy = KeyRotationPolicy.strict(),
       keyDerivationConfig = KeyDerivationConfig.highSecurity(),
       useRoomBackedAudit = true,

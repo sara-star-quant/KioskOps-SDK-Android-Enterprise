@@ -1,10 +1,12 @@
 package com.peterz.kioskops.sdk.queue
 
+import androidx.annotation.RestrictTo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Dao
 interface QueueDao {
   @Insert(onConflict = OnConflictStrategy.ABORT)
@@ -102,6 +104,7 @@ interface QueueDao {
 }
 
 /** Lightweight projection to avoid pulling encrypted payload blobs. */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class QuarantinedEventRow(
   val id: String,
   val type: String,
