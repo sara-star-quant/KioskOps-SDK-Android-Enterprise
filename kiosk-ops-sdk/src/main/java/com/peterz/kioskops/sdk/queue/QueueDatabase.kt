@@ -1,10 +1,12 @@
 package com.peterz.kioskops.sdk.queue
 
+import androidx.annotation.RestrictTo
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Database(
   entities = [QueueEventEntity::class],
   version = 4,

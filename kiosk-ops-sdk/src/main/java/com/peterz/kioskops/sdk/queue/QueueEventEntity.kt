@@ -1,9 +1,11 @@
 package com.peterz.kioskops.sdk.queue
 
+import androidx.annotation.RestrictTo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Entity(
   tableName = "queue_events",
   indices = [
@@ -50,6 +52,7 @@ data class QueueEventEntity(
   val anomalyScore: Float? = null,
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 object QueueStates {
   const val PENDING = "PENDING"
   const val SENDING = "SENDING"

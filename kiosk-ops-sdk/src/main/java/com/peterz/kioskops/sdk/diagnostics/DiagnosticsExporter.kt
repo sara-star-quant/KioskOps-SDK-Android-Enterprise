@@ -74,7 +74,7 @@ class DiagnosticsExporter(
       )
 
       // Note: telemetry and audit share the same encryption setting (encryptTelemetryAtRest).
-      // This is intentional—they are both local observability stores with the same threat model.
+      // This is intentional - they are both local observability stores with the same threat model.
       val observabilityEncrypted = cfg.securityPolicy.encryptTelemetryAtRest
       val manifest = mapOf(
         "createdAtEpochMs" to ts.toString(),

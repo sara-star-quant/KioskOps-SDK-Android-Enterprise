@@ -1,6 +1,7 @@
 package com.peterz.kioskops.sdk.work
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.peterz.kioskops.sdk.KioskOpsSdk
@@ -11,6 +12,7 @@ import com.peterz.kioskops.sdk.KioskOpsSdk
  * - applies retention locally
  * - never uploads data (host app controls data residency & transfer)
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class KioskOpsSyncWorker(
   appContext: Context,
   params: WorkerParameters

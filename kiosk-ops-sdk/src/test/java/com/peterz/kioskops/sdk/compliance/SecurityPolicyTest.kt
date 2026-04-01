@@ -25,7 +25,6 @@ class SecurityPolicyTest {
     assertThat(policy.encryptDiagnosticsBundle).isTrue()
     assertThat(policy.encryptExportedLogs).isTrue()
     assertThat(policy.maxEventPayloadBytes).isEqualTo(64 * 1024)
-    assertThat(policy.allowRawPayloadStorage).isFalse()
 
     // New v0.2.0 fields
     assertThat(policy.keyRotationPolicy).isNotNull()
@@ -42,7 +41,6 @@ class SecurityPolicyTest {
     assertThat(policy.keyRotationPolicy.maxKeyAgeDays).isEqualTo(90)
     assertThat(policy.keyRotationPolicy.autoRotateEnabled).isTrue()
     assertThat(policy.keyDerivationConfig.iterationCount).isEqualTo(600_000)
-    assertThat(policy.denylistJsonKeys).contains("credit_card")
   }
 
   @Test

@@ -189,7 +189,6 @@ class KioskOpsSdk private constructor(
       context = appContext,
       retentionProvider = { cfg().retentionPolicy },
       clock = clock,
-      crypto = telemetryCrypto,
       attestationProvider = if (cfg().securityPolicy.signAuditEntries) {
         { KeystoreAttestationProvider(appContext) }
       } else {
@@ -813,7 +812,7 @@ class KioskOpsSdk private constructor(
   }
 
   companion object {
-    const val SDK_VERSION = "0.5.3"
+    val SDK_VERSION: String = BuildConfig.SDK_VERSION
 
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 
@@ -826,6 +825,9 @@ class KioskOpsSdk private constructor(
       transportOverride: Transport? = null,
       okHttpClientOverride: OkHttpClient? = null,
     ): KioskOpsSdk {
+      if (INSTANCE != null) {
+        throw KioskOpsAlreadyInitializedException()
+      }
       val appCtx = context.applicationContext
       val created = KioskOpsSdk(
         appCtx,
@@ -844,8 +846,13 @@ class KioskOpsSdk private constructor(
       return created
     }
 
-    fun get(): KioskOpsSdk = INSTANCE ?: throw IllegalStateException("KioskOpsSdk not initialized")
+    fun get(): KioskOpsSdk = INSTANCE ?: throw KioskOpsNotInitializedException()
 
     fun getOrNull(): KioskOpsSdk? = INSTANCE
+
+    @androidx.annotation.VisibleForTesting
+    internal fun resetForTesting() {
+      INSTANCE = null
+    }
   }
 }

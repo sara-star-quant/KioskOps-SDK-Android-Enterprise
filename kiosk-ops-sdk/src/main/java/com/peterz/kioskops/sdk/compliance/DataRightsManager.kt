@@ -224,11 +224,5 @@ class DataRightsManager(
     }
   }
 
-  @Deprecated("Use exportAllLocalData() instead.", replaceWith = ReplaceWith("exportAllLocalData()"))
-  fun exportLocalFiles(): List<File> = buildList {
-    addAll(telemetry.listFiles())
-    addAll(audit.listFiles())
-  }
-
   fun resetSdkDeviceId(): String = DeviceId.reset(context)
 }

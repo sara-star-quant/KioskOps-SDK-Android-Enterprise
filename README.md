@@ -39,7 +39,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.peterz.kioskops:kiosk-ops-sdk:0.5.3")
+    implementation("com.peterz.kioskops:kiosk-ops-sdk:0.6.0")
 }
 ```
 
@@ -55,7 +55,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v0.5.3")
+    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v0.6.0")
 }
 ```
 

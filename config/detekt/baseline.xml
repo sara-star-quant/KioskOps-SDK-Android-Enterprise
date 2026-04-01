@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:OkHttpTransport.kt$OkHttpTransport$code == 429 || code >= 500 || code == 401 || code == 403</ID>
+    <ID>ComplexCondition:StatisticalAnomalyDetector.kt$StatisticalAnomalyDetector$count > CARDINALITY_THRESHOLD &amp;&amp; key.lowercase().let { it.contains("id") || it.contains("token") || it.contains("key") || it.contains("code") }</ID>
+    <ID>CyclomaticComplexMethod:DataRightsManager.kt$DataRightsManager$suspend fun exportUserData(userId: String): DataExportResult</ID>
+    <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun matchesType(element: JsonElement, expected: String): Boolean</ID>
+    <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
+    <ID>CyclomaticComplexMethod:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>CyclomaticComplexMethod:StatisticalAnomalyDetector.kt$StatisticalAnomalyDetector$override fun analyze(eventType: String, payloadJson: String): AnomalyResult</ID>
+    <ID>CyclomaticComplexMethod:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
+    <ID>EmptyFunctionBlock:GeofenceTransitionListener.kt$GeofenceTransitionAdapter${}</ID>
+    <ID>EmptyFunctionBlock:Logger.kt$NoOpLogger${}</ID>
+    <ID>EmptyFunctionBlock:Meter.kt$NoOpCounter${}</ID>
+    <ID>EmptyFunctionBlock:Meter.kt$NoOpGauge${}</ID>
+    <ID>EmptyFunctionBlock:Meter.kt$NoOpHistogram${}</ID>
+    <ID>EmptyFunctionBlock:Span.kt$NoOpSpan${}</ID>
+    <ID>EmptyFunctionBlock:SyncEngineTest.kt$SyncEngineTest.&lt;no name provided>${ }</ID>
+    <ID>EmptyFunctionBlock:SyncEngineTest.kt$SyncEngineTest.&lt;no name provided>${}</ID>
+    <ID>ImplicitDefaultLocale:SpanContext.kt$SpanContext$String.format("%02x", traceFlags)</ID>
+    <ID>LongMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
+    <ID>LongMethod:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>LongMethod:RemoteConfigManager.kt$RemoteConfigManager$suspend fun processConfigBundle( bundle: Bundle, source: ConfigSource, ): ConfigUpdateResult</ID>
+    <ID>LongMethod:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
+    <ID>LongParameterList:QueueRepository.kt$QueueRepository$( type: String, payloadJson: String, bytes: ByteArray, nowOverrideMs: Long?, cfg: KioskOpsConfig, stableEventId: String?, idempotencyKeyOverride: String?, droppedOldest: Int, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:SyncEngine.kt$SyncEngine$for</ID>
+    <ID>MatchingDeclarationName:NistCompliance.kt$NistControl</ID>
+    <ID>MaxLineLength:ManagedConfigReader.kt$ManagedConfigReader$val includeDeviceId = if (bundle.containsKey(Keys.TELEMETRY_INCLUDE_DEVICE_ID)) bundle.getBoolean(Keys.TELEMETRY_INCLUDE_DEVICE_ID) else defaults.telemetryPolicy.includeDeviceId</ID>
+    <ID>MaxLineLength:QueueRepository.kt$QueueRepository$val reason = "Queue limits exceeded count=$beforeCount/${limits.maxActiveEvents} bytes=${beforeBytes}+${newBytes}/${limits.maxActiveBytes}"</ID>
+    <ID>MaxLineLength:RegexPiiDetector.kt$RegexPiiDetector.Companion$PatternEntry(Regex("\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b"), PiiType.IP_ADDRESS, 0.85f)</ID>
+    <ID>MaxLineLength:SyncEngineTest.kt$SyncEngineTest$val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = com.peterz.kioskops.sdk.util.Clock.SYSTEM)</ID>
+    <ID>NestedBlockDepth:DataRightsManager.kt$DataRightsManager$suspend fun exportAllLocalData(): DataExportResult</ID>
+    <ID>NestedBlockDepth:DataRightsManager.kt$DataRightsManager$suspend fun exportUserData(userId: String): DataExportResult</ID>
+    <ID>NestedBlockDepth:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
+    <ID>NestedBlockDepth:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>NestedBlockDepth:QueueRepository.kt$QueueRepository$suspend fun enqueue( type: String, payloadJson: String, cfg: KioskOpsConfig, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, ): EnqueueResult</ID>
+    <ID>NestedBlockDepth:StatisticalAnomalyDetector.kt$StatisticalAnomalyDetector$override fun analyze(eventType: String, payloadJson: String): AnomalyResult</ID>
+    <ID>ProtectedMemberInFinalClass:GeofenceManager.kt$GeofenceManager$protected fun registerGeofences(regions: List&lt;GeofenceRegion>)</ID>
+    <ID>ProtectedMemberInFinalClass:GeofenceManager.kt$GeofenceManager$protected fun unregisterGeofences()</ID>
+    <ID>ReturnCount:BatteryCollector.kt$BatteryCollector$private fun computeTimeRemaining(batteryManager: BatteryManager?, status: Int): Int?</ID>
+    <ID>ReturnCount:CertificatePinningInterceptor.kt$CertificatePinningInterceptor$private fun matchesHostname(pattern: String, hostname: String): Boolean</ID>
+    <ID>ReturnCount:DiagnosticsSchedulerWorker.kt$DiagnosticsSchedulerWorker$override suspend fun doWork(): Result</ID>
+    <ID>ReturnCount:FieldLevelEncryptor.kt$FieldLevelEncryptor$fun decryptFields(payloadJson: String): String</ID>
+    <ID>ReturnCount:FieldLevelEncryptor.kt$FieldLevelEncryptor$fun encryptFields(payloadJson: String, fieldsToEncrypt: Set&lt;String>): String</ID>
+    <ID>ReturnCount:GeofenceManager.kt$GeofenceManager$@RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION) suspend fun startMonitoring(): GeofenceStartResult</ID>
+    <ID>ReturnCount:KeyAttestationReporter.kt$KeyAttestationReporter$fun generateAttestationChallengeResponse( alias: String, challenge: ByteArray, ): AttestationResponse?</ID>
+    <ID>ReturnCount:KeystoreAttestationProvider.kt$KeystoreAttestationProvider$override fun getAttestationBlob(): ByteArray?</ID>
+    <ID>ReturnCount:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>ReturnCount:KioskOpsTracer.kt$KioskOpsSpanBuilder$override fun startSpan(): Span</ID>
+    <ID>ReturnCount:KioskOpsTracer.kt$KioskOpsSpanBuilder$private fun getContextFromCorrelation(): SpanContext?</ID>
+    <ID>ReturnCount:PersistentAuditTrail.kt$PersistentAuditTrail$suspend fun verifyChainIntegrity( fromTs: Long? = null, toTs: Long? = null, ): ChainVerificationResult</ID>
+    <ID>ReturnCount:QueueRepository.kt$QueueRepository$suspend fun enqueue( type: String, payloadJson: String, cfg: KioskOpsConfig, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, ): EnqueueResult</ID>
+    <ID>ReturnCount:RemoteConfigManager.kt$RemoteConfigManager$private fun determineAbVariant(bundle: Bundle, policy: RemoteConfigPolicy): String?</ID>
+    <ID>ReturnCount:RemoteConfigManager.kt$RemoteConfigManager$private fun verifySignature( bundle: Bundle, signature: String?, publicKey: String?, ): Boolean</ID>
+    <ID>ReturnCount:SpanContext.kt$SpanContext.Companion$fun fromTraceparent(traceparent: String): SpanContext?</ID>
+    <ID>ReturnCount:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
+    <ID>ReturnCount:VersionedCryptoProvider.kt$VersionedCryptoProvider$fun shouldRotate(): Boolean</ID>
+    <ID>SwallowedException:KeyAttestationReporter.kt$KeyAttestationReporter$e: Exception</ID>
+    <ID>SwallowedException:KeyMetadataStore.kt$KeyMetadataStore$e: Exception</ID>
+    <ID>SwallowedException:KeystoreAttestationProvider.kt$KeystoreAttestationProvider$e: Exception</ID>
+    <ID>SwallowedException:KeystoreAttestationProvider.kt$KeystoreAttestationProvider.Companion$e: Exception</ID>
+    <ID>SwallowedException:MtlsClientBuilder.kt$MtlsClientBuilder$e: Exception</ID>
+    <ID>SwallowedException:VersionedCryptoProvider.kt$VersionedCryptoProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CorrelatedOperation.kt$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:DataRightsManager.kt$DataRightsManager$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DiagnosticsSchedulerWorker.kt$DiagnosticsSchedulerWorker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GeofenceManager.kt$GeofenceManager$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:JsonSchemaValidator.kt$JsonSchemaValidator$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:KeyAttestationReporter.kt$KeyAttestationReporter$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:KeyMetadataStore.kt$KeyMetadataStore$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:KeystoreAttestationProvider.kt$KeystoreAttestationProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:KeystoreAttestationProvider.kt$KeystoreAttestationProvider.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MtlsClientBuilder.kt$MtlsClientBuilder$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:NetworkLoggingInterceptor.kt$NetworkLoggingInterceptor$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:OkHttpTransport.kt$OkHttpTransport$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:QueueRepository.kt$QueueRepository$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:StructuredLogger.kt$StructuredLogger$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:VersionedCryptoProvider.kt$VersionedCryptoProvider$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:CorrelatedOperationTest.kt$CorrelatedOperationTest$throw RuntimeException("Tracked failure")</ID>
+    <ID>UnusedParameter:CertificateTransparencyValidator.kt$CertificateTransparencyValidator$hostname: String</ID>
+    <ID>UnusedParameter:CorrelatedOperation.kt$attributes: Map&lt;String, String> = emptyMap()</ID>
+    <ID>UnusedParameter:KeystoreAttestationProvider.kt$KeystoreAttestationProvider.Companion$context: Context</ID>
+    <ID>UnusedParameter:RemoteConfigManager.kt$RemoteConfigManager$policy: RemoteConfigPolicy</ID>
+    <ID>UnusedPrivateProperty:ChainVerificationResultTest.kt$ChainVerificationResultTest$val broken: ChainVerificationResult = ChainVerificationResult.Broken("id", 0, "a", "b")</ID>
+    <ID>UnusedPrivateProperty:ChainVerificationResultTest.kt$ChainVerificationResultTest$val empty: ChainVerificationResult = ChainVerificationResult.EmptyRange(0, 1)</ID>
+    <ID>UnusedPrivateProperty:ChainVerificationResultTest.kt$ChainVerificationResultTest$val hashMismatch: ChainVerificationResult = ChainVerificationResult.HashMismatch("id", 0)</ID>
+    <ID>UnusedPrivateProperty:ChainVerificationResultTest.kt$ChainVerificationResultTest$val signatureInvalid: ChainVerificationResult = ChainVerificationResult.SignatureInvalid("id", 0, "reason")</ID>
+    <ID>UnusedPrivateProperty:HardwareAcceleratedDetector.kt$HardwareAcceleratedDetector$private val mlTimeoutMs: Long = 200L</ID>
+    <ID>UnusedPrivateProperty:HardwareAcceleratedDetector.kt$HardwareAcceleratedDetector$private val modelHash: String? = null</ID>
+    <ID>UnusedPrivateProperty:HardwareAcceleratedDetector.kt$HardwareAcceleratedDetector$private val nnapiAvailable: Boolean by lazy { Build.VERSION.SDK_INT >= 27 &amp;&amp; checkNnapiAvailability() }</ID>
+    <ID>UnusedPrivateProperty:KeyAttestationReporter.kt$KeyAttestationReporter$private val context: Context</ID>
+    <ID>UnusedPrivateProperty:KeystoreAttestationProvider.kt$KeystoreAttestationProvider$private val context: Context</ID>
+    <ID>UnusedPrivateProperty:KioskOpsTracer.kt$KioskOpsTracer$private val instrumentationVersion: String?</ID>
+    <ID>UseCheckOrError:VersionedCryptoProvider.kt$VersionedCryptoProvider$throw IllegalStateException("Key version $version not available")</ID>
+  </CurrentIssues>
+</SmellBaseline>

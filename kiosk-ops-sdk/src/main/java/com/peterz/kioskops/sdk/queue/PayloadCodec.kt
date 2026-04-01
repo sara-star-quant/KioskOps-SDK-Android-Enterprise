@@ -1,7 +1,9 @@
 package com.peterz.kioskops.sdk.queue
 
+import androidx.annotation.RestrictTo
 import com.peterz.kioskops.sdk.crypto.CryptoProvider
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 object PayloadCodec {
   const val ENCODING_PLAIN_UTF8 = "plain_utf8"
   const val ENCODING_AESGCM_V1 = "aesgcm_v1"

@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-04-01
+
+API freeze readiness release; hardening the API surface, adding quality tooling, removing deprecated APIs, and implementing real config signature verification in preparation for v1.0.
+
+### Added
+
+- Binary Compatibility Validator (BCV) enforcing API stability via `apiCheck` in CI
+- Dokka HTML API documentation generation (`dokkaHtml` task)
+- Detekt static analysis with baseline configuration
+- JaCoCo code coverage reporting (report-only, no enforcement threshold)
+- `@RestrictTo(LIBRARY)` annotations on internal Room DAOs, database classes, entities, and WorkManager workers
+- Real ECDSA P-256 signature verification for remote config bundles (replaces placeholder stub)
+
+### Changed
+
+- Consumer ProGuard rules refined from blanket keep to categorized rules per API surface, Room, serialization, and WorkManager
+- CI pipeline expanded with binary compatibility check, Detekt, JaCoCo coverage, and Dokka doc generation steps
+- androidx-core-ktx 1.17.0 -> 1.18.0
+- androidx-work 2.11.0 -> 2.11.1
+- androidx-datastore 1.2.0 -> 1.2.1
+- JUnit 5 5.11.4 -> 5.14.3
+
+### Removed
+
+- `SecurityPolicy.denylistJsonKeys` and `SecurityPolicy.allowRawPayloadStorage` - use `PiiPolicy` for structured PII detection instead
+- `EnqueueResult.Rejected.DenylistedKey` - PII detection is now handled by `PiiPolicy` in the enqueue pipeline
+- `DataRightsManager.exportLocalFiles()` - use `exportAllLocalData()` instead
+- Unused `crypto` parameter from `PersistentAuditTrail` constructor
+
+### Fixed
+
+- `KioskOpsSdk.init()` now throws `KioskOpsAlreadyInitializedException` if called twice (previously silently overwrote the first instance, losing in-memory state)
+- `KioskOpsSdk.get()` now throws `KioskOpsNotInitializedException` instead of generic `IllegalStateException`
+- `QueueRepository` now distinguishes disk-full (`SQLiteFullException` -> `QueueFull`) from duplicate idempotency key (`SQLiteConstraintException` -> `DuplicateIdempotency`) and unexpected errors (`Unknown`)
+
+### Documentation
+
+- Added `MIGRATION.md` with code examples for all v0.5.x to v0.6.0 breaking changes
+- Updated all docs to replace stale "denylist" terminology with `PiiPolicy` references
+- Updated CONTRIBUTING.md with new quality tool tasks (Detekt, apiCheck, Dokka, JaCoCo)
+
+### Build
+
+- Switched from JaCoCo to Kover for accurate Kotlin code coverage (JaCoCo underreported by ~40% due to coroutine bytecode)
+- `KioskOpsSdk.SDK_VERSION` now reads from `BuildConfig` (injected from `gradle.properties`); version is defined in one place only
+- Added `androidx.work:work-testing` for WorkManager test initialization
+- Test coverage: 52% line coverage (up from 47% with new tests for metrics, tracing, profiler, init, signature verification, enqueue errors)
+
+### Security
+
+- Internal database classes and WorkManager workers annotated as library-internal to discourage direct consumer access
+- Consumer ProGuard rules now explicitly document what is preserved and why
+- Remote config signature verification now uses real ECDSA P-256 cryptographic verification (BSI APP.4.4.A3)
+
+---
+
 ## [0.5.3] - 2026-03-17
 
 Patch release with documentation, project governance, and release workflow updates.
@@ -364,6 +420,7 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[0.6.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.6.0
 [0.5.3]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.3
 [0.5.2]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.2
 [0.5.1]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.1

@@ -21,7 +21,7 @@ The guiding principle is: **local-first by default**, with **explicit opt-in** f
 ## Defaults (maximalist presets)
 
 ### Data minimization
-- **Queue guardrails**: caps payload size and blocks common accidental PII keys (denylist)
+- **Queue guardrails**: caps payload size; PII detection via `PiiPolicy` (regex-based with configurable actions: REJECT, REDACT, or FLAG)
 - **Telemetry allow-list**: only keys in `TelemetryPolicy.allowedKeys` are persisted
 - **No payloads in telemetry/audit**: the SDK never emits queue payload contents into telemetry or audit records
 
