@@ -162,6 +162,7 @@ Focus: Java interop, error handling, observability, API contract finalization, f
 - [ ] Document sync ordering limitation (batches may arrive out of order under retry)
 
 ### Build Infrastructure
+- [ ] Dokka V1 -> V2 migration (eliminates vulnerable jackson-core, netty, woodstox transitive dependencies from build classpath)
 - [ ] Gradle Daemon toolchain (auto-detect/download JDK, align CLI and IDE, single Daemon)
 
 ### Supply Chain & Compliance
