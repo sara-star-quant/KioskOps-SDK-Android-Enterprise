@@ -13,6 +13,19 @@ kotlin {
   jvmToolchain(17)
 }
 
+// Force patched jackson for Dokka V1 build classpath (GHSA-h46c-h94j-95f3, GHSA-wf8f-6423-gfxg)
+// Remove after Dokka V2 migration in v0.7.0
+configurations.matching { it.name.startsWith("dokka") }.configureEach {
+  resolutionStrategy.eachDependency {
+    if (requested.group == "com.fasterxml.jackson.core") {
+      useVersion("2.15.4")
+    }
+    if (requested.group == "com.fasterxml.jackson.module") {
+      useVersion("2.15.4")
+    }
+  }
+}
+
 // Force patched jackson for Dokka's build-time classpath (GHSA-h46c-h94j-95f3)
 configurations.matching { it.name.startsWith("dokka") }.configureEach {
   resolutionStrategy.eachDependency {
