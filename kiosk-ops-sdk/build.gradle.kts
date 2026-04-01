@@ -3,6 +3,9 @@ plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
+  alias(libs.plugins.dokka)
+  alias(libs.plugins.detekt)
+  alias(libs.plugins.kover)
   `maven-publish`
 }
 
@@ -18,6 +21,11 @@ android {
     minSdk = 26
     consumerProguardFiles("consumer-rules.pro")
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    buildConfigField("String", "SDK_VERSION", "\"${findProperty("VERSION_NAME") ?: "0.0.0-SNAPSHOT"}\"")
+  }
+
+  buildFeatures {
+    buildConfig = true
   }
 
   buildTypes {
@@ -75,6 +83,12 @@ ksp {
   arg("room.expandProjection", "true")
 }
 
+detekt {
+  buildUponDefaultConfig = true
+  config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+  baseline = file("$rootDir/config/detekt/baseline.xml")
+}
+
 dependencies {
   api(libs.androidx.core.ktx)
 
@@ -97,6 +111,7 @@ dependencies {
   testImplementation(libs.androidx.test.core)
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.androidx.work.testing)
 
   // Fuzzing (JUnit 5)
   testImplementation(libs.junit5.api)

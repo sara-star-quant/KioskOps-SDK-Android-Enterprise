@@ -10,7 +10,7 @@
 | Feature | Default | Description |
 |---------|---------|-------------|
 | Encryption at rest | On | AES-256-GCM via Android Keystore |
-| PII denylist | On | Blocks common PII keys (email, phone, ssn, etc.) |
+| PII detection | On | Detects and handles PII via `PiiPolicy` (email, phone, ssn, credit card, address, DOB, IP, passport, national ID) with configurable actions (REJECT, REDACT, FLAG) |
 | Payload size limit | 64 KB | Configurable per deployment |
 | Queue pressure control | 10K events / 50 MB | DROP_OLDEST, DROP_NEWEST, or BLOCK |
 | Tamper-evident audit | On | Hash-chain with SHA-256, Room-backed |

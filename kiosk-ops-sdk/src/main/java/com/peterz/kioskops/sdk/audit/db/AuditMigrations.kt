@@ -5,6 +5,7 @@
 
 package com.peterz.kioskops.sdk.audit.db
 
+import androidx.annotation.RestrictTo
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
@@ -14,6 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * NIST AU-11: Audit records must not be lost during schema evolution.
  * All migrations use ALTER TABLE (non-destructive) to preserve existing data.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 object AuditMigrations {
 
   /** v1 -> v2: Add userId column for GDPR data subject tracking. */

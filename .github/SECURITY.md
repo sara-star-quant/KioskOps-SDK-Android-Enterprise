@@ -77,7 +77,7 @@ KioskOps SDK includes enterprise security features:
 
 ### Data Protection
 - AES-256-GCM encryption at rest (Android Keystore backed)
-- PII denylist filtering
+- PII detection and redaction via PiiPolicy
 - Payload size limits and queue pressure controls
 
 ### Transport Security (v0.2.0)

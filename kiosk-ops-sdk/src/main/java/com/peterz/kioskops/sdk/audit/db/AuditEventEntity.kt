@@ -5,6 +5,7 @@
 
 package com.peterz.kioskops.sdk.audit.db
 
+import androidx.annotation.RestrictTo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -25,6 +26,7 @@ import androidx.room.PrimaryKey
  * @property deviceAttestationBlob Optional attestation certificate chain.
  * @property chainGeneration Chain generation number (increments on restart if file-based).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Entity(
   tableName = "audit_events",
   indices = [
@@ -84,6 +86,7 @@ data class AuditEventEntity(
  * This is stored separately to enable atomic updates and
  * quick access to the last hash for chaining.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Entity(tableName = "audit_chain_state")
 data class AuditChainState(
   @PrimaryKey

@@ -1,0 +1,23 @@
+complexity:
+  LongMethod:
+    threshold: 80
+  LongParameterList:
+    functionThreshold: 10
+    constructorThreshold: 15
+  TooManyFunctions:
+    thresholdInClasses: 30
+    thresholdInFiles: 40
+    thresholdInObjects: 20
+    thresholdInInterfaces: 20
+
+style:
+  MaxLineLength:
+    maxLineLength: 140
+  WildcardImport:
+    active: false
+  MagicNumber:
+    active: false
+
+naming:
+  FunctionNaming:
+    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'

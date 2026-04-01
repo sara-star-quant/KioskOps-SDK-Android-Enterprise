@@ -1,6 +1,7 @@
 package com.peterz.kioskops.sdk.queue
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.room.Room
 import com.peterz.kioskops.sdk.KioskOpsConfig
 import com.peterz.kioskops.sdk.crypto.CryptoProvider
@@ -10,6 +11,7 @@ import com.peterz.kioskops.sdk.util.Idempotency
 import com.peterz.kioskops.sdk.util.Ids
 import com.peterz.kioskops.sdk.util.InstallSecret
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class QueueRepository(
   context: Context,
   private val logs: RingLog,
@@ -39,15 +41,6 @@ class QueueRepository(
     if (bytes.size > cfg.securityPolicy.maxEventPayloadBytes) {
       logs.w("Queue", "Rejected payload too large (${bytes.size} bytes) type=$type")
       return EnqueueResult.Rejected.PayloadTooLarge(bytes = bytes.size, max = cfg.securityPolicy.maxEventPayloadBytes)
-    }
-    if (!cfg.securityPolicy.allowRawPayloadStorage) {
-      val lower = payloadJson.lowercase()
-      for (k in cfg.securityPolicy.denylistJsonKeys) {
-        if (lower.contains("\"$k\"")) {
-          logs.w("Queue", "Rejected payload due to denylisted key=$k type=$type")
-          return EnqueueResult.Rejected.DenylistedKey(key = k)
-        }
-      }
     }
 
     // Step 7: enforce local storage quotas (count + bytes) before writing payloads.
@@ -173,9 +166,15 @@ class QueueRepository(
         )
       )
       EnqueueResult.Accepted(id = id, idempotencyKey = idempotencyKey, droppedOldest = droppedOldest)
+    } catch (t: android.database.sqlite.SQLiteConstraintException) {
+      logs.w("Queue", "Insert failed: duplicate idempotency key", t)
+      EnqueueResult.Rejected.DuplicateIdempotency("Duplicate idempotency key: ${t.message ?: ""}")
+    } catch (t: android.database.sqlite.SQLiteFullException) {
+      logs.e("Queue", "Insert failed: device storage full", t)
+      EnqueueResult.Rejected.QueueFull("Device storage full: ${t.message ?: ""}")
     } catch (t: Throwable) {
-      logs.w("Queue", "Insert failed (possible duplicate idempotency?)", t)
-      EnqueueResult.Rejected.DuplicateIdempotency("Insert failed: ${t.message ?: t::class.java.simpleName}")
+      logs.e("Queue", "Insert failed: unexpected error", t)
+      EnqueueResult.Rejected.Unknown("Insert failed: ${t.message ?: t::class.java.simpleName}")
     }
   }
 
