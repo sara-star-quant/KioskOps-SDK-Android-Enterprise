@@ -1,6 +1,7 @@
 package com.peterz.kioskops.sdk.work
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.peterz.kioskops.sdk.KioskOpsSdk
@@ -10,6 +11,7 @@ import com.peterz.kioskops.sdk.KioskOpsSdk
  * - attempts to upload queued operational events (idempotent batch)
  * - emits heartbeat + retention after sync
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class KioskOpsEventSyncWorker(
   appContext: Context,
   params: WorkerParameters
@@ -33,7 +35,7 @@ class KioskOpsEventSyncWorker(
         Result.retry()
       }
       is com.peterz.kioskops.sdk.transport.TransportResult.PermanentFailure -> {
-        // Permanent failure (e.g., baseUrl not configured, auth error). Don't retry—operator must fix config.
+        // Permanent failure (e.g., baseUrl not configured, auth error). Don't retry - operator must fix config.
         android.util.Log.e(TAG, "Sync permanent failure: ${r.message}; check SDK configuration")
         Result.success()
       }

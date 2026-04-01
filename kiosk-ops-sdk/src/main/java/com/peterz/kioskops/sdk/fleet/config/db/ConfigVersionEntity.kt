@@ -5,6 +5,7 @@
 
 package com.peterz.kioskops.sdk.fleet.config.db
 
+import androidx.annotation.RestrictTo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -17,6 +18,7 @@ import com.peterz.kioskops.sdk.fleet.config.ConfigVersion
  * Data Retention (ISO 27001 A.8.10): Versions are pruned based on
  * maxRetainedVersions policy to limit storage consumption.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Entity(
   tableName = "config_versions",
   indices = [Index("version", unique = true)]

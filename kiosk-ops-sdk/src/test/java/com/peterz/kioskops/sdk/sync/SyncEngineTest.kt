@@ -100,7 +100,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = com.peterz.kioskops.sdk.util.Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = com.peterz.kioskops.sdk.util.Clock.SYSTEM)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
     // two events
@@ -149,7 +149,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
     assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
@@ -229,7 +229,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
     assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
 
@@ -304,7 +304,7 @@ class SyncEngineTest {
     )
 
     val queue = QueueRepository(context, logs, NoopCryptoProvider)
-    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM, crypto = NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM)
     val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
 
     assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()

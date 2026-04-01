@@ -6,6 +6,7 @@
 package com.peterz.kioskops.sdk.audit.db
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -19,6 +20,7 @@ import androidx.room.RoomDatabase
  * This is a separate database from QueueDatabase to avoid
  * migration conflicts and allow independent versioning.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Database(
   entities = [AuditEventEntity::class, AuditChainState::class],
   version = 2,

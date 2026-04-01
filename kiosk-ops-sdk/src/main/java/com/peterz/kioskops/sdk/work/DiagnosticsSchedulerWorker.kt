@@ -6,6 +6,7 @@
 package com.peterz.kioskops.sdk.work
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit
  * - Uses flexible scheduling window
  * - Respects battery constraints
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class DiagnosticsSchedulerWorker(
   context: Context,
   params: WorkerParameters,

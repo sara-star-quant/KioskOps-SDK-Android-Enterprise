@@ -7,6 +7,7 @@ package com.peterz.kioskops.sdk.fleet.config
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Base64
 import com.peterz.kioskops.sdk.audit.AuditTrail
 import com.peterz.kioskops.sdk.fleet.config.db.ConfigDatabase
 import com.peterz.kioskops.sdk.fleet.config.db.ConfigVersionDao
@@ -19,6 +20,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.security.KeyFactory
+import java.security.Signature
+import java.security.spec.X509EncodedKeySpec
 
 /**
  * Manages remote configuration lifecycle: receive, validate, apply, rollback.
@@ -252,10 +256,40 @@ class RemoteConfigManager internal constructor(
     if (signature.isNullOrBlank()) return false
     if (publicKey.isNullOrBlank()) return false
 
-    // For now, signature verification is a placeholder
-    // In production, implement ECDSA P-256 signature verification
-    // using the public key to verify the signature over the config content
-    return signature.isNotBlank()
+    return try {
+      val content = serializeBundleExcluding(bundle, KEY_CONFIG_SIGNATURE).toByteArray(Charsets.UTF_8)
+      val sigBytes = Base64.decode(signature, Base64.NO_WRAP)
+
+      val keyBytes = Base64.decode(
+        publicKey
+          .replace("-----BEGIN PUBLIC KEY-----", "")
+          .replace("-----END PUBLIC KEY-----", "")
+          .replace("\\s".toRegex(), ""),
+        Base64.NO_WRAP,
+      )
+      val keySpec = X509EncodedKeySpec(keyBytes)
+      val ecPublicKey = KeyFactory.getInstance("EC").generatePublic(keySpec)
+
+      val verifier = Signature.getInstance("SHA256withECDSA")
+      verifier.initVerify(ecPublicKey)
+      verifier.update(content)
+      verifier.verify(sigBytes)
+    } catch (_: Exception) {
+      false
+    }
+  }
+
+  private fun serializeBundleExcluding(bundle: Bundle, excludeKey: String): String {
+    val map = mutableMapOf<String, String>()
+    for (key in bundle.keySet()) {
+      if (key == excludeKey) continue
+      @Suppress("DEPRECATION")
+      val value = bundle.getString(key) ?: bundle.get(key)?.toString()
+      if (value != null) {
+        map[key] = value
+      }
+    }
+    return json.encodeToString(kotlinx.serialization.serializer(), map)
   }
 
   private fun serializeBundle(bundle: Bundle): String {

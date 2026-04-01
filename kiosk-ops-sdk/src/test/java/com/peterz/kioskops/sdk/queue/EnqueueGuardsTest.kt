@@ -15,41 +15,38 @@ import org.robolectric.RobolectricTestRunner
 class EnqueueGuardsTest {
   private val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
 
+  private val cfg = KioskOpsConfig(
+    baseUrl = "https://example.invalid/",
+    locationId = "L",
+    kioskEnabled = false,
+    securityPolicy = SecurityPolicy.maximalistDefaults(),
+  )
+
   @Test fun rejectsOversizePayload() = runBlocking {
-    val cfg = KioskOpsConfig(
-      baseUrl = "https://example.invalid/",
-      locationId = "L",
-      kioskEnabled = false,
+    val smallCfg = cfg.copy(
       securityPolicy = SecurityPolicy.maximalistDefaults().copy(maxEventPayloadBytes = 10)
     )
     val repo = QueueRepository(ctx, RingLog(ctx), NoopCryptoProvider)
-    val res = repo.enqueue("T", "{\"long\":\"payload\"}", cfg)
+    val res = repo.enqueue("T", "{\"long\":\"payload\"}", smallCfg)
     assertThat(res.isAccepted).isFalse()
     assertThat(res).isInstanceOf(EnqueueResult.Rejected.PayloadTooLarge::class.java)
   }
 
-  @Test fun rejectsDenylistedKeyWhenRawNotAllowed() = runBlocking {
-    val cfg = KioskOpsConfig(
-      baseUrl = "https://example.invalid/",
-      locationId = "L",
-      kioskEnabled = false,
-      securityPolicy = SecurityPolicy.maximalistDefaults().copy(denylistJsonKeys = setOf("email"), allowRawPayloadStorage = false)
-    )
+  @Test fun duplicateIdempotencyKeyReturnsDuplicateIdempotency() = runBlocking {
     val repo = QueueRepository(ctx, RingLog(ctx), NoopCryptoProvider)
-    val res = repo.enqueue("T", "{\"email\":\"a@b.com\"}", cfg)
-    assertThat(res.isAccepted).isFalse()
-    assertThat(res).isInstanceOf(EnqueueResult.Rejected.DenylistedKey::class.java)
+    val first = repo.enqueue("T", "{\"x\":1}", cfg, idempotencyKeyOverride = "same-key")
+    assertThat(first.isAccepted).isTrue()
+
+    val second = repo.enqueue("T", "{\"x\":2}", cfg, idempotencyKeyOverride = "same-key")
+    assertThat(second.isAccepted).isFalse()
+    assertThat(second).isInstanceOf(EnqueueResult.Rejected.DuplicateIdempotency::class.java)
   }
 
-  @Test fun allowsDenylistedKeyWhenRawAllowed() = runBlocking {
-    val cfg = KioskOpsConfig(
-      baseUrl = "https://example.invalid/",
-      locationId = "L",
-      kioskEnabled = false,
-      securityPolicy = SecurityPolicy.maximalistDefaults().copy(denylistJsonKeys = setOf("email"), allowRawPayloadStorage = true, encryptQueuePayloads = false)
-    )
-    val repo = QueueRepository(ctx, RingLog(ctx), NoopCryptoProvider)
-    val res = repo.enqueue("T", "{\"email\":\"a@b.com\"}", cfg)
-    assertThat(res.isAccepted).isTrue()
+  @Test fun unknownErrorReturnsUnknown() {
+    // Verify the Unknown type exists and is a Rejected subtype
+    val unknown = EnqueueResult.Rejected.Unknown("test error")
+    assertThat(unknown).isInstanceOf(EnqueueResult.Rejected::class.java)
+    assertThat(unknown.reason).isEqualTo("test error")
+    assertThat(unknown.isAccepted).isFalse()
   }
 }

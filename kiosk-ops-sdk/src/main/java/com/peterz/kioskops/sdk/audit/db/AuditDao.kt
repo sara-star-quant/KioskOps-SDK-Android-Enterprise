@@ -5,6 +5,7 @@
 
 package com.peterz.kioskops.sdk.audit.db
 
+import androidx.annotation.RestrictTo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -17,6 +18,7 @@ import androidx.room.Update
  *
  * Provides CRUD operations for audit events and chain state management.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 @Dao
 interface AuditDao {
 
@@ -137,6 +139,7 @@ interface AuditDao {
 /**
  * Result of event name count query.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class EventNameCount(
   val name: String,
   val count: Int,

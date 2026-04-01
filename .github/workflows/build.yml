@@ -35,8 +35,20 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
 
+      - name: Generate code coverage report
+        run: ./gradlew :kiosk-ops-sdk:koverXmlReportDebug :kiosk-ops-sdk:koverHtmlReportDebug --no-daemon
+
+      - name: Check binary compatibility
+        run: ./gradlew apiCheck --no-daemon
+
+      - name: Run Detekt
+        run: ./gradlew :kiosk-ops-sdk:detekt --no-daemon
+
       - name: Run lint
         run: ./gradlew lintDebug --no-daemon
+
+      - name: Generate API docs
+        run: ./gradlew :kiosk-ops-sdk:dokkaHtml --no-daemon
 
       - name: Build SDK
         run: ./gradlew :kiosk-ops-sdk:assembleRelease --no-daemon
@@ -55,4 +67,20 @@ jobs:
         with:
           name: lint-results
           path: '**/build/reports/lint-results-debug.html'
+          retention-days: 7
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
+        with:
+          name: coverage-report
+          path: 'kiosk-ops-sdk/build/reports/kover/'
+          retention-days: 7
+
+      - name: Upload API docs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
+        with:
+          name: api-docs
+          path: 'kiosk-ops-sdk/build/dokka/'
           retention-days: 7

@@ -105,14 +105,14 @@ when (res) {
     // res.droppedOldest > 0 means queue pressure forced eviction of oldest events
   }
   is EnqueueResult.Rejected -> {
-    // res contains a typed reason (payload too large, denylisted key, queue full, etc.)
+    // res contains a typed reason (payload too large, PII detected, queue full, validation failed, etc.)
   }
 }
 ```
 
 ### Guardrails (MVP)
 - If payload size exceeds `SecurityPolicy.maxEventPayloadBytes`, enqueue is rejected.
-- If payload contains denylisted JSON keys (e.g., `"email"`, `"phone"`), enqueue is rejected unless `allowRawPayloadStorage = true`.
+- If PII is detected and `PiiPolicy.action` is `REJECT`, enqueue is rejected. Use `PiiPolicy` to configure detection and redaction behavior.
 
 ### Queue pressure controls (Step 7)
 - Enforced before writing payloads to disk: `QueueLimits.maxActiveEvents` + `QueueLimits.maxActiveBytes`.
@@ -405,7 +405,7 @@ See [Audit Integrity Guide](AUDIT_INTEGRITY.md) for verification details.
 ## 12) Testing
 
 The SDK includes JVM tests for:
-- payload guardrails (size cap / denylist)
+- payload guardrails (size cap, PII detection)
 - crypto codec behavior
 - retention purge behavior
 - sync engine behavior (MockWebServer)

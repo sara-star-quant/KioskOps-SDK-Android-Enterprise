@@ -40,7 +40,7 @@ The event queue provides durable, encrypted storage for operational events:
 - **Storage**: Room database with AES-256-GCM encryption at rest
 - **Pressure control**: Configurable limits (default: 10K events / 50 MB)
 - **Overflow strategies**: `DROP_OLDEST`, `DROP_NEWEST`, or `BLOCK`
-- **PII filtering**: Automatic denylist for common PII keys
+- **PII filtering**: Configurable PII detection via `PiiPolicy` with REJECT, REDACT, or FLAG actions
 
 ### Telemetry
 
