@@ -164,6 +164,7 @@ Focus: Java interop, error handling, observability, API contract finalization, f
 ### Build Infrastructure
 - [ ] Dokka V1 -> V2 migration (eliminates vulnerable jackson-core, netty, woodstox transitive dependencies from build classpath)
 - [ ] Gradle Daemon toolchain (auto-detect/download JDK, align CLI and IDE, single Daemon)
+- [ ] GitHub Packages page: description, installation instructions, README rendering, link to docs
 
 ### Supply Chain & Compliance
 - [ ] SBOM generation (CycloneDX) in CI for EO 14028 / FedRAMP supply chain requirements
