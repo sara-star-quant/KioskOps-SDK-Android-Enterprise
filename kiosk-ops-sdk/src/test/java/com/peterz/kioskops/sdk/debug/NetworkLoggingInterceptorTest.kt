@@ -29,9 +29,21 @@ class NetworkLoggingInterceptorTest {
     override fun v(tag: String, message: String, fields: Map<String, String>) { logEntries.add(LogEntry("V", tag, message, fields)) }
     override fun d(tag: String, message: String, fields: Map<String, String>) { logEntries.add(LogEntry("D", tag, message, fields)) }
     override fun i(tag: String, message: String, fields: Map<String, String>) { logEntries.add(LogEntry("I", tag, message, fields)) }
-    override fun w(tag: String, message: String, throwable: Throwable?, fields: Map<String, String>) { logEntries.add(LogEntry("W", tag, message, fields)) }
-    override fun e(tag: String, message: String, throwable: Throwable?, fields: Map<String, String>) { logEntries.add(LogEntry("E", tag, message, fields)) }
-    override fun log(level: com.peterz.kioskops.sdk.observability.LogLevel, tag: String, message: String, throwable: Throwable?, fields: Map<String, String>) { logEntries.add(LogEntry(level.name, tag, message, fields)) }
+    override fun w(tag: String, message: String, throwable: Throwable?, fields: Map<String, String>) {
+      logEntries.add(LogEntry("W", tag, message, fields))
+    }
+    override fun e(tag: String, message: String, throwable: Throwable?, fields: Map<String, String>) {
+      logEntries.add(LogEntry("E", tag, message, fields))
+    }
+    override fun log(
+      level: com.peterz.kioskops.sdk.observability.LogLevel,
+      tag: String,
+      message: String,
+      throwable: Throwable?,
+      fields: Map<String, String>,
+    ) {
+      logEntries.add(LogEntry(level.name, tag, message, fields))
+    }
     override fun isEnabled(level: com.peterz.kioskops.sdk.observability.LogLevel) = true
   }
 
