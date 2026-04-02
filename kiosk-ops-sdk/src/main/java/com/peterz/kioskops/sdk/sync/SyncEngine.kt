@@ -22,6 +22,11 @@ import com.peterz.kioskops.sdk.util.Ids
  * - idempotent server contract (id + idempotencyKey)
  * - explicit transient vs permanent error classification
  * - local-only observability (telemetry/audit) without sending PII
+ *
+ * **Ordering guarantee**: Events within a single batch are delivered in enqueue order.
+ * However, if a batch fails and is retried, a newer batch may be delivered before the
+ * retried batch. Consumers that require strict global ordering should implement
+ * server-side sequence checks using [com.peterz.kioskops.sdk.queue.QueueEventEntity.createdAtEpochMs].
  */
 class SyncEngine(
   private val context: Context,

@@ -49,9 +49,11 @@ abstract class ConfigDatabase : RoomDatabase() {
     }
 
     /**
-     * For testing only.
+     * Replace the singleton instance (for testing with in-memory databases).
+     * Pass null to clear.
      */
-    internal fun setInstance(database: ConfigDatabase) {
+    @androidx.annotation.VisibleForTesting
+    internal fun setInstance(database: ConfigDatabase?) {
       INSTANCE = database
     }
   }
