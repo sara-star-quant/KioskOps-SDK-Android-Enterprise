@@ -84,10 +84,6 @@ object FipsComplianceChecker {
 
     // Check provider info string for FIPS indicators
     val info = provider.info ?: ""
-    if (info.contains("FIPS", ignoreCase = true)) {
-      return true
-    }
-
-    return false
+    return info.contains("FIPS", ignoreCase = true)
   }
 }
