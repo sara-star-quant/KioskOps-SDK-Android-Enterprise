@@ -250,7 +250,7 @@ Focus: Production stability, distribution, LTS commitment, and cross-platform su
 
 ### Distribution
 - [ ] Maven Central publication with PGP-signed artifacts
-- [ ] BOM artifact (`com.peterz.kioskops:kioskops-bom`) for coordinated version management
+- [ ] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for coordinated version management
 - [ ] Gradle Version Catalog snippet for consumers
 - [ ] Source JAR and Javadoc JAR published alongside the AAR
 

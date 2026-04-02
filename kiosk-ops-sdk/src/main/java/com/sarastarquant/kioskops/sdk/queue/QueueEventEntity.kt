@@ -1,0 +1,66 @@
+package com.sarastarquant.kioskops.sdk.queue
+
+import androidx.annotation.RestrictTo
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
+
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+@Entity(
+  tableName = "queue_events",
+  indices = [
+    Index(value = ["state"]),
+    Index(value = ["createdAtEpochMs"]),
+    Index(value = ["idempotencyKey"], unique = true),
+    Index(value = ["userId"]),
+  ]
+)
+data class QueueEventEntity(
+  @PrimaryKey val id: String,
+  val idempotencyKey: String,
+  val type: String,
+  val payloadBlob: ByteArray,
+  val payloadEncoding: String,
+  /** Payload size in bytes, stored for fast quota checks. */
+  val payloadBytes: Int,
+  val createdAtEpochMs: Long,
+  val state: String,
+  val attempts: Int,
+  /**
+   * Backoff gate. Event is eligible for send when nextAttemptAtEpochMs <= now.
+   *
+   * Default is 0 for immediate eligibility.
+   */
+  val nextAttemptAtEpochMs: Long,
+
+  /**
+   * 1 = permanently failed (do not retry). 0 = retryable.
+   *
+   * This is a pragmatic enterprise knob: if the server rejects an event due to
+   * schema/validation (4xx), you don't want infinite retries.
+   */
+  val permanentFailure: Int,
+  val lastError: String? = null,
+  /** Set when [permanentFailure] is 1 to explain why the event was quarantined. */
+  val quarantineReason: String? = null,
+  val updatedAtEpochMs: Long,
+  /** @since 0.5.0 */
+  val userId: String? = null,
+  /** @since 0.5.0 */
+  val dataClassification: String? = null,
+  /** @since 0.5.0 */
+  val anomalyScore: Float? = null,
+)
+
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+object QueueStates {
+  const val PENDING = "PENDING"
+  const val SENDING = "SENDING"
+  const val SENT = "SENT"
+  const val FAILED = "FAILED"
+  /**
+   * Quarantined events are not retried automatically.
+   * They typically indicate validation/schema issues or max-attempt exhaustion.
+   */
+  const val QUARANTINED = "QUARANTINED"
+}
