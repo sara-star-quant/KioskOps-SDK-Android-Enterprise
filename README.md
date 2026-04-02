@@ -115,11 +115,11 @@ See [Features](docs/FEATURES.md) for the complete list.
 
 | Document | Description |
 |----------|-------------|
-| [Integration Guide](docs/INTEGRATION_STEP_BY_STEP.md) | Step-by-step setup |
-| [Architecture](docs/ARCHITECTURE.md) | System design and modules |
+| [Integration Guide](docs/INTEGRATION.md) | Step-by-step setup |
+| [Architecture](docs/ARCHITECTURE.md) | System design, modules, and scope |
 | [Features](docs/FEATURES.md) | Full feature list and limitations |
-| [Security & Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model and security controls |
-| [Target Use Cases](docs/SDK_TARGET.md) | What this SDK is (and isn't) for |
+| [Security and Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model, transport security, key management, audit integrity |
+| [Compliance Mappings](docs/compliance/) | NIST 800-171, CJIS, ASD, BSI, Australian Privacy Act |
 | [Server API Contract](docs/openapi.yaml) | OpenAPI spec for batch ingest |
 | [Changelog](CHANGELOG.md) | Version history |
 | [Roadmap](ROADMAP.md) | Planned features |

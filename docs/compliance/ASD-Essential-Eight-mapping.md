@@ -1,4 +1,4 @@
-# ASD Essential Eight -- KioskOps SDK Control Mapping
+# ASD Essential Eight: KioskOps SDK Control Mapping
 
 > **Disclaimer:** This document is an engineering reference only. It does not
 > constitute a compliance certification, legal advice, or security assessment.
@@ -50,9 +50,9 @@ SDK's contributions primarily support ML1 and ML2 posture:
 The following aspects of the Essential Eight require host-app, infrastructure,
 or organizational measures:
 
-- **Application allowlisting/blocklisting** -- OS or MDM policy
-- **OS patching and patch verification** -- device management
-- **MFA enrollment and lifecycle** -- identity provider
-- **Backup scheduling, offsite storage, and restoration testing** -- infrastructure
-- **User privilege reviews** -- organizational IAM process
-- **Microsoft Office macro policies** -- not applicable to Android
+- **Application allowlisting/blocklisting**: OS or MDM policy
+- **OS patching and patch verification**: device management
+- **MFA enrollment and lifecycle**: identity provider
+- **Backup scheduling, offsite storage, and restoration testing**: infrastructure
+- **User privilege reviews**: organizational IAM process
+- **Microsoft Office macro policies**: not applicable to Android
