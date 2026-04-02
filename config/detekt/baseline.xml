@@ -7,7 +7,7 @@
     <ID>CyclomaticComplexMethod:DataRightsManager.kt$DataRightsManager$suspend fun exportUserData(userId: String): DataExportResult</ID>
     <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun matchesType(element: JsonElement, expected: String): Boolean</ID>
     <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
-    <ID>CyclomaticComplexMethod:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>CyclomaticComplexMethod:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.sarastarquant.kioskops.sdk.queue.EnqueueResult</ID>
     <ID>CyclomaticComplexMethod:StatisticalAnomalyDetector.kt$StatisticalAnomalyDetector$override fun analyze(eventType: String, payloadJson: String): AnomalyResult</ID>
     <ID>CyclomaticComplexMethod:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
     <ID>EmptyFunctionBlock:GeofenceTransitionListener.kt$GeofenceTransitionAdapter${}</ID>
@@ -20,7 +20,7 @@
     <ID>EmptyFunctionBlock:SyncEngineTest.kt$SyncEngineTest.&lt;no name provided>${}</ID>
     <ID>ImplicitDefaultLocale:SpanContext.kt$SpanContext$String.format("%02x", traceFlags)</ID>
     <ID>LongMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
-    <ID>LongMethod:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>LongMethod:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.sarastarquant.kioskops.sdk.queue.EnqueueResult</ID>
     <ID>LongMethod:RemoteConfigManager.kt$RemoteConfigManager$suspend fun processConfigBundle( bundle: Bundle, source: ConfigSource, ): ConfigUpdateResult</ID>
     <ID>LongMethod:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
     <ID>LongParameterList:QueueRepository.kt$QueueRepository$( type: String, payloadJson: String, bytes: ByteArray, nowOverrideMs: Long?, cfg: KioskOpsConfig, stableEventId: String?, idempotencyKeyOverride: String?, droppedOldest: Int, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, )</ID>
@@ -29,11 +29,11 @@
     <ID>MaxLineLength:ManagedConfigReader.kt$ManagedConfigReader$val includeDeviceId = if (bundle.containsKey(Keys.TELEMETRY_INCLUDE_DEVICE_ID)) bundle.getBoolean(Keys.TELEMETRY_INCLUDE_DEVICE_ID) else defaults.telemetryPolicy.includeDeviceId</ID>
     <ID>MaxLineLength:QueueRepository.kt$QueueRepository$val reason = "Queue limits exceeded count=$beforeCount/${limits.maxActiveEvents} bytes=${beforeBytes}+${newBytes}/${limits.maxActiveBytes}"</ID>
     <ID>MaxLineLength:RegexPiiDetector.kt$RegexPiiDetector.Companion$PatternEntry(Regex("\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b"), PiiType.IP_ADDRESS, 0.85f)</ID>
-    <ID>MaxLineLength:SyncEngineTest.kt$SyncEngineTest$val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = com.peterz.kioskops.sdk.util.Clock.SYSTEM)</ID>
+    <ID>MaxLineLength:SyncEngineTest.kt$SyncEngineTest$val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = com.sarastarquant.kioskops.sdk.util.Clock.SYSTEM)</ID>
     <ID>NestedBlockDepth:DataRightsManager.kt$DataRightsManager$suspend fun exportAllLocalData(): DataExportResult</ID>
     <ID>NestedBlockDepth:DataRightsManager.kt$DataRightsManager$suspend fun exportUserData(userId: String): DataExportResult</ID>
     <ID>NestedBlockDepth:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
-    <ID>NestedBlockDepth:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>NestedBlockDepth:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.sarastarquant.kioskops.sdk.queue.EnqueueResult</ID>
     <ID>NestedBlockDepth:QueueRepository.kt$QueueRepository$suspend fun enqueue( type: String, payloadJson: String, cfg: KioskOpsConfig, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, ): EnqueueResult</ID>
     <ID>NestedBlockDepth:StatisticalAnomalyDetector.kt$StatisticalAnomalyDetector$override fun analyze(eventType: String, payloadJson: String): AnomalyResult</ID>
     <ID>ProtectedMemberInFinalClass:GeofenceManager.kt$GeofenceManager$protected fun registerGeofences(regions: List&lt;GeofenceRegion>)</ID>
@@ -46,7 +46,7 @@
     <ID>ReturnCount:GeofenceManager.kt$GeofenceManager$@RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION) suspend fun startMonitoring(): GeofenceStartResult</ID>
     <ID>ReturnCount:KeyAttestationReporter.kt$KeyAttestationReporter$fun generateAttestationChallengeResponse( alias: String, challenge: ByteArray, ): AttestationResponse?</ID>
     <ID>ReturnCount:KeystoreAttestationProvider.kt$KeystoreAttestationProvider$override fun getAttestationBlob(): ByteArray?</ID>
-    <ID>ReturnCount:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.peterz.kioskops.sdk.queue.EnqueueResult</ID>
+    <ID>ReturnCount:KioskOpsSdk.kt$KioskOpsSdk$suspend fun enqueueDetailed( type: String, payloadJson: String, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, ): com.sarastarquant.kioskops.sdk.queue.EnqueueResult</ID>
     <ID>ReturnCount:KioskOpsTracer.kt$KioskOpsSpanBuilder$override fun startSpan(): Span</ID>
     <ID>ReturnCount:KioskOpsTracer.kt$KioskOpsSpanBuilder$private fun getContextFromCorrelation(): SpanContext?</ID>
     <ID>ReturnCount:PersistentAuditTrail.kt$PersistentAuditTrail$suspend fun verifyChainIntegrity( fromTs: Long? = null, toTs: Long? = null, ): ChainVerificationResult</ID>

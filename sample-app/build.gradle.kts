@@ -8,11 +8,11 @@ kotlin {
 }
 
 android {
-  namespace = "com.peterz.kioskops.sample"
+  namespace = "com.sarastarquant.kioskops.sample"
   compileSdk = 36
 
   defaultConfig {
-    applicationId = "com.peterz.kioskops.sample"
+    applicationId = "com.sarastarquant.kioskops.sample"
     minSdk = 26
     targetSdk = 36
     versionCode = 1

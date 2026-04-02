@@ -11,7 +11,7 @@
       android:exported="false"
       tools:node="replace">
       <meta-data
-        android:name="com.peterz.kioskops.sdk.KioskOpsInitializer"
+        android:name="com.sarastarquant.kioskops.sdk.KioskOpsInitializer"
         android:value="androidx.startup" />
     </provider>
   </application>
