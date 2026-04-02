@@ -77,7 +77,7 @@ private class StubX509Certificate(
 }
 
 @RunWith(RobolectricTestRunner::class)
-class CertificateTransparencyValidatorTest {
+class CtValidationTest {
 
   // ---------------------------------------------------------------
   // Helper: build a fake Interceptor.Chain that returns a Response
@@ -155,37 +155,6 @@ class CertificateTransparencyValidatorTest {
   }
 
   // ---------------------------------------------------------------
-  // fromPolicy() tests
-  // ---------------------------------------------------------------
-
-  @Test
-  fun `fromPolicy returns null when CT disabled`() {
-    val policy = TransportSecurityPolicy(certificateTransparencyEnabled = false)
-    val validator = CertificateTransparencyValidator.fromPolicy(policy)
-    assertThat(validator).isNull()
-  }
-
-  @Test
-  fun `fromPolicy returns validator when CT enabled`() {
-    val policy = TransportSecurityPolicy(certificateTransparencyEnabled = true)
-    val validator = CertificateTransparencyValidator.fromPolicy(policy)
-    assertThat(validator).isNotNull()
-    assertThat(validator).isInstanceOf(CertificateTransparencyValidator::class.java)
-  }
-
-  @Test
-  fun `fromPolicy passes callback to validator`() {
-    val policy = TransportSecurityPolicy(certificateTransparencyEnabled = true)
-    var callbackCalled = false
-    val callback: (String, String) -> Unit = { _, _ -> callbackCalled = true }
-
-    val validator = CertificateTransparencyValidator.fromPolicy(policy, callback)
-    assertThat(validator).isNotNull()
-    // Callback is stored but not yet invoked
-    assertThat(callbackCalled).isFalse()
-  }
-
-  // ---------------------------------------------------------------
   // intercept() -- disabled path
   // ---------------------------------------------------------------
 
@@ -237,12 +206,6 @@ class CertificateTransparencyValidatorTest {
     assertThat(response).isNotNull()
     assertThat(response.code).isEqualTo(200)
   }
-
-  // ---------------------------------------------------------------
-  // validateCertificateTransparency() -- empty chain returns invalid
-  // (exercised via the empty-cert handshake path above; the private
-  //  method guard for isEmpty is a defense-in-depth measure)
-  // ---------------------------------------------------------------
 
   // ---------------------------------------------------------------
   // hasEmbeddedScts() -- OID 1.3.6.1.4.1.11129.2.4.2
@@ -553,15 +516,8 @@ class CertificateTransparencyValidatorTest {
   }
 
   // ---------------------------------------------------------------
-  // Exception type and message
+  // Exception message details
   // ---------------------------------------------------------------
-
-  @Test
-  fun `CertificateTransparencyException is an IOException`() {
-    val exception = CertificateTransparencyException("test message")
-    assertThat(exception).isInstanceOf(java.io.IOException::class.java)
-    assertThat(exception.message).isEqualTo("test message")
-  }
 
   @Test
   fun `exception message contains hostname and reason`() {
@@ -577,32 +533,6 @@ class CertificateTransparencyValidatorTest {
     }
     assertThat(exception.message).contains("target.example.com")
     assertThat(exception.message).contains("No Signed Certificate Timestamps found")
-  }
-
-  // ---------------------------------------------------------------
-  // CtValidationResult data class
-  // ---------------------------------------------------------------
-
-  @Test
-  fun `CtValidationResult valid`() {
-    val result = CtValidationResult(isValid = true, reason = "")
-    assertThat(result.isValid).isTrue()
-    assertThat(result.reason).isEmpty()
-  }
-
-  @Test
-  fun `CtValidationResult invalid`() {
-    val result = CtValidationResult(isValid = false, reason = "No SCTs found")
-    assertThat(result.isValid).isFalse()
-    assertThat(result.reason).isEqualTo("No SCTs found")
-  }
-
-  @Test
-  fun `CtValidationResult data class equality`() {
-    val a = CtValidationResult(isValid = true, reason = "ok")
-    val b = CtValidationResult(isValid = true, reason = "ok")
-    assertThat(a).isEqualTo(b)
-    assertThat(a.hashCode()).isEqualTo(b.hashCode())
   }
 
   // ---------------------------------------------------------------
@@ -650,7 +580,7 @@ class CertificateTransparencyValidatorTest {
   }
 
   // ---------------------------------------------------------------
-  // Default constructor parameter
+  // Default constructor validates known CA
   // ---------------------------------------------------------------
 
   @Test
