@@ -96,19 +96,17 @@ jobs:
           INPUT_VERSION: ${{ steps.version.outputs.VERSION }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
-        with:
-          tag_name: ${{ steps.version.outputs.TAG }}
-          name: ${{ steps.version.outputs.TAG }}
-          body_path: release_notes.md
-          make_latest: true
-          files: |
-            kiosk-ops-sdk/build/outputs/aar/*.aar
-            kiosk-ops-sdk/build/outputs/aar/*.sig
+        run: |
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release_notes.md \
+            --latest \
+            kiosk-ops-sdk/build/outputs/aar/*.aar \
+            kiosk-ops-sdk/build/outputs/aar/*.sig \
             kiosk-ops-sdk/build/outputs/aar/*.pem
-          fail_on_unmatched_files: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.TAG }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
         run: |
