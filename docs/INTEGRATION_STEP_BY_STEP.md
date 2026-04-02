@@ -20,7 +20,7 @@ dependencies {
 ```
 
 When publishing, recommended Maven coordinates:
-- groupId: `com.peterz.kioskops`
+- groupId: `com.sarastarquant.kioskops`
 - artifact: `kioskops-sdk`
 
 ---
@@ -256,7 +256,7 @@ This provides defense-in-depth on top of TLS (tamper detection, replay resistanc
 **Important:** signing is **off by default**. The host app must provide the shared secret.
 
 ```kotlin
-import com.peterz.kioskops.sdk.transport.HmacRequestSigner
+import com.sarastarquant.kioskops.sdk.transport.HmacRequestSigner
 
 val signer = HmacRequestSigner(
   sharedSecret = "<shared-secret-from-your-server>".toByteArray(),

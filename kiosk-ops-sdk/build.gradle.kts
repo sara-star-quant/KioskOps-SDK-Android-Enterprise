@@ -15,7 +15,7 @@ kotlin {
 }
 
 android {
-  namespace = "com.peterz.kioskops.sdk"
+  namespace = "com.sarastarquant.kioskops.sdk"
   compileSdk = 36
 
   defaultConfig {
@@ -49,7 +49,7 @@ android {
         // Exclude fuzz tests from regular test runs.
         // Jazzer's JUnit extension conflicts with Robolectric's sandbox classloader.
         // Run fuzz tests separately: ./gradlew :kiosk-ops-sdk:fuzzTest
-        test.filter.excludeTestsMatching("com.peterz.kioskops.sdk.fuzz.*")
+        test.filter.excludeTestsMatching("com.sarastarquant.kioskops.sdk.fuzz.*")
       }
     }
   }
@@ -74,7 +74,7 @@ afterEvaluate {
     classpath = debugUnitTest.classpath
 
     useJUnitPlatform()
-    filter.includeTestsMatching("com.peterz.kioskops.sdk.fuzz.*")
+    filter.includeTestsMatching("com.sarastarquant.kioskops.sdk.fuzz.*")
   }
 }
 
@@ -140,7 +140,7 @@ afterEvaluate {
       create<MavenPublication>("release") {
         from(components["release"])
 
-        groupId = "com.peterz.kioskops"
+        groupId = "com.sarastarquant.kioskops"
         artifactId = "kiosk-ops-sdk"
         version = findProperty("VERSION_NAME")?.toString() ?: "0.1.0-SNAPSHOT"
 
