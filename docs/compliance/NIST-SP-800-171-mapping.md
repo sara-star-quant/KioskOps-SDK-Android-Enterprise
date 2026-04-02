@@ -1,4 +1,4 @@
-# NIST SP 800-171 Rev 2 -- KioskOps SDK Control Mapping
+# NIST SP 800-171 Rev 2: KioskOps SDK Control Mapping
 
 > **Disclaimer:** This document is an engineering reference only. It does not
 > constitute a compliance certification, legal advice, or security assessment.
@@ -74,11 +74,11 @@ preset enables the recommended combination.
 
 The following 800-171 families are largely outside SDK scope:
 
-- **Awareness and Training (AT)** -- organizational responsibility
-- **Configuration Management (CM)** -- SDK provides `cuiDefaults()` preset but CM policies are organizational
-- **Incident Response (IR)** -- SDK provides error listener and audit trail; IR process is organizational
-- **Maintenance (MA)** -- infrastructure responsibility
-- **Personnel Security (PS)** -- organizational responsibility
-- **Physical Protection (PE)** -- facility responsibility
-- **Risk Assessment (RA)** -- organizational responsibility
-- **Security Assessment (CA)** -- organizational responsibility
+- **Awareness and Training (AT)**: organizational responsibility
+- **Configuration Management (CM)**: SDK provides `cuiDefaults()` preset but CM policies are organizational
+- **Incident Response (IR)**: SDK provides error listener and audit trail; IR process is organizational
+- **Maintenance (MA)**: infrastructure responsibility
+- **Personnel Security (PS)**: organizational responsibility
+- **Physical Protection (PE)**: facility responsibility
+- **Risk Assessment (RA)**: organizational responsibility
+- **Security Assessment (CA)**: organizational responsibility

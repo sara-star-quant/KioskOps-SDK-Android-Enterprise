@@ -349,7 +349,7 @@ val cfg = KioskOpsConfig(
 )
 ```
 
-See [Transport Security Guide](TRANSPORT_SECURITY.md) for detailed configuration.
+See [Transport Security](SECURITY_COMPLIANCE.md#2-transport-security) for detailed configuration.
 
 ---
 
@@ -372,7 +372,7 @@ val securityPolicy = SecurityPolicy.maximalistDefaults().copy(
 )
 ```
 
-See [Key Management Guide](KEY_MANAGEMENT.md) for key rotation and attestation.
+See [Key Management](SECURITY_COMPLIANCE.md#3-key-management) for key rotation and attestation.
 
 ---
 
@@ -398,7 +398,7 @@ val file = KioskOpsSdk.get().exportSignedAuditRange(startOfMonth, endOfMonth)
 // Gzipped JSONL with signatures for external verification
 ```
 
-See [Audit Integrity Guide](AUDIT_INTEGRITY.md) for verification details.
+See [Audit Trail Integrity](SECURITY_COMPLIANCE.md#4-audit-trail-integrity) for verification details.
 
 ---
 

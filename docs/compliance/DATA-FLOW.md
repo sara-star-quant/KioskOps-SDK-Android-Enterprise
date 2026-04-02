@@ -1,4 +1,4 @@
-# Data Flow Reference -- KioskOps SDK
+# Data Flow Reference: KioskOps SDK
 
 > **Disclaimer:** This document is an engineering reference describing the
 > SDK's data storage and transmission behavior. It does not constitute a
