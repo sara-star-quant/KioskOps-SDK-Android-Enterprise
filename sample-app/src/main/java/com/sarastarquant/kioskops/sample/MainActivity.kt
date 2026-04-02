@@ -8,6 +8,7 @@ import com.sarastarquant.kioskops.sdk.KioskOpsSdk
 import com.sarastarquant.kioskops.sdk.queue.EnqueueResult
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 
 /**
@@ -72,8 +73,12 @@ class MainActivity : Activity() {
       }
     }
 
+    // v0.8.0: Reactive queue depth observation via Flow.
+    // In production, use lifecycleScope or viewModelScope instead of MainScope.
     scope.launch {
-      queueStatus.text = "Queue depth: ${sdk.queueDepth()}"
+      sdk.queueDepthFlow(intervalMs = 5000L).take(1).collect { depth ->
+        queueStatus.text = "Queue depth: $depth"
+      }
     }
   }
 
