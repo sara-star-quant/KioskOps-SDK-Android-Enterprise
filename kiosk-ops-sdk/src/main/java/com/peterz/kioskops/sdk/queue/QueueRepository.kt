@@ -3,6 +3,7 @@ package com.peterz.kioskops.sdk.queue
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.room.Room
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.peterz.kioskops.sdk.KioskOpsConfig
 import com.peterz.kioskops.sdk.crypto.CryptoProvider
 import com.peterz.kioskops.sdk.logging.RingLog
@@ -16,12 +17,14 @@ class QueueRepository(
   context: Context,
   private val logs: RingLog,
   private val crypto: CryptoProvider,
+  openHelperFactory: SupportSQLiteOpenHelper.Factory? = null,
 ) {
   private val appContext = context.applicationContext
   private val db = Room.databaseBuilder(appContext, QueueDatabase::class.java, "kiosk_ops_queue.db")
     .addMigrations(QueueDatabase.MIGRATION_2_3, QueueDatabase.MIGRATION_3_4)
     // v1 was an internal pre-release snapshot; allow destructive migration from it.
     .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1)
+    .apply { if (openHelperFactory != null) openHelperFactory(openHelperFactory) }
     .build()
 
   private val dao = db.queueDao()
