@@ -36,15 +36,13 @@ class DebugLogBroadcastReceiver : BroadcastReceiver() {
 
     val level = intent.getStringExtra("level")?.uppercase() ?: return
     val validLevels = setOf("VERBOSE", "DEBUG", "INFO", "WARN", "ERROR", "OFF")
-    if (level !in validLevels) {
+    if (level in validLevels) {
+      currentLevel = level
+      Log.i(TAG, "Log level set to $level via ADB broadcast")
+      KioskOpsSdk.getOrNull()?.logger()?.i("DebugLog", "Log level changed to $level via ADB")
+    } else {
       Log.w(TAG, "Invalid log level: $level. Valid: $validLevels")
-      return
     }
-
-    currentLevel = level
-    Log.i(TAG, "Log level set to $level via ADB broadcast")
-
-    KioskOpsSdk.getOrNull()?.logger()?.i("DebugLog", "Log level changed to $level via ADB")
   }
 
   companion object {
