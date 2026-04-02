@@ -106,6 +106,12 @@ KioskOps SDK includes enterprise security features:
 - GDPR data export (Art. 20) and deletion (Art. 17) APIs
 - Data classification tagging (PUBLIC/INTERNAL/CONFIDENTIAL/RESTRICTED)
 
+### Error Observability & Supply Chain (v0.7.0)
+- Non-fatal error callbacks via `KioskOpsErrorListener` for operational visibility
+- FIPS 140-2/3 runtime detection via `FipsComplianceChecker` (Conscrypt/BoringSSL)
+- CycloneDX SBOM generation in CI for EO 14028 / FedRAMP supply chain requirements
+- Debug log level toggle restricted to debug builds (ISO 27001 A.14.2)
+
 ### Disclaimer
 
 References to regulatory frameworks (NIST 800-53, FedRAMP, GDPR, ISO 27001,
