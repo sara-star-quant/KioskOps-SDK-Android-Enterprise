@@ -119,7 +119,23 @@ class KioskOpsSdk private constructor(
     delegate = AesGcmKeystoreCryptoProvider(alias = "kioskops_exports_aesgcm_v1")
   )
 
-  private val queue = QueueRepository(appContext, logs, queueCrypto)
+  // v0.8.0 Database encryption (SQLCipher)
+  private val dbOpenHelperFactory: androidx.sqlite.db.SupportSQLiteOpenHelper.Factory? =
+    if (cfg().databaseEncryptionPolicy.enabled) {
+      com.peterz.kioskops.sdk.crypto.DatabaseEncryptionProvider.createFactory()
+    } else {
+      null
+    }
+
+  init {
+    // Set audit database encryption before any getInstance() calls
+    com.peterz.kioskops.sdk.audit.db.AuditDatabase.setOpenHelperFactory(dbOpenHelperFactory)
+  }
+
+  private val queue = QueueRepository(
+    appContext, logs, queueCrypto,
+    openHelperFactory = dbOpenHelperFactory,
+  )
 
   // v0.5.0 Validation & PII pipeline components
   /** @since 0.5.0 */
@@ -879,9 +895,69 @@ class KioskOpsSdk private constructor(
 
   @Volatile private var lastHeartbeatReason: String? = null
 
+  // ========================================================================
+  // v0.8.0 Reactive APIs
+  // ========================================================================
+
+  /**
+   * Observe queue depth as a polling-based [kotlinx.coroutines.flow.Flow].
+   *
+   * Emits the current queue depth at the specified interval. The flow completes
+   * when the collector is cancelled. Not database-reactive; polls on interval.
+   *
+   * @param intervalMs Polling interval in milliseconds. Default 5000ms.
+   * @since 0.8.0
+   */
+  fun queueDepthFlow(intervalMs: Long = 5000L): kotlinx.coroutines.flow.Flow<Long> =
+    kotlinx.coroutines.flow.flow {
+      while (true) {
+        emit(queueDepth())
+        kotlinx.coroutines.delay(intervalMs)
+      }
+    }
+
+  /**
+   * Observe SDK health status as a polling-based [kotlinx.coroutines.flow.Flow].
+   *
+   * Emits a [HealthCheckResult] at the specified interval. The flow completes
+   * when the collector is cancelled. Not database-reactive; polls on interval.
+   *
+   * @param intervalMs Polling interval in milliseconds. Default 10000ms.
+   * @since 0.8.0
+   */
+  fun healthStatusFlow(intervalMs: Long = 10000L): kotlinx.coroutines.flow.Flow<HealthCheckResult> =
+    kotlinx.coroutines.flow.flow {
+      while (true) {
+        emit(healthCheck())
+        kotlinx.coroutines.delay(intervalMs)
+      }
+    }
+
+  // ========================================================================
+  // v0.8.0 SDK Lifecycle
+  // ========================================================================
+
+  private val sdkJob = kotlinx.coroutines.SupervisorJob()
+
   private val javaInteropScope = kotlinx.coroutines.CoroutineScope(
-    kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
+    sdkJob + kotlinx.coroutines.Dispatchers.IO
   )
+
+  /**
+   * Gracefully shut down the SDK.
+   *
+   * Cancels background coroutine scopes, closes databases, and flushes
+   * pending audit records. After calling this method, the SDK instance
+   * is no longer usable; call [init] to create a new instance.
+   *
+   * @since 0.8.0
+   */
+  suspend fun shutdown() {
+    sdkJob.cancel()
+    persistentAudit.record("sdk_shutdown")
+    telemetry.emit("sdk_shutdown", mapOf("sdkVersion" to SDK_VERSION))
+    INSTANCE = null
+  }
 
   /**
    * Java-friendly wrapper for [enqueue].
@@ -1082,6 +1158,7 @@ class KioskOpsSdk private constructor(
 
     @androidx.annotation.VisibleForTesting
     internal fun resetForTesting() {
+      INSTANCE?.sdkJob?.cancel()
       INSTANCE = null
     }
   }

@@ -10,6 +10,7 @@ import androidx.annotation.RestrictTo
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 
 /**
  * Room database for persistent audit trail.
@@ -42,6 +43,18 @@ abstract class AuditDatabase : RoomDatabase() {
      * @param context Android context.
      * @return The audit database instance.
      */
+    @Volatile
+    private var openHelperFactory: SupportSQLiteOpenHelper.Factory? = null
+
+    /**
+     * Set the SQLCipher open helper factory for database encryption.
+     * Must be called before [getInstance].
+     * @since 0.8.0
+     */
+    fun setOpenHelperFactory(factory: SupportSQLiteOpenHelper.Factory?) {
+      openHelperFactory = factory
+    }
+
     fun getInstance(context: Context): AuditDatabase {
       return INSTANCE ?: synchronized(this) {
         INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
@@ -55,6 +68,7 @@ abstract class AuditDatabase : RoomDatabase() {
         DATABASE_NAME
       )
         .addMigrations(AuditMigrations.MIGRATION_1_2)
+        .apply { openHelperFactory?.let { openHelperFactory(it) } }
         .build()
     }
 
