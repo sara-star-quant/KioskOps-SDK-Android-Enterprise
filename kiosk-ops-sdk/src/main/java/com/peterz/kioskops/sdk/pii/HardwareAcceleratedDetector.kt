@@ -6,6 +6,7 @@
 package com.peterz.kioskops.sdk.pii
 
 import android.os.Build
+import com.peterz.kioskops.sdk.ExperimentalKioskOpsApi
 
 /**
  * Optional NNAPI-backed PII detector wrapper.
@@ -24,6 +25,7 @@ import android.os.Build
  *
  * @since 0.5.0
  */
+@ExperimentalKioskOpsApi
 class HardwareAcceleratedDetector(
   private val fallback: PiiDetector,
   private val modelHash: String? = null,

@@ -1,9 +1,12 @@
 package com.peterz.kioskops.sdk.queue
 
+import kotlinx.serialization.Serializable
+
 /**
  * Lightweight quarantined event metadata for support tooling.
  * Payload is intentionally excluded.
  */
+@Serializable
 data class QuarantinedEventSummary(
   val id: String,
   val type: String,

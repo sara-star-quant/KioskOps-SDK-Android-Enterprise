@@ -147,42 +147,42 @@ Focus: Harden the API surface, add quality tooling, and prepare for v1.0 API fre
 Focus: Java interop, error handling, observability, API contract finalization, federal/gov compliance tooling, accessibility, and quality gates before the 1.0 freeze.
 
 ### Java Interop & Developer Experience
-- [ ] `@JvmStatic` on `KioskOpsSdk.init()`, `get()`, `getOrNull()` companion methods
-- [ ] `@JvmOverloads` on public functions with default parameters
-- [ ] Blocking wrapper methods for Java callers (`enqueueBlocking()`, `syncOnceBlocking()`)
-- [ ] `healthCheck()` API returning structured status (connectivity, queue depth, last sync timestamp, auth state)
-- [ ] Runtime debug log level toggle via ADB broadcast intent (for field technicians)
-- [ ] Error callback hooks for consumers (`KioskOpsSdk.setErrorListener()`)
+- [x] `@JvmStatic` on `KioskOpsSdk.init()`, `get()`, `getOrNull()` companion methods
+- [x] `@JvmOverloads` on public functions with default parameters
+- [x] Blocking wrapper methods for Java callers (`enqueueBlocking()`, `syncOnceBlocking()`)
+- [x] `healthCheck()` API returning structured status (connectivity, queue depth, last sync timestamp, auth state)
+- [x] Runtime debug log level toggle via ADB broadcast intent (for field technicians)
+- [x] Error callback hooks for consumers (`KioskOpsSdk.setErrorListener()`)
 
 ### API Contract
-- [ ] Mark `HardwareAcceleratedDetector` as `@RequiresOptIn` experimental (stub until companion `kiosk-ops-sdk-ml` artifact ships)
-- [ ] Document `GeofenceManager` as extension point (stub `registerGeofences`/`unregisterGeofences` are intentional for subclassing)
-- [ ] Nullability and sealed hierarchy audit (no accidental `open` classes, no mutable collection returns)
-- [ ] Threading/dispatcher documentation per public `suspend` function (main-safe vs IO)
-- [ ] Document sync ordering limitation (batches may arrive out of order under retry)
+- [x] Mark `HardwareAcceleratedDetector` as `@RequiresOptIn` experimental (stub until companion `kiosk-ops-sdk-ml` artifact ships)
+- [x] Document `GeofenceManager` as extension point (stub `registerGeofences`/`unregisterGeofences` are intentional for subclassing)
+- [x] Nullability and sealed hierarchy audit (no accidental `open` classes, no mutable collection returns)
+- [x] Threading/dispatcher documentation per public `suspend` function (main-safe vs IO)
+- [x] Document sync ordering limitation (batches may arrive out of order under retry)
 
 ### Build Infrastructure
-- [ ] Dokka V1 -> V2 migration (eliminates vulnerable jackson-core, netty, woodstox transitive dependencies from build classpath)
-- [ ] Gradle Daemon toolchain (auto-detect/download JDK, align CLI and IDE, single Daemon)
-- [ ] GitHub Packages page: description, installation instructions, README rendering, link to docs
+- [x] Dokka V1 -> V2 migration (eliminates vulnerable jackson-core, netty, woodstox transitive dependencies from build classpath)
+- [x] Gradle Daemon toolchain (auto-detect/download JDK, align CLI and IDE, single Daemon)
+- [x] GitHub Packages page: description, installation instructions, README rendering, link to docs
 
 ### Supply Chain & Compliance
-- [ ] SBOM generation (CycloneDX) in CI for EO 14028 / FedRAMP supply chain requirements
-- [ ] Transitive dependency CVE audit and Dependabot/Renovate setup
-- [ ] FIPS 140 runtime check (detect BoringCrypto/FIPS mode on device) and documentation of which SDK crypto operations are FIPS-compliant
+- [x] SBOM generation (CycloneDX) in CI for EO 14028 / FedRAMP supply chain requirements
+- [x] Transitive dependency CVE audit and Dependabot/Renovate setup
+- [x] FIPS 140 runtime check (detect BoringCrypto/FIPS mode on device) and documentation of which SDK crypto operations are FIPS-compliant
 
 ### Accessibility
-- [ ] DebugOverlay WCAG 2.1 AA pass (content descriptions, minimum 48dp touch targets, sufficient contrast ratios, screen reader compatibility)
-- [ ] Sample app accessibility review (demonstrate accessible patterns consumers can copy)
+- [x] DebugOverlay WCAG 2.1 AA pass (content descriptions, minimum 48dp touch targets, sufficient contrast ratios, screen reader compatibility)
+- [x] Sample app accessibility review (demonstrate accessible patterns consumers can copy)
 
 ### Test Coverage (target: 65% line coverage)
-- [ ] Audit trail tests: AuditTrail record/verify round-trip, PersistentAuditTrail chain integrity, retention enforcement, GDPR user deletion
-- [ ] Queue DAO tests: QueueDao with in-memory Room DB (state transitions, backoff eligibility, retention purge, user queries)
-- [ ] RemoteConfigManager tests: version monotonicity, cooldown, A/B variant assignment, rollback
-- [ ] Transport security tests: MtlsClientBuilder, CertificateTransparencyValidator, OkHttpTransport error paths
-- [ ] Fleet tests: DevicePostureCollector with Robolectric shadows, DiagnosticsExporter zip validation
-- [ ] Room migration tests with `androidx.room:room-testing` MigrationTestHelper
-- [ ] ProGuard integration test (sample-app release build with minifyEnabled)
+- [x] Audit trail tests: AuditTrail record/verify round-trip, PersistentAuditTrail chain integrity, retention enforcement, GDPR user deletion
+- [x] Queue DAO tests: QueueDao with in-memory Room DB (state transitions, backoff eligibility, retention purge, user queries)
+- [x] RemoteConfigManager tests: version monotonicity, cooldown, A/B variant assignment, rollback
+- [x] Transport security tests: MtlsClientBuilder, CertificateTransparencyValidator, OkHttpTransport error paths
+- [x] Fleet tests: DevicePostureCollector with Robolectric shadows, DiagnosticsExporter zip validation
+- [x] Room migration tests with `androidx.room:room-testing` MigrationTestHelper
+- [x] ProGuard integration test (sample-app release build with minifyEnabled)
 
 ---
 
@@ -209,13 +209,29 @@ Focus: Compliance presets for government deployments, expanded sample app, compr
 - [ ] README overhaul (configuration matrix, troubleshooting, dependency impact, quick-start under 5 minutes)
 - [ ] Published AAR size and method count in release notes
 
-### Test Coverage (target: 60% line coverage)
-- [ ] Crypto module: ConditionalCryptoProvider, VersionedCryptoProvider, FieldLevelEncryptor
+### Security & Data Protection
+- [ ] Database-at-rest encryption via SQLCipher (`SupportFactory` for Room) for federal/DoD deployments where device disk encryption alone is insufficient
+- [ ] Database corruption recovery with `DatabaseErrorHandler` callback and consumer notification via `KioskOpsErrorListener`
+
+### Reactive APIs
+- [ ] `queueDepthFlow(): Flow<Long>` for reactive queue depth observation
+- [ ] `healthStatusFlow(): Flow<HealthCheckResult>` for health status streaming
+- [ ] Config update event flow from `RemoteConfigManager`
+
+### SDK Lifecycle
+- [ ] Cancel `javaInteropScope` on SDK teardown / process death
+- [ ] `ProcessLifecycleOwner` integration for auto-flush on background
+- [ ] Graceful cleanup on app death (flush queues, close databases)
+
+### Test Coverage (target: 70% line coverage)
+- [ ] Crypto module: VersionedCryptoProvider key rotation, versioned blob format, multi-version decrypt, cleanup policy (288 lines, currently 0%)
 - [ ] GeofenceManager state machine (permission checks, transitions, profile switching)
 - [ ] KioskOpsSdk orchestrator integration tests (enqueue pipeline end-to-end, sync, heartbeat)
-- [ ] WorkManager worker tests (KioskOpsSyncWorker, KioskOpsEventSyncWorker, DiagnosticsSchedulerWorker)
-- [ ] Debug module: DebugOverlay state aggregation, NetworkLoggingInterceptor
-- [ ] Structured logging: StructuredLogger multi-sink dispatch, FileSink
+- [ ] Instrumented test suite for crypto (AndroidKeyStore), Room (on-device SQLite), and WorkManager (real scheduler)
+
+### CI & Size Budget
+- [ ] AAR size and method count regression gate in CI
+- [ ] Dex method count tracking per release
 
 ### Documentation Accessibility
 - [ ] Dokka HTML output WCAG compliance review (alt text, heading structure, keyboard navigation)
