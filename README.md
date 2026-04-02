@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:0.7.0")
+    implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:0.8.0")
 }
 ```
 
