@@ -97,3 +97,42 @@ jobs:
           name: sbom
           path: 'kiosk-ops-sdk/build/reports/bom.*'
           retention-days: 90
+
+      - name: Update coverage badge
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          REPORT="kiosk-ops-sdk/build/reports/kover/reportDebug.xml"
+          if [ ! -f "$REPORT" ]; then
+            echo "Coverage report not found, skipping badge update"
+            exit 0
+          fi
+          COVERAGE=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('$REPORT')
+          root = tree.getroot()
+          missed = covered = 0
+          for pkg in root.findall('.//package'):
+              for c in pkg.findall('counter'):
+                  if c.get('type') == 'LINE':
+                      missed += int(c.get('missed', 0))
+                      covered += int(c.get('covered', 0))
+          total = missed + covered
+          print(int(covered * 100 / total) if total > 0 else 0)
+          ")
+          if [ "$COVERAGE" -ge 80 ]; then
+            COLOR="brightgreen"
+          elif [ "$COVERAGE" -ge 70 ]; then
+            COLOR="green"
+          elif [ "$COVERAGE" -ge 60 ]; then
+            COLOR="yellowgreen"
+          else
+            COLOR="orange"
+          fi
+          curl -s -X PATCH \
+            -H "Authorization: token $GIST_TOKEN" \
+            -d "{\"files\":{\"kioskops-coverage.json\":{\"content\":\"{\\\"schemaVersion\\\":1,\\\"label\\\":\\\"Coverage\\\",\\\"message\\\":\\\"${COVERAGE}%\\\",\\\"color\\\":\\\"${COLOR}\\\"}\"}}}" \
+            "https://api.github.com/gists/$GIST_ID"  > /dev/null
+          echo "Badge updated: ${COVERAGE}% (${COLOR})"
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: e10185573398e3034647f57ff8d61076
