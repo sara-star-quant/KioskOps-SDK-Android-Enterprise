@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WCAG 2.1 AA: Semantic structure, content descriptions, 48dp touch targets, contrast -->
+<ScrollView
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:padding="16dp">
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Header: app title (accessible heading) -->
+    <TextView
+      android:id="@+id/header"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/app_name"
+      android:textSize="24sp"
+      android:textColor="#212121"
+      android:accessibilityHeading="true"
+      android:importantForAccessibility="yes"
+      android:layout_marginBottom="16dp" />
+
+    <!-- SDK status section -->
+    <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/section_sdk_status"
+      android:textSize="18sp"
+      android:textColor="#212121"
+      android:accessibilityHeading="true"
+      android:layout_marginBottom="8dp" />
+
+    <TextView
+      android:id="@+id/sdkVersion"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:textSize="14sp"
+      android:textColor="#424242"
+      android:contentDescription="@string/cd_sdk_version"
+      android:layout_marginBottom="4dp" />
+
+    <TextView
+      android:id="@+id/queueStatus"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:textSize="14sp"
+      android:textColor="#424242"
+      android:contentDescription="@string/cd_queue_status"
+      android:layout_marginBottom="16dp" />
+
+    <!-- Actions section -->
+    <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/section_actions"
+      android:textSize="18sp"
+      android:textColor="#212121"
+      android:accessibilityHeading="true"
+      android:layout_marginBottom="8dp" />
+
+    <!-- Enqueue button: minimum 48dp touch target -->
+    <Button
+      android:id="@+id/btnEnqueue"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:minHeight="48dp"
+      android:text="@string/btn_enqueue"
+      android:contentDescription="@string/cd_enqueue"
+      android:layout_marginBottom="8dp" />
+
+    <!-- Heartbeat button -->
+    <Button
+      android:id="@+id/btnHeartbeat"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:minHeight="48dp"
+      android:text="@string/btn_heartbeat"
+      android:contentDescription="@string/cd_heartbeat"
+      android:layout_marginBottom="8dp" />
+
+    <!-- Health check button -->
+    <Button
+      android:id="@+id/btnHealthCheck"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:minHeight="48dp"
+      android:text="@string/btn_health_check"
+      android:contentDescription="@string/cd_health_check"
+      android:layout_marginBottom="16dp" />
+
+    <!-- Result display -->
+    <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/section_result"
+      android:textSize="18sp"
+      android:textColor="#212121"
+      android:accessibilityHeading="true"
+      android:layout_marginBottom="8dp" />
+
+    <TextView
+      android:id="@+id/resultText"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:textSize="14sp"
+      android:textColor="#424242"
+      android:importantForAccessibility="yes"
+      android:accessibilityLiveRegion="polite"
+      android:layout_marginBottom="16dp" />
+
+  </LinearLayout>
+</ScrollView>

@@ -5,6 +5,79 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - Unreleased
+
+Pre-1.0 hardening release; Java interop, error observability, supply chain compliance, and test coverage push.
+
+### Added
+
+- `@JvmStatic` on `KioskOpsSdk.init()`, `get()`, `getOrNull()`, `SDK_VERSION` for direct Java access
+- `@JvmOverloads` on `enqueue`, `enqueueDetailed`, `quarantinedEvents`, `heartbeat`, `uploadDiagnosticsNow`, `verifyAuditIntegrity`, `processRemoteDiagnosticsTrigger`, `init`, and `KioskOpsConfig` constructor
+- Blocking wrapper methods for Java callers: `enqueueBlocking()`, `enqueueDetailedBlocking()`, `syncOnceBlocking()`, `heartbeatBlocking()`, `queueDepthBlocking()`, `healthCheckBlocking()` returning `CompletableFuture`
+- `healthCheck()` API returning `HealthCheckResult` (queue depth, sync status, auth state, encryption, SDK version)
+- `KioskOpsErrorListener` and `KioskOpsError` sealed class for non-fatal error callbacks via `setErrorListener()`
+- `ExperimentalKioskOpsApi` opt-in annotation for experimental APIs
+- `DebugLogBroadcastReceiver` for runtime log level toggle via ADB broadcast intent
+- `FipsComplianceChecker` for FIPS 140-2/3 runtime detection with documentation of FIPS-compliant SDK crypto operations
+- CycloneDX SBOM generation in CI for EO 14028 / FedRAMP supply chain requirements
+- Kover 65% line coverage enforcement threshold in CI
+
+### Changed
+
+- `HardwareAcceleratedDetector` now annotated with `@ExperimentalKioskOpsApi` (callers must opt in)
+- `GeofenceManager` is now `open` with `protected open` extension point methods (`registerGeofences`, `unregisterGeofences`)
+- Removed jackson-core force-patch from Dokka V1 build classpath (Dokka V2 does not use Jackson)
+- Added Gradle foojay toolchain resolver for automatic JDK provisioning
+- Consumer ProGuard rules updated for new types (`HealthCheckResult`, `KioskOpsErrorListener`, `KioskOpsError`, `ExperimentalKioskOpsApi`)
+- Error listener notified on sync transient and permanent failures
+- SDK library `isMinifyEnabled` set to `false` for release builds (libraries must not self-minify; consumer R8 handles shrinking)
+- Threading KDoc added to all public suspend functions (main-safe vs IO dispatcher)
+- Sync ordering limitation documented on `SyncEngine`
+
+### Fixed
+
+- `QuarantinedEventSummary` now annotated with `@Serializable` (was missing, caused runtime crash in diagnostics export)
+- `RemoteConfigSignatureTest` test isolation: clearing `ConfigDatabase` singleton in tearDown prevents stale database poisoning across tests
+- `ConfigDatabase.setInstance` now accepts nullable to allow clearing singleton in tests
+
+### Build
+
+- CycloneDX SBOM plugin added to build; SBOM artifact uploaded in CI and release workflows
+- Kover `koverVerifyDebug` step added to CI pipeline
+- SBOM artifact uploaded with 90-day retention
+- Dokka V2 plugin mode enabled (`V2EnabledWithHelpers`); CI updated to `dokkaGeneratePublicationHtml`
+- room-testing dependency added for migration tests
+- Test coverage: 68% line coverage (517 tests, up from 52% / 400 tests in v0.6.0)
+
+### Security
+
+- FIPS 140 runtime checker documents which SDK crypto operations are FIPS-compliant (AES-256-GCM, ECDSA P-256, SHA-256, HMAC-SHA256)
+- Dependabot already configured for Gradle and GitHub Actions (verified, not new)
+
+### Documentation
+
+- `GeofenceManager` extension point methods documented with subclass integration guidance
+- `DebugLogBroadcastReceiver` usage documented for field technician ADB access
+
+### Test Coverage
+
+- PersistentAuditTrail: record/verify round-trip, chain integrity, retention, GDPR user deletion, statistics, export
+- QueueDao: state transitions, backoff eligibility, retention purge, user queries, anomaly filtering, quarantine summaries
+- RemoteConfigManager: version monotonicity, cooldown enforcement, A/B variants, rollback, minimum version, disabled policy, missing version
+- OkHttpTransport: success path, HTTP 4xx/5xx classification, auth header injection, SDK version header, example.invalid guard
+- HealthCheck and ErrorListener: structured status, queue depth reflection, heartbeat reason, error types
+- FipsComplianceChecker: runtime detection, data class accessibility
+- DevicePostureCollector: device info, groups, resilience to system service failures
+- DiagnosticsExporter: ZIP creation, manifest content, health snapshot, quarantined summaries
+- Room migrations: QueueDatabase v3->v4 column/index verification, AuditDatabase v1->v2 userId column
+- ProGuard integration: sample-app release build with R8 minification validates consumer-rules.pro
+
+### Accessibility
+
+- Sample app rewritten with WCAG 2.1 AA patterns: semantic headings, content descriptions, 48dp touch targets, live region announcements, sufficient contrast
+
+---
+
 ## [0.6.0] - 2026-04-01
 
 API freeze readiness release; hardening the API surface, adding quality tooling, removing deprecated APIs, and implementing real config signature verification in preparation for v1.0.

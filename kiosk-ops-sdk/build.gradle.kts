@@ -6,36 +6,12 @@ plugins {
   alias(libs.plugins.dokka)
   alias(libs.plugins.detekt)
   alias(libs.plugins.kover)
+  alias(libs.plugins.cyclonedx)
   `maven-publish`
 }
 
 kotlin {
   jvmToolchain(17)
-}
-
-// Force patched jackson for Dokka V1 build classpath (GHSA-h46c-h94j-95f3, GHSA-wf8f-6423-gfxg)
-// Remove after Dokka V2 migration in v0.7.0
-configurations.matching { it.name.startsWith("dokka") }.configureEach {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "com.fasterxml.jackson.core") {
-      useVersion("2.15.4")
-    }
-    if (requested.group == "com.fasterxml.jackson.module") {
-      useVersion("2.15.4")
-    }
-  }
-}
-
-// Force patched jackson for Dokka's build-time classpath (GHSA-h46c-h94j-95f3)
-configurations.matching { it.name.startsWith("dokka") }.configureEach {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "com.fasterxml.jackson.core") {
-      useVersion("2.15.4")
-    }
-    if (requested.group == "com.fasterxml.jackson.module") {
-      useVersion("2.15.4")
-    }
-  }
 }
 
 android {
@@ -55,8 +31,9 @@ android {
 
   buildTypes {
     release {
-      isMinifyEnabled = true
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+      // Libraries must not minify themselves; consumer R8 handles shrinking.
+      // consumer-rules.pro tells the consumer what to keep.
+      isMinifyEnabled = false
     }
     debug {
       isMinifyEnabled = false
@@ -114,6 +91,16 @@ detekt {
   baseline = file("$rootDir/config/detekt/baseline.xml")
 }
 
+kover {
+  reports {
+    verify {
+      rule {
+        minBound(65)
+      }
+    }
+  }
+}
+
 dependencies {
   api(libs.androidx.core.ktx)
 
@@ -137,6 +124,7 @@ dependencies {
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.androidx.work.testing)
+  testImplementation(libs.androidx.room.testing)
 
   // Fuzzing (JUnit 5)
   testImplementation(libs.junit5.api)

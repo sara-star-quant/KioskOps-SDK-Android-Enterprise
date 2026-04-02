@@ -9,6 +9,11 @@
 -keep class com.peterz.kioskops.sdk.KioskOpsSdk { *; }
 -keep class com.peterz.kioskops.sdk.KioskOpsConfig { *; }
 -keep class com.peterz.kioskops.sdk.KioskOpsInitializer { *; }
+-keep class com.peterz.kioskops.sdk.HealthCheckResult { *; }
+-keep class com.peterz.kioskops.sdk.KioskOpsErrorListener { *; }
+-keep class com.peterz.kioskops.sdk.KioskOpsError { *; }
+-keep class com.peterz.kioskops.sdk.KioskOpsError$* { *; }
+-keep class com.peterz.kioskops.sdk.ExperimentalKioskOpsApi { *; }
 
 # -----------------------------------------------------------------------------
 # 2. Policy and configuration types

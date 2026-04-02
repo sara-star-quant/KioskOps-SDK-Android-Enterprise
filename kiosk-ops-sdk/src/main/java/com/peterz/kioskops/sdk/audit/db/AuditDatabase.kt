@@ -59,6 +59,17 @@ abstract class AuditDatabase : RoomDatabase() {
     }
 
     /**
+     * Replace the singleton instance (for testing with in-memory databases).
+     * Pass null to clear.
+     */
+    @androidx.annotation.VisibleForTesting
+    fun setInstance(database: AuditDatabase?) {
+      synchronized(this) {
+        INSTANCE = database
+      }
+    }
+
+    /**
      * Close and clear the database instance.
      * Used primarily for testing.
      */

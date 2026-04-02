@@ -6,12 +6,57 @@ public final class com/peterz/kioskops/sdk/BuildConfig {
 	public fun <init> ()V
 }
 
+public abstract interface annotation class com/peterz/kioskops/sdk/ExperimentalKioskOpsApi : java/lang/annotation/Annotation {
+}
+
+public final class com/peterz/kioskops/sdk/HealthCheckResult {
+	public fun <init> (ZJZLjava/lang/String;ZZLjava/lang/String;)V
+	public final fun component1 ()Z
+	public final fun component2 ()J
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Z
+	public final fun component6 ()Z
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (ZJZLjava/lang/String;ZZLjava/lang/String;)Lcom/peterz/kioskops/sdk/HealthCheckResult;
+	public static synthetic fun copy$default (Lcom/peterz/kioskops/sdk/HealthCheckResult;ZJZLjava/lang/String;ZZLjava/lang/String;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/HealthCheckResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAuthProviderConfigured ()Z
+	public final fun getEncryptionEnabled ()Z
+	public final fun getLastHeartbeatReason ()Ljava/lang/String;
+	public final fun getQueueDepth ()J
+	public final fun getSdkVersion ()Ljava/lang/String;
+	public final fun getSyncEnabled ()Z
+	public fun hashCode ()I
+	public final fun isInitialized ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/peterz/kioskops/sdk/KioskOpsAlreadyInitializedException : com/peterz/kioskops/sdk/KioskOpsException {
 	public fun <init> ()V
 }
 
 public final class com/peterz/kioskops/sdk/KioskOpsConfig {
 	public static final field Companion Lcom/peterz/kioskops/sdk/KioskOpsConfig$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Z)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJ)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;Ljava/util/Map;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;Ljava/util/Map;Lcom/peterz/kioskops/sdk/validation/ValidationPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;Ljava/util/Map;Lcom/peterz/kioskops/sdk/validation/ValidationPolicy;Lcom/peterz/kioskops/sdk/pii/PiiPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;Ljava/util/Map;Lcom/peterz/kioskops/sdk/validation/ValidationPolicy;Lcom/peterz/kioskops/sdk/pii/PiiPolicy;Lcom/peterz/kioskops/sdk/crypto/FieldEncryptionPolicy;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;Ljava/util/Map;Lcom/peterz/kioskops/sdk/validation/ValidationPolicy;Lcom/peterz/kioskops/sdk/pii/PiiPolicy;Lcom/peterz/kioskops/sdk/crypto/FieldEncryptionPolicy;Lcom/peterz/kioskops/sdk/pii/DataClassificationPolicy;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;Ljava/util/Map;Lcom/peterz/kioskops/sdk/validation/ValidationPolicy;Lcom/peterz/kioskops/sdk/pii/PiiPolicy;Lcom/peterz/kioskops/sdk/crypto/FieldEncryptionPolicy;Lcom/peterz/kioskops/sdk/pii/DataClassificationPolicy;Lcom/peterz/kioskops/sdk/anomaly/AnomalyPolicy;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZJLjava/lang/String;Lcom/peterz/kioskops/sdk/compliance/SecurityPolicy;Lcom/peterz/kioskops/sdk/compliance/RetentionPolicy;Lcom/peterz/kioskops/sdk/compliance/TelemetryPolicy;Lcom/peterz/kioskops/sdk/compliance/QueueLimits;Lcom/peterz/kioskops/sdk/compliance/IdempotencyConfig;Lcom/peterz/kioskops/sdk/sync/SyncPolicy;Lcom/peterz/kioskops/sdk/transport/security/TransportSecurityPolicy;Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigPolicy;Lcom/peterz/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;Lcom/peterz/kioskops/sdk/observability/ObservabilityPolicy;Lcom/peterz/kioskops/sdk/geofence/GeofencePolicy;Ljava/util/Map;Lcom/peterz/kioskops/sdk/validation/ValidationPolicy;Lcom/peterz/kioskops/sdk/pii/PiiPolicy;Lcom/peterz/kioskops/sdk/crypto/FieldEncryptionPolicy;Lcom/peterz/kioskops/sdk/pii/DataClassificationPolicy;Lcom/peterz/kioskops/sdk/anomaly/AnomalyPolicy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
@@ -70,6 +115,87 @@ public final class com/peterz/kioskops/sdk/KioskOpsConfig$Companion {
 	public final fun gdprDefaults (Ljava/lang/String;Ljava/lang/String;)Lcom/peterz/kioskops/sdk/KioskOpsConfig;
 }
 
+public abstract class com/peterz/kioskops/sdk/KioskOpsError {
+	public abstract fun getCause ()Ljava/lang/Throwable;
+	public abstract fun getMessage ()Ljava/lang/String;
+}
+
+public final class com/peterz/kioskops/sdk/KioskOpsError$ConfigError : com/peterz/kioskops/sdk/KioskOpsError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lcom/peterz/kioskops/sdk/KioskOpsError$ConfigError;
+	public static synthetic fun copy$default (Lcom/peterz/kioskops/sdk/KioskOpsError$ConfigError;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/KioskOpsError$ConfigError;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/peterz/kioskops/sdk/KioskOpsError$CryptoError : com/peterz/kioskops/sdk/KioskOpsError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lcom/peterz/kioskops/sdk/KioskOpsError$CryptoError;
+	public static synthetic fun copy$default (Lcom/peterz/kioskops/sdk/KioskOpsError$CryptoError;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/KioskOpsError$CryptoError;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/peterz/kioskops/sdk/KioskOpsError$EnqueueFailed : com/peterz/kioskops/sdk/KioskOpsError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lcom/peterz/kioskops/sdk/KioskOpsError$EnqueueFailed;
+	public static synthetic fun copy$default (Lcom/peterz/kioskops/sdk/KioskOpsError$EnqueueFailed;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/KioskOpsError$EnqueueFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/peterz/kioskops/sdk/KioskOpsError$StorageError : com/peterz/kioskops/sdk/KioskOpsError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lcom/peterz/kioskops/sdk/KioskOpsError$StorageError;
+	public static synthetic fun copy$default (Lcom/peterz/kioskops/sdk/KioskOpsError$StorageError;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/KioskOpsError$StorageError;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/peterz/kioskops/sdk/KioskOpsError$SyncFailed : com/peterz/kioskops/sdk/KioskOpsError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Throwable;)Lcom/peterz/kioskops/sdk/KioskOpsError$SyncFailed;
+	public static synthetic fun copy$default (Lcom/peterz/kioskops/sdk/KioskOpsError$SyncFailed;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/KioskOpsError$SyncFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getHttpStatus ()Ljava/lang/Integer;
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/peterz/kioskops/sdk/KioskOpsErrorListener {
+	public abstract fun onError (Lcom/peterz/kioskops/sdk/KioskOpsError;)V
+}
+
 public class com/peterz/kioskops/sdk/KioskOpsException : java/lang/RuntimeException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -94,36 +220,71 @@ public final class com/peterz/kioskops/sdk/KioskOpsSdk {
 	public final fun currentPolicyHash ()Ljava/lang/String;
 	public final fun devicePosture ()Lcom/peterz/kioskops/sdk/fleet/DevicePosture;
 	public final fun enqueue (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun enqueue (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun enqueue$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun enqueueBlocking (Ljava/lang/String;Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
+	public final fun enqueueBlocking (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
+	public static synthetic fun enqueueBlocking$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/util/concurrent/CompletableFuture;
 	public final fun enqueueDetailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun enqueueDetailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun enqueueDetailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun enqueueDetailed (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun enqueueDetailed$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun enqueueDetailedBlocking (Ljava/lang/String;Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
+	public final fun enqueueDetailedBlocking (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
+	public final fun enqueueDetailedBlocking (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
+	public final fun enqueueDetailedBlocking (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
+	public static synthetic fun enqueueDetailedBlocking$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/util/concurrent/CompletableFuture;
 	public final fun exportDiagnostics (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exportSignedAuditRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun get ()Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 	public final fun getAbTestVariant (Ljava/lang/String;Ljava/util/List;)Ljava/lang/String;
 	public final fun getAuditStatistics (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getConfigVersionHistory (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getDataRights ()Lcom/peterz/kioskops/sdk/compliance/DataRightsManager;
 	public final fun getDebugOverlay ()Lcom/peterz/kioskops/sdk/debug/DebugOverlay;
 	public final fun getDeviceGroupProvider ()Lcom/peterz/kioskops/sdk/fleet/DeviceGroupProvider;
+	public static final fun getOrNull ()Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 	public final fun getRemainingDiagnosticsTriggersToday ()I
 	public final fun getRemoteConfigManager ()Lcom/peterz/kioskops/sdk/fleet/config/RemoteConfigManager;
+	public static final fun getSDK_VERSION ()Ljava/lang/String;
 	public final fun getSchemaRegistry ()Lcom/peterz/kioskops/sdk/validation/SchemaRegistry;
+	public final fun healthCheck (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun healthCheckBlocking ()Ljava/util/concurrent/CompletableFuture;
 	public final fun heartbeat (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun heartbeat (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun heartbeat$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun heartbeatBlocking ()Ljava/util/concurrent/CompletableFuture;
+	public final fun heartbeatBlocking (Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
+	public static synthetic fun heartbeatBlocking$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;ILjava/lang/Object;)Ljava/util/concurrent/CompletableFuture;
+	public static final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public static final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public static final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public static final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;Lcom/peterz/kioskops/sdk/transport/RequestSigner;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public static final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;Lcom/peterz/kioskops/sdk/transport/RequestSigner;Lcom/peterz/kioskops/sdk/transport/Transport;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public static final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;Lcom/peterz/kioskops/sdk/transport/RequestSigner;Lcom/peterz/kioskops/sdk/transport/Transport;Lokhttp3/OkHttpClient;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 	public final fun logger ()Lcom/peterz/kioskops/sdk/logging/RingLog;
 	public final fun processRemoteDiagnosticsTrigger (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun processRemoteDiagnosticsTrigger (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun processRemoteDiagnosticsTrigger$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun quarantinedEvents (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun quarantinedEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun quarantinedEvents$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun queueDepth (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun queueDepthBlocking ()Ljava/util/concurrent/CompletableFuture;
 	public final fun rollbackConfig (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun setAnomalyDetector (Lcom/peterz/kioskops/sdk/anomaly/AnomalyDetector;)V
 	public final fun setDiagnosticsUploader (Lcom/peterz/kioskops/sdk/fleet/DiagnosticsUploader;)V
+	public final fun setErrorListener (Lcom/peterz/kioskops/sdk/KioskOpsErrorListener;)V
 	public final fun setPiiDetector (Lcom/peterz/kioskops/sdk/pii/PiiDetector;)V
 	public final fun syncOnce (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun syncOnceBlocking ()Ljava/util/concurrent/CompletableFuture;
 	public final fun uploadDiagnosticsNow (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun uploadDiagnosticsNow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun uploadDiagnosticsNow$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun verifyAuditIntegrity (Ljava/lang/Long;Ljava/lang/Long;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun verifyAuditIntegrity (Ljava/lang/Long;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun verifyAuditIntegrity (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun verifyAuditIntegrity$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk;Ljava/lang/Long;Ljava/lang/Long;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
@@ -131,6 +292,11 @@ public final class com/peterz/kioskops/sdk/KioskOpsSdk$Companion {
 	public final fun get ()Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 	public final fun getOrNull ()Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 	public final fun getSDK_VERSION ()Ljava/lang/String;
+	public final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;Lcom/peterz/kioskops/sdk/transport/RequestSigner;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
+	public final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;Lcom/peterz/kioskops/sdk/transport/RequestSigner;Lcom/peterz/kioskops/sdk/transport/Transport;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 	public final fun init (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;Lcom/peterz/kioskops/sdk/transport/RequestSigner;Lcom/peterz/kioskops/sdk/transport/Transport;Lokhttp3/OkHttpClient;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 	public static synthetic fun init$default (Lcom/peterz/kioskops/sdk/KioskOpsSdk$Companion;Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/peterz/kioskops/sdk/crypto/CryptoProvider;Lcom/peterz/kioskops/sdk/transport/AuthProvider;Lcom/peterz/kioskops/sdk/transport/RequestSigner;Lcom/peterz/kioskops/sdk/transport/Transport;Lokhttp3/OkHttpClient;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/KioskOpsSdk;
 }
@@ -480,6 +646,7 @@ public abstract class com/peterz/kioskops/sdk/audit/db/AuditDatabase : androidx/
 public final class com/peterz/kioskops/sdk/audit/db/AuditDatabase$Companion {
 	public final fun closeInstance ()V
 	public final fun getInstance (Landroid/content/Context;)Lcom/peterz/kioskops/sdk/audit/db/AuditDatabase;
+	public final fun setInstance (Lcom/peterz/kioskops/sdk/audit/db/AuditDatabase;)V
 }
 
 public final class com/peterz/kioskops/sdk/audit/db/AuditDatabase_Impl : com/peterz/kioskops/sdk/audit/db/AuditDatabase {
@@ -616,6 +783,28 @@ public final class com/peterz/kioskops/sdk/compliance/DataRightsManager {
 	public final fun exportUserData (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun resetSdkDeviceId ()Ljava/lang/String;
 	public final fun wipeAllSdkData (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/peterz/kioskops/sdk/compliance/FipsComplianceChecker {
+	public static final field INSTANCE Lcom/peterz/kioskops/sdk/compliance/FipsComplianceChecker;
+	public final fun check ()Lcom/peterz/kioskops/sdk/compliance/FipsComplianceChecker$FipsStatus;
+}
+
+public final class com/peterz/kioskops/sdk/compliance/FipsComplianceChecker$FipsStatus {
+	public fun <init> (ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/peterz/kioskops/sdk/compliance/FipsComplianceChecker$FipsStatus;
+	public static synthetic fun copy$default (Lcom/peterz/kioskops/sdk/compliance/FipsComplianceChecker$FipsStatus;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/peterz/kioskops/sdk/compliance/FipsComplianceChecker$FipsStatus;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDetails ()Ljava/lang/String;
+	public final fun getProviderName ()Ljava/lang/String;
+	public final fun getProviderVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isFipsMode ()Z
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/peterz/kioskops/sdk/compliance/IdempotencyConfig {
@@ -1080,6 +1269,19 @@ public final class com/peterz/kioskops/sdk/crypto/VersionedCryptoProvider : com/
 	public final fun rotateKey (Z)Lcom/peterz/kioskops/sdk/crypto/RotationResult;
 	public static synthetic fun rotateKey$default (Lcom/peterz/kioskops/sdk/crypto/VersionedCryptoProvider;ZILjava/lang/Object;)Lcom/peterz/kioskops/sdk/crypto/RotationResult;
 	public final fun shouldRotate ()Z
+}
+
+public final class com/peterz/kioskops/sdk/debug/DebugLogBroadcastReceiver : android/content/BroadcastReceiver {
+	public static final field ACTION Ljava/lang/String;
+	public static final field Companion Lcom/peterz/kioskops/sdk/debug/DebugLogBroadcastReceiver$Companion;
+	public fun <init> ()V
+	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
+}
+
+public final class com/peterz/kioskops/sdk/debug/DebugLogBroadcastReceiver$Companion {
+	public final fun getCurrentLevel ()Ljava/lang/String;
+	public final fun intentFilter ()Landroid/content/IntentFilter;
+	public final fun register (Landroid/content/Context;)Lcom/peterz/kioskops/sdk/debug/DebugLogBroadcastReceiver;
 }
 
 public final class com/peterz/kioskops/sdk/debug/DebugOverlay {
@@ -2095,7 +2297,7 @@ public final class com/peterz/kioskops/sdk/geofence/GeofenceError$TooManyGeofenc
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/peterz/kioskops/sdk/geofence/GeofenceManager {
+public class com/peterz/kioskops/sdk/geofence/GeofenceManager {
 	public fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lcom/peterz/kioskops/sdk/audit/AuditTrail;Ljava/time/Clock;)V
 	public synthetic fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lcom/peterz/kioskops/sdk/audit/AuditTrail;Ljava/time/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun addTransitionListener (Lcom/peterz/kioskops/sdk/geofence/GeofenceTransitionListener;)V
@@ -2105,9 +2307,11 @@ public final class com/peterz/kioskops/sdk/geofence/GeofenceManager {
 	public final fun getCurrentRegion ()Lcom/peterz/kioskops/sdk/geofence/GeofenceRegion;
 	public final fun isInRegion (Ljava/lang/String;)Z
 	public final fun isMonitoring ()Z
+	protected fun registerGeofences (Ljava/util/List;)V
 	public final fun removeTransitionListener (Lcom/peterz/kioskops/sdk/geofence/GeofenceTransitionListener;)V
 	public final fun startMonitoring (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun stopMonitoring (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun unregisterGeofences ()V
 }
 
 public final class com/peterz/kioskops/sdk/geofence/GeofencePolicy {
@@ -3402,6 +3606,7 @@ public final class com/peterz/kioskops/sdk/queue/QuarantinedEventRow {
 }
 
 public final class com/peterz/kioskops/sdk/queue/QuarantinedEventSummary {
+	public static final field Companion Lcom/peterz/kioskops/sdk/queue/QuarantinedEventSummary$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;JILjava/lang/String;J)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
@@ -3420,6 +3625,20 @@ public final class com/peterz/kioskops/sdk/queue/QuarantinedEventSummary {
 	public final fun getUpdatedAtEpochMs ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public synthetic class com/peterz/kioskops/sdk/queue/QuarantinedEventSummary$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/peterz/kioskops/sdk/queue/QuarantinedEventSummary$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/peterz/kioskops/sdk/queue/QuarantinedEventSummary;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/peterz/kioskops/sdk/queue/QuarantinedEventSummary;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class com/peterz/kioskops/sdk/queue/QuarantinedEventSummary$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public abstract interface class com/peterz/kioskops/sdk/queue/QueueDao {
