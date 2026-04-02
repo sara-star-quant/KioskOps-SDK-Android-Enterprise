@@ -108,7 +108,7 @@ Focus: Stronger data quality and compliance tooling.
 
 ---
 
-## v0.6.0 -- API Freeze Readiness [RELEASED]
+## v0.6.0 API Freeze Readiness [RELEASED]
 
 Focus: Harden the API surface, add quality tooling, and prepare for v1.0 API freeze.
 
@@ -142,7 +142,7 @@ Focus: Harden the API surface, add quality tooling, and prepare for v1.0 API fre
 
 ---
 
-## v0.7.0 -- Pre-1.0 Hardening
+## v0.7.0 Pre-1.0 Hardening
 
 Focus: Java interop, error handling, observability, API contract finalization, federal/gov compliance tooling, accessibility, and quality gates before the 1.0 freeze.
 
@@ -186,7 +186,7 @@ Focus: Java interop, error handling, observability, API contract finalization, f
 
 ---
 
-## v0.8.0 -- Compliance Presets, Documentation & Developer Experience
+## v0.8.0 Compliance Presets, Documentation and Developer Experience
 
 Focus: Compliance presets for government deployments, expanded sample app, comprehensive documentation, and developer experience polish.
 
@@ -239,7 +239,7 @@ Focus: Compliance presets for government deployments, expanded sample app, compr
 
 ---
 
-## v1.0.0 -- Stable Release & Platform Expansion
+## v1.0.0 Stable Release and Platform Expansion
 
 Focus: Production stability, distribution, LTS commitment, and cross-platform support.
 

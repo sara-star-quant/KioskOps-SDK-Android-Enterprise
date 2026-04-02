@@ -1,4 +1,4 @@
-# BSI IT-Grundschutz -- KioskOps SDK Control Mapping
+# BSI IT-Grundschutz: KioskOps SDK Control Mapping
 
 > **Disclaimer:** This document is an engineering reference only. It does not
 > constitute a compliance certification, legal advice, or security assessment.
@@ -17,7 +17,7 @@ Compendium (Edition 2023).
 
 ---
 
-## APP.4.4 -- Application Development Security
+## APP.4.4 Application Development Security
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
@@ -32,7 +32,7 @@ Compendium (Edition 2023).
 | APP.4.4.A9 | Error handling | Error listener; fail-safe validation | `setErrorListener()` for non-fatal errors; validation errors never block pipeline in permissive mode; no sensitive data in error messages | Debug log output restricted to debug builds |
 | APP.4.4.A10 | Dependency management | CycloneDX SBOM | BOM generated in CI pipeline; dependency versions tracked; jackson-core CVE mitigations applied | SDK consumers must monitor SBOM for vulnerability updates |
 
-## SYS.3.2.2 -- Mobile Device Management
+## SYS.3.2.2 Mobile Device Management
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
@@ -51,10 +51,10 @@ Compendium (Edition 2023).
 
 The following IT-Grundschutz requirements are outside SDK scope:
 
-- **ORP (Organizational)** -- security policies, personnel, training
-- **CON (Concepts)** -- data protection concept, crypto concept (SDK provides technical building blocks)
-- **OPS (Operations)** -- patch management, incident handling, backup procedures
-- **DER (Detection and Response)** -- SIEM integration, forensic readiness (SDK provides audit trail as input)
-- **INF (Infrastructure)** -- physical security, network segmentation
-- **NET (Network)** -- firewall, VPN, network monitoring
-- **SYS.3.2.2 device enrollment and MDM policy enforcement** -- MDM/EMM responsibility
+- **ORP (Organizational)**: security policies, personnel, training
+- **CON (Concepts)**: data protection concept, crypto concept (SDK provides technical building blocks)
+- **OPS (Operations)**: patch management, incident handling, backup procedures
+- **DER (Detection and Response)**: SIEM integration, forensic readiness (SDK provides audit trail as input)
+- **INF (Infrastructure)**: physical security, network segmentation
+- **NET (Network)**: firewall, VPN, network monitoring
+- **SYS.3.2.2 device enrollment and MDM policy enforcement**: MDM/EMM responsibility

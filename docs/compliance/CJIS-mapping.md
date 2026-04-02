@@ -1,4 +1,4 @@
-# CJIS Security Policy v5.9 -- KioskOps SDK Control Mapping
+# CJIS Security Policy v5.9: KioskOps SDK Control Mapping
 
 > **Disclaimer:** This document is an engineering reference only. It does not
 > constitute a compliance certification, legal advice, or security assessment.
@@ -17,7 +17,7 @@ combination for CJIS-adjacent deployments.
 
 ---
 
-## 5.4 -- Access Control
+## 5.4 Access Control
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
@@ -25,7 +25,7 @@ combination for CJIS-adjacent deployments.
 | 5.4.4 | Information Flow Enforcement | Data classification; field encryption | RESTRICTED tag prevents uncontrolled flow; field-level encryption protects CJI fields | Network flow enforcement requires host-app and infrastructure controls |
 | 5.4.6 | Least Privilege | Config presets | `cjisDefaults()` enables minimum necessary SDK features; debug logs restricted to debug builds | Application-level privilege enforcement is host-app responsibility |
 
-## 5.5 -- Authentication
+## 5.5 Authentication
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
@@ -33,14 +33,14 @@ combination for CJIS-adjacent deployments.
 | 5.5.5 | Session Timeout | None | SDK does not manage user sessions | Session timeout must be enforced by the host application; this is outside SDK scope |
 | 5.5.6 | Advanced Authentication (AA) | mTLS | Client certificate mutual authentication | Multi-factor authentication is host-app responsibility; SDK provides the transport channel |
 
-## 5.6 -- Identification
+## 5.6 Identification
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
 | 5.6.1 | Uniquely Identify Individuals | userId tracking; pseudonymous deviceId | SDK-scoped deviceId stable per install; optional userId per event | User identity verification is host-app responsibility |
 | 5.6.2 | Identifier Management | Device ID reset | `resetSdkDeviceId()` for device re-provisioning; key rotation for crypto identifiers | Host app manages user identifier lifecycle |
 
-## 5.7 -- Encryption
+## 5.7 Encryption
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
@@ -49,7 +49,7 @@ combination for CJIS-adjacent deployments.
 | 5.7.2 | Encryption in Transit | TLS; certificate pinning; mTLS | Certificate pinning with SHA-256 pins; mutual TLS; Certificate Transparency | Only active when network sync is enabled (opt-in) |
 | 5.7.2.2 | FIPS 140-2 Compliance | FIPS 140 runtime detection | Detects FIPS-mode Conscrypt/BoringSSL at runtime; `cjisDefaults()` enables detection | SDK does not bundle a FIPS module; host must supply a FIPS 140-2 validated provider |
 
-## 5.8 -- Media Protection
+## 5.8 Media Protection
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
@@ -57,13 +57,13 @@ combination for CJIS-adjacent deployments.
 | 5.8.2 | Media Transport | Encryption in transit | TLS + HMAC signing for sync; exported diagnostics ZIPs contain encrypted data | Physical transport controls are organizational responsibility |
 | 5.8.3 | Media Sanitization | Data deletion APIs | `wipeAllSdkData()` removes all SDK data; `deleteUserData()` for targeted erasure | Covers SDK data only; host app handles its own media sanitization |
 
-## 5.9 -- Physical Protection
+## 5.9 Physical Protection
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
 | 5.9.1 | Physically Secure Location | Device posture snapshot | Lock-task mode detection; device owner status reporting | Physical security is facility/deployment responsibility; SDK provides posture awareness only |
 
-## 5.10 -- Audit and Accountability
+## 5.10 Audit and Accountability
 
 | Control ID | Control Title | SDK Feature | Implementation | Notes/Limitations |
 |------------|--------------|-------------|----------------|-------------------|
@@ -79,11 +79,11 @@ combination for CJIS-adjacent deployments.
 
 The following CJIS policy areas require host-app, infrastructure, or organizational controls:
 
-- **5.1 (Information Exchange Agreements)** -- organizational/contractual
-- **5.2 (Security Awareness Training)** -- organizational
-- **5.3 (Incident Response)** -- organizational; SDK provides audit trail and error listener as inputs
-- **5.5.5 (Session Timeout)** -- must be enforced by the host application
-- **5.9 (Physical Protection)** -- largely facility/deployment responsibility
-- **5.11 (Configuration Management)** -- organizational; SDK provides `cjisDefaults()` preset
-- **5.12 (Personnel Security)** -- organizational
-- **5.13 (Mobile Devices)** -- MDM/EMM responsibility; SDK provides device posture data
+- **5.1 (Information Exchange Agreements)**: organizational/contractual
+- **5.2 (Security Awareness Training)**: organizational
+- **5.3 (Incident Response)**: organizational; SDK provides audit trail and error listener as inputs
+- **5.5.5 (Session Timeout)**: must be enforced by the host application
+- **5.9 (Physical Protection)**: largely facility/deployment responsibility
+- **5.11 (Configuration Management)**: organizational; SDK provides `cjisDefaults()` preset
+- **5.12 (Personnel Security)**: organizational
+- **5.13 (Mobile Devices)**: MDM/EMM responsibility; SDK provides device posture data
