@@ -85,7 +85,13 @@ class App : Application() {
 ### 2. Enqueue events
 
 ```kotlin
-val accepted = KioskOpsSdk.get().enqueue("button_press", """{"screen": "home"}""")
+// suspend function -- call from a coroutine scope
+lifecycleScope.launch {
+    val accepted = KioskOpsSdk.get().enqueue("button_press", """{"screen": "home"}""")
+}
+
+// or use the blocking wrapper from Java / non-coroutine code
+val accepted = KioskOpsSdk.get().enqueueBlocking("button_press", """{"screen": "home"}""").get()
 ```
 
 ## Features
