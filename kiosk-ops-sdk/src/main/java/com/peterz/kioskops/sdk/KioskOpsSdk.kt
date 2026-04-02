@@ -43,6 +43,7 @@ import com.peterz.kioskops.sdk.fleet.config.ConfigVersion
 import com.peterz.kioskops.sdk.fleet.config.RemoteConfigManager
 import com.peterz.kioskops.sdk.logging.LogExporter
 import com.peterz.kioskops.sdk.logging.RingLog
+import com.peterz.kioskops.sdk.queue.EnqueueResult
 import com.peterz.kioskops.sdk.queue.QueueRepository
 import com.peterz.kioskops.sdk.telemetry.EncryptedTelemetryStore
 import com.peterz.kioskops.sdk.util.Clock
@@ -67,6 +68,7 @@ import okhttp3.OkHttpClient
 import java.io.File
 import java.util.concurrent.TimeUnit
 
+@Suppress("TooManyFunctions", "LargeClass")
 class KioskOpsSdk private constructor(
   private val appContext: Context,
   private val configProvider: () -> KioskOpsConfig,
@@ -333,6 +335,7 @@ class KioskOpsSdk private constructor(
    * @param userId Optional user identifier for GDPR data subject tracking.
    * @since 0.5.0 userId parameter, pipeline steps 3-7 added
    */
+  @Suppress("ReturnCount")
   @JvmOverloads
   suspend fun enqueueDetailed(
     type: String,
@@ -340,96 +343,30 @@ class KioskOpsSdk private constructor(
     stableEventId: String? = null,
     idempotencyKeyOverride: String? = null,
     userId: String? = null,
-  ): com.peterz.kioskops.sdk.queue.EnqueueResult {
+  ): EnqueueResult {
     val cfg = cfg()
     var processedPayload = payloadJson
 
     // Step 3: Event Validation
-    if (cfg.validationPolicy.enabled) {
-      try {
-        when (val vResult = schemaValidator.validate(type, processedPayload)) {
-          is ValidationResult.Valid -> { /* pass */ }
-          is ValidationResult.Invalid -> {
-            if (cfg.validationPolicy.strictMode) {
-              val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.ValidationFailed(vResult.errors)
-              persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "validation_failed"))
-              telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "validation_failed"))
-              return result
-            }
-          }
-          is ValidationResult.SchemaNotFound -> {
-            when (cfg.validationPolicy.unknownEventTypeAction) {
-              UnknownEventTypeAction.REJECT -> {
-                val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.ValidationFailed(
-                  listOf("No schema registered for event type '$type'")
-                )
-                persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "schema_not_found"))
-                telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "schema_not_found"))
-                return result
-              }
-              UnknownEventTypeAction.FLAG, UnknownEventTypeAction.ALLOW -> { /* pass */ }
-            }
-          }
-        }
-      } catch (_: Exception) {
-        // Fail-safe: validation failure must not block the pipeline
-      }
-    }
+    runValidation(type, processedPayload, cfg)?.let { return it }
 
     // Step 4: PII Detection
-    var piiRedactedFields: List<String>? = null
-    if (cfg.piiPolicy.enabled) {
-      try {
-        val scanResult = piiDetector.scan(processedPayload)
-        if (scanResult.hasPii) {
-          when (cfg.piiPolicy.action) {
-            PiiAction.REJECT -> {
-              val findings = scanResult.findings.map { "${it.jsonPath}:${it.piiType}" }
-              val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.PiiDetected(findings)
-              persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "pii_detected"), userId = userId)
-              telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "pii_detected"))
-              return result
-            }
-            PiiAction.REDACT_VALUE -> {
-              val redaction = piiRedactor.redact(processedPayload, scanResult.findings)
-              processedPayload = redaction.redactedJson
-              piiRedactedFields = redaction.redactedPaths
-            }
-            PiiAction.FLAG_AND_ALLOW -> { /* proceed, but log */ }
-          }
-        }
-      } catch (_: Exception) {
-        // Fail-safe: PII detection failure must not block the pipeline
-      }
-    }
+    val piiResult = runPiiScan(type, processedPayload, userId, cfg)
+    piiResult.rejected?.let { return it }
+    processedPayload = piiResult.processedPayload
+    val piiRedactedFields = piiResult.redactedFields
 
     // Step 5: Anomaly Detection
-    var anomalyScore: Float? = null
-    if (cfg.anomalyPolicy.enabled) {
-      try {
-        val anomalyResult = anomalyDetector.analyze(type, processedPayload)
-        anomalyScore = anomalyResult.score
-        if (anomalyResult.recommendedAction == AnomalyAction.REJECT) {
-          val result = com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected.AnomalyRejected(
-            anomalyResult.score, anomalyResult.reasons
-          )
-          persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "anomaly_rejected"))
-          telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "anomaly_rejected"))
-          return result
-        }
-      } catch (_: Exception) {
-        // Fail-safe: anomaly detection failure must not block the pipeline
-      }
-    }
+    val anomalyResult = runAnomalyCheck(type, processedPayload, cfg)
+    anomalyResult.rejected?.let { return it }
+    val anomalyScore = anomalyResult.score
 
     // Step 6: Data Classification tagging
-    var classification: String? = null
-    if (cfg.dataClassificationPolicy.enabled) {
-      classification = if (piiRedactedFields != null) {
-        cfg.dataClassificationPolicy.piiClassification.name
-      } else {
-        cfg.dataClassificationPolicy.defaultClassification.name
-      }
+    val classification = if (cfg.dataClassificationPolicy.enabled) {
+      if (piiRedactedFields != null) cfg.dataClassificationPolicy.piiClassification.name
+      else cfg.dataClassificationPolicy.defaultClassification.name
+    } else {
+      null
     }
 
     // Step 7: Field-Level Encryption
@@ -456,16 +393,15 @@ class KioskOpsSdk private constructor(
 
     // Step 12: Audit and telemetry
     when (res) {
-      is com.peterz.kioskops.sdk.queue.EnqueueResult.Accepted -> {
+      is EnqueueResult.Accepted -> {
         persistentAudit.record("event_enqueued", mapOf("type" to type), userId = userId)
         telemetry.emit("event_enqueued", mapOf("type" to type))
         if (res.droppedOldest > 0) {
           persistentAudit.record("queue_overflow_dropped", mapOf("dropped" to res.droppedOldest.toString()))
           telemetry.emit("queue_overflow_dropped", mapOf("dropped" to res.droppedOldest.toString(), "strategy" to "DROP_OLDEST"))
         }
-        // Return PiiRedacted variant if redaction occurred
         if (piiRedactedFields != null) {
-          return com.peterz.kioskops.sdk.queue.EnqueueResult.PiiRedacted(
+          return EnqueueResult.PiiRedacted(
             id = res.id,
             idempotencyKey = res.idempotencyKey,
             redactedFields = piiRedactedFields,
@@ -473,13 +409,111 @@ class KioskOpsSdk private constructor(
           )
         }
       }
-      is com.peterz.kioskops.sdk.queue.EnqueueResult.Rejected -> {
+      is EnqueueResult.Rejected -> {
         persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to res::class.java.simpleName))
         telemetry.emit("event_rejected", mapOf("type" to type, "reason" to res::class.java.simpleName))
       }
-      is com.peterz.kioskops.sdk.queue.EnqueueResult.PiiRedacted -> { /* unreachable from queue.enqueue */ }
+      is EnqueueResult.PiiRedacted -> { /* unreachable from queue.enqueue */ }
     }
     return res
+  }
+
+  private class PiiScanResult(
+    val rejected: EnqueueResult.Rejected? = null,
+    val processedPayload: String,
+    val redactedFields: List<String>? = null,
+  )
+
+  private class AnomalyCheckResult(
+    val rejected: EnqueueResult.Rejected? = null,
+    val score: Float? = null,
+  )
+
+  private suspend fun runValidation(
+    type: String,
+    payload: String,
+    cfg: KioskOpsConfig,
+  ): EnqueueResult.Rejected? {
+    if (!cfg.validationPolicy.enabled) return null
+    return try {
+      val vResult = schemaValidator.validate(type, payload)
+      when {
+        vResult is ValidationResult.Valid -> null
+        vResult is ValidationResult.Invalid && cfg.validationPolicy.strictMode -> {
+          persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "validation_failed"))
+          telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "validation_failed"))
+          EnqueueResult.Rejected.ValidationFailed(vResult.errors)
+        }
+        vResult is ValidationResult.SchemaNotFound &&
+            cfg.validationPolicy.unknownEventTypeAction == UnknownEventTypeAction.REJECT -> {
+          persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "schema_not_found"))
+          telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "schema_not_found"))
+          EnqueueResult.Rejected.ValidationFailed(
+            listOf("No schema registered for event type '$type'")
+          )
+        }
+        else -> null
+      }
+    } catch (_: Exception) {
+      null // Fail-safe: validation failure must not block the pipeline
+    }
+  }
+
+  private suspend fun runPiiScan(
+    type: String,
+    payload: String,
+    userId: String?,
+    cfg: KioskOpsConfig,
+  ): PiiScanResult {
+    val passThrough = PiiScanResult(processedPayload = payload)
+    val scanResult = if (cfg.piiPolicy.enabled) {
+      try { piiDetector.scan(payload) } catch (_: Exception) { null }
+    } else {
+      null
+    }
+    if (scanResult == null || !scanResult.hasPii) return passThrough
+    return when (cfg.piiPolicy.action) {
+      PiiAction.REJECT -> {
+        val findings = scanResult.findings.map { "${it.jsonPath}:${it.piiType}" }
+        persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "pii_detected"), userId = userId)
+        telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "pii_detected"))
+        PiiScanResult(
+          rejected = EnqueueResult.Rejected.PiiDetected(findings),
+          processedPayload = payload,
+        )
+      }
+      PiiAction.REDACT_VALUE -> {
+        val redaction = piiRedactor.redact(payload, scanResult.findings)
+        PiiScanResult(
+          processedPayload = redaction.redactedJson,
+          redactedFields = redaction.redactedPaths,
+        )
+      }
+      PiiAction.FLAG_AND_ALLOW -> passThrough
+    }
+  }
+
+  private suspend fun runAnomalyCheck(
+    type: String,
+    payload: String,
+    cfg: KioskOpsConfig,
+  ): AnomalyCheckResult {
+    if (!cfg.anomalyPolicy.enabled) return AnomalyCheckResult()
+    return try {
+      val anomalyResult = anomalyDetector.analyze(type, payload)
+      if (anomalyResult.recommendedAction == AnomalyAction.REJECT) {
+        persistentAudit.record("event_rejected", mapOf("type" to type, "reason" to "anomaly_rejected"))
+        telemetry.emit("event_rejected", mapOf("type" to type, "reason" to "anomaly_rejected"))
+        AnomalyCheckResult(
+          rejected = EnqueueResult.Rejected.AnomalyRejected(anomalyResult.score, anomalyResult.reasons),
+          score = anomalyResult.score,
+        )
+      } else {
+        AnomalyCheckResult(score = anomalyResult.score)
+      }
+    } catch (_: Exception) {
+      AnomalyCheckResult() // Fail-safe: anomaly detection failure must not block the pipeline
+    }
   }
 
   /** **Threading**: Main-safe. */
@@ -863,8 +897,9 @@ class KioskOpsSdk private constructor(
   ): java.util.concurrent.CompletableFuture<Boolean> {
     val future = java.util.concurrent.CompletableFuture<Boolean>()
     javaInteropScope.launch {
+      @Suppress("TooGenericExceptionCaught")
       try { future.complete(enqueue(type, payloadJson, userId)) }
-      catch (e: Throwable) { future.completeExceptionally(e) }
+      catch (e: Exception) { future.completeExceptionally(e) }
     }
     return future
   }
@@ -883,8 +918,9 @@ class KioskOpsSdk private constructor(
   ): java.util.concurrent.CompletableFuture<com.peterz.kioskops.sdk.queue.EnqueueResult> {
     val future = java.util.concurrent.CompletableFuture<com.peterz.kioskops.sdk.queue.EnqueueResult>()
     javaInteropScope.launch {
+      @Suppress("TooGenericExceptionCaught")
       try { future.complete(enqueueDetailed(type, payloadJson, stableEventId, idempotencyKeyOverride, userId)) }
-      catch (e: Throwable) { future.completeExceptionally(e) }
+      catch (e: Exception) { future.completeExceptionally(e) }
     }
     return future
   }
@@ -896,8 +932,9 @@ class KioskOpsSdk private constructor(
   fun syncOnceBlocking(): java.util.concurrent.CompletableFuture<TransportResult<SyncOnceResult>> {
     val future = java.util.concurrent.CompletableFuture<TransportResult<SyncOnceResult>>()
     javaInteropScope.launch {
+      @Suppress("TooGenericExceptionCaught")
       try { future.complete(syncOnce()) }
-      catch (e: Throwable) { future.completeExceptionally(e) }
+      catch (e: Exception) { future.completeExceptionally(e) }
     }
     return future
   }
@@ -910,8 +947,9 @@ class KioskOpsSdk private constructor(
   fun heartbeatBlocking(reason: String = "periodic"): java.util.concurrent.CompletableFuture<Unit> {
     val future = java.util.concurrent.CompletableFuture<Unit>()
     javaInteropScope.launch {
+      @Suppress("TooGenericExceptionCaught")
       try { future.complete(heartbeat(reason)) }
-      catch (e: Throwable) { future.completeExceptionally(e) }
+      catch (e: Exception) { future.completeExceptionally(e) }
     }
     return future
   }
@@ -923,8 +961,9 @@ class KioskOpsSdk private constructor(
   fun queueDepthBlocking(): java.util.concurrent.CompletableFuture<Long> {
     val future = java.util.concurrent.CompletableFuture<Long>()
     javaInteropScope.launch {
+      @Suppress("TooGenericExceptionCaught")
       try { future.complete(queueDepth()) }
-      catch (e: Throwable) { future.completeExceptionally(e) }
+      catch (e: Exception) { future.completeExceptionally(e) }
     }
     return future
   }
@@ -936,8 +975,9 @@ class KioskOpsSdk private constructor(
   fun healthCheckBlocking(): java.util.concurrent.CompletableFuture<HealthCheckResult> {
     val future = java.util.concurrent.CompletableFuture<HealthCheckResult>()
     javaInteropScope.launch {
+      @Suppress("TooGenericExceptionCaught")
       try { future.complete(healthCheck()) }
-      catch (e: Throwable) { future.completeExceptionally(e) }
+      catch (e: Exception) { future.completeExceptionally(e) }
     }
     return future
   }

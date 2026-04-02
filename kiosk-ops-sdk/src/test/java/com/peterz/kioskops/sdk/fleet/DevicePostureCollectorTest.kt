@@ -41,9 +41,9 @@ class DevicePostureCollectorTest {
   fun `collect with custom device group provider`() {
     val groupProvider = object : DeviceGroupProvider {
       override fun getDeviceGroups() = listOf("fleet-A", "region-EU")
-      override suspend fun addToGroup(groupId: String) {}
-      override suspend fun removeFromGroup(groupId: String) {}
-      override suspend fun setGroups(groupIds: List<String>) {}
+      override suspend fun addToGroup(groupId: String) = Unit
+      override suspend fun removeFromGroup(groupId: String) = Unit
+      override suspend fun setGroups(groupIds: List<String>) = Unit
     }
     val collector = DevicePostureCollector(ctx, groupProvider)
     val posture = collector.collect()
