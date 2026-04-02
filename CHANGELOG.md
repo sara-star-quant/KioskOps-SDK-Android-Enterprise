@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - Unreleased
+
+Compliance presets, database encryption, reactive APIs, SDK lifecycle, and comprehensive test coverage.
+
+### Added
+
+- `cuiDefaults()` config preset for NIST SP 800-171 / Controlled Unclassified Information deployments
+- `cjisDefaults()` config preset for CJIS Security Policy / law enforcement kiosk deployments
+- `asdEssentialEightDefaults()` config preset for Australian government (ASD Essential Eight) deployments
+- `DatabaseEncryptionPolicy` and `DatabaseEncryptionProvider` for SQLCipher database-at-rest encryption; enabled by default in CUI and CJIS presets
+- `DatabaseCorruptionHandler` for corruption recovery with `KioskOpsErrorListener` notification
+- `queueDepthFlow()` reactive API for polling-based queue depth observation via Kotlin Flow
+- `healthStatusFlow()` reactive API for polling-based health status streaming via Kotlin Flow
+- `shutdown()` method for graceful SDK teardown (scope cancellation, singleton cleanup)
+- Compliance mapping documents: NIST SP 800-171, CJIS, ASD Essential Eight, BSI IT-Grundschutz, Australian Privacy Act, Data Flow
+
+### Changed
+
+- Package renamed from `com.peterz.kioskops` to `com.sarastarquant.kioskops` (aligns with sarastarquant.com domain)
+- Maven group ID changed from `com.peterz.kioskops` to `com.sarastarquant.kioskops`
+- `resetForTesting()` now cancels coroutine scopes to prevent test leaks
+- Kover coverage threshold raised from 65% to 70%
+- CycloneDX plugin upgraded from 2.2.0 to 3.2.3 (fixes CVE-2025-64518, CVE-2025-48924)
+
+### Build
+
+- CUI and CJIS presets enable `DatabaseEncryptionPolicy` by default (requires `sqlcipher-android` on classpath)
+- Room databases (`QueueDatabase`, `AuditDatabase`) accept optional `SupportSQLiteOpenHelper.Factory` for encryption
+
+### Test Coverage
+
+- 821 tests (up from 517 in v0.7.0)
+- 75.5% line coverage (up from 68% in v0.7.0); threshold enforced at 70%
+- Pipeline rejection tests: validation, PII, anomaly, size guardrails, queue overflow, idempotency dedup
+- Queue repository tests: overflow strategies (DROP_OLDEST, DROP_NEWEST, BLOCK), byte-based limits, data field preservation
+- Transport security tests: certificate pinning (95.3% coverage), CT validation, mTLS
+- VersionedCryptoProvider: key rotation, multi-version decrypt, blob validation
+- GeofenceManager: state machine, transitions, profiles, listeners
+
+---
+
 ## [0.7.0] - 2026-04-02
 
 Pre-1.0 hardening release; Java interop, error observability, supply chain compliance, and test coverage push.
