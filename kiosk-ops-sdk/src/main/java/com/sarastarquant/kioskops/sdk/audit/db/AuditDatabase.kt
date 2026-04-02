@@ -1,0 +1,97 @@
+/*
+ * Copyright (c) 2026 SARA STAR QUANT LLC
+ * SPDX-License-Identifier: BUSL-1.1
+ */
+
+package com.sarastarquant.kioskops.sdk.audit.db
+
+import android.content.Context
+import androidx.annotation.RestrictTo
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+
+/**
+ * Room database for persistent audit trail.
+ *
+ * Stores audit events with hash chain for tamper detection.
+ * The database file is encrypted if the device supports it.
+ *
+ * This is a separate database from QueueDatabase to avoid
+ * migration conflicts and allow independent versioning.
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+@Database(
+  entities = [AuditEventEntity::class, AuditChainState::class],
+  version = 2,
+  exportSchema = true,
+)
+abstract class AuditDatabase : RoomDatabase() {
+
+  abstract fun auditDao(): AuditDao
+
+  companion object {
+    private const val DATABASE_NAME = "kioskops_audit.db"
+
+    @Volatile
+    private var INSTANCE: AuditDatabase? = null
+
+    /**
+     * Get or create the audit database singleton.
+     *
+     * @param context Android context.
+     * @return The audit database instance.
+     */
+    @Volatile
+    private var openHelperFactory: SupportSQLiteOpenHelper.Factory? = null
+
+    /**
+     * Set the SQLCipher open helper factory for database encryption.
+     * Must be called before [getInstance].
+     * @since 0.8.0
+     */
+    fun setOpenHelperFactory(factory: SupportSQLiteOpenHelper.Factory?) {
+      openHelperFactory = factory
+    }
+
+    fun getInstance(context: Context): AuditDatabase {
+      return INSTANCE ?: synchronized(this) {
+        INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
+      }
+    }
+
+    private fun buildDatabase(context: Context): AuditDatabase {
+      return Room.databaseBuilder(
+        context.applicationContext,
+        AuditDatabase::class.java,
+        DATABASE_NAME
+      )
+        .addMigrations(AuditMigrations.MIGRATION_1_2)
+        .apply { openHelperFactory?.let { openHelperFactory(it) } }
+        .build()
+    }
+
+    /**
+     * Replace the singleton instance (for testing with in-memory databases).
+     * Pass null to clear.
+     */
+    @androidx.annotation.VisibleForTesting
+    fun setInstance(database: AuditDatabase?) {
+      synchronized(this) {
+        INSTANCE = database
+      }
+    }
+
+    /**
+     * Close and clear the database instance.
+     * Used primarily for testing.
+     */
+    fun closeInstance() {
+      synchronized(this) {
+        INSTANCE?.close()
+        INSTANCE = null
+      }
+    }
+  }
+}

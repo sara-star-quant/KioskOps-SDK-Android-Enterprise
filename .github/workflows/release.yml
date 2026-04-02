@@ -115,7 +115,7 @@ jobs:
           echo "## Release ${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- **GitHub Packages**: \`com.peterz.kioskops:kiosk-ops-sdk:${VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Packages**: \`com.sarastarquant.kioskops:kiosk-ops-sdk:${VERSION}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **JitPack**: \`com.github.pzverkov:KioskOps-SDK-Android-Enterprise:${TAG}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Signature Verification" >> $GITHUB_STEP_SUMMARY
