@@ -80,6 +80,19 @@
 | FIPS 140 detection | Available | Runtime check for FIPS-mode Conscrypt/BoringSSL provider |
 | SBOM | CI | CycloneDX BOM generated in CI pipeline |
 
+### Database Encryption & Reactive APIs (v0.8.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Database-at-rest encryption | Off | SQLCipher encryption for Room databases; enabled by default in CUI and CJIS presets |
+| Corruption recovery | On | `DatabaseCorruptionHandler` notifies error listener and recreates database |
+| Queue depth Flow | Available | `queueDepthFlow()` polling-based reactive observation via Kotlin Flow |
+| Health status Flow | Available | `healthStatusFlow()` polling-based health streaming via Kotlin Flow |
+| SDK shutdown | Available | `shutdown()` for graceful teardown (scope cancellation, singleton cleanup) |
+| CUI preset | Available | `cuiDefaults()` for NIST SP 800-171 / defense contractor deployments |
+| CJIS preset | Available | `cjisDefaults()` for law enforcement kiosk deployments |
+| ASD Essential Eight preset | Available | `asdEssentialEightDefaults()` for Australian government deployments |
+
 See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
 
 ## Fleet Operations

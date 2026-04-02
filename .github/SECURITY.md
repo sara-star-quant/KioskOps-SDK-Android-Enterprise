@@ -112,6 +112,13 @@ KioskOps SDK includes enterprise security features:
 - CycloneDX SBOM generation in CI for EO 14028 / FedRAMP supply chain requirements
 - Debug log level toggle restricted to debug builds (ISO 27001 A.14.2)
 
+### Database Encryption & Compliance Presets (v0.8.0)
+- SQLCipher database-at-rest encryption via `DatabaseEncryptionPolicy` (Keystore-backed key)
+- Database corruption recovery with `DatabaseCorruptionHandler` and error listener notification
+- `cuiDefaults()` preset for NIST SP 800-171 / CUI deployments (all encryption, signed audit, PII rejection)
+- `cjisDefaults()` preset for CJIS Security Policy / law enforcement deployments
+- `asdEssentialEightDefaults()` preset for Australian government (ASD Essential Eight)
+
 ### Disclaimer
 
 References to regulatory frameworks (NIST 800-53, FedRAMP, GDPR, ISO 27001,

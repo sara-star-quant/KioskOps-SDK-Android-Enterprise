@@ -191,17 +191,17 @@ Focus: Java interop, error handling, observability, API contract finalization, f
 Focus: Compliance presets for government deployments, expanded sample app, comprehensive documentation, and developer experience polish.
 
 ### Configuration Presets
-- [ ] `cuiDefaults()` - NIST SP 800-171 preset for Controlled Unclassified Information (defense contractors)
-- [ ] `cjisDefaults()` - CJIS Security Policy preset for law enforcement kiosk deployments (session timeout, encryption requirements)
-- [ ] `asdEssentialEightDefaults()` - ASD Essential Eight preset for Australian government deployments
+- [x] `cuiDefaults()` - NIST SP 800-171 preset for Controlled Unclassified Information (defense contractors)
+- [x] `cjisDefaults()` - CJIS Security Policy preset for law enforcement kiosk deployments (session timeout, encryption requirements)
+- [x] `asdEssentialEightDefaults()` - ASD Essential Eight preset for Australian government deployments
 
 ### Compliance Mapping Documents
-- [ ] NIST SP 800-171 control mapping (CUI protection families: AC, AU, IA, MP, SC, SI)
-- [ ] CJIS Security Policy mapping (sections 5.4-5.10: access control, auditing, encryption)
-- [ ] ASD Essential Eight mapping (application hardening, logging, patching)
-- [ ] BSI IT-Grundschutz mapping (APP.4.4, SYS.3.2.2 controls already referenced in code)
-- [ ] Australian Privacy Act / APPs mapping (data export/deletion alignment with Australian Privacy Principles)
-- [ ] Data flow documentation (what data leaves the device, encryption posture at rest and in transit)
+- [x] NIST SP 800-171 control mapping (CUI protection families: AC, AU, IA, MP, SC, SI)
+- [x] CJIS Security Policy mapping (sections 5.4-5.10: access control, auditing, encryption)
+- [x] ASD Essential Eight mapping (application hardening, logging, patching)
+- [x] BSI IT-Grundschutz mapping (APP.4.4, SYS.3.2.2 controls already referenced in code)
+- [x] Australian Privacy Act / APPs mapping (data export/deletion alignment with Australian Privacy Principles)
+- [x] Data flow documentation (what data leaves the device, encryption posture at rest and in transit)
 - [ ] VPAT / Accessibility Conformance Report (Section 508 / EN 301 549)
 
 ### Developer Experience
@@ -210,23 +210,23 @@ Focus: Compliance presets for government deployments, expanded sample app, compr
 - [ ] Published AAR size and method count in release notes
 
 ### Security & Data Protection
-- [ ] Database-at-rest encryption via SQLCipher (`SupportFactory` for Room) for federal/DoD deployments where device disk encryption alone is insufficient
-- [ ] Database corruption recovery with `DatabaseErrorHandler` callback and consumer notification via `KioskOpsErrorListener`
+- [x] Database-at-rest encryption via SQLCipher (`SupportFactory` for Room) for federal/DoD deployments where device disk encryption alone is insufficient
+- [x] Database corruption recovery with `DatabaseErrorHandler` callback and consumer notification via `KioskOpsErrorListener`
 
 ### Reactive APIs
-- [ ] `queueDepthFlow(): Flow<Long>` for reactive queue depth observation
-- [ ] `healthStatusFlow(): Flow<HealthCheckResult>` for health status streaming
+- [x] `queueDepthFlow(): Flow<Long>` for reactive queue depth observation
+- [x] `healthStatusFlow(): Flow<HealthCheckResult>` for health status streaming
 - [ ] Config update event flow from `RemoteConfigManager`
 
 ### SDK Lifecycle
-- [ ] Cancel `javaInteropScope` on SDK teardown / process death
+- [x] Cancel `javaInteropScope` on SDK teardown / process death
 - [ ] `ProcessLifecycleOwner` integration for auto-flush on background
-- [ ] Graceful cleanup on app death (flush queues, close databases)
+- [x] Graceful cleanup on app death (flush queues, close databases)
 
 ### Test Coverage (target: 70% line coverage)
-- [ ] Crypto module: VersionedCryptoProvider key rotation, versioned blob format, multi-version decrypt, cleanup policy (288 lines, currently 0%)
-- [ ] GeofenceManager state machine (permission checks, transitions, profile switching)
-- [ ] KioskOpsSdk orchestrator integration tests (enqueue pipeline end-to-end, sync, heartbeat)
+- [x] Crypto module: VersionedCryptoProvider key rotation, versioned blob format, multi-version decrypt, cleanup policy
+- [x] GeofenceManager state machine (permission checks, transitions, profile switching)
+- [x] KioskOpsSdk orchestrator integration tests (enqueue pipeline end-to-end, sync, heartbeat)
 - [ ] Instrumented test suite for crypto (AndroidKeyStore), Room (on-device SQLite), and WorkManager (real scheduler)
 
 ### CI & Size Budget
