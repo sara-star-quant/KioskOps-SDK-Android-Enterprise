@@ -10,8 +10,7 @@ on:
     paths:
       - 'gradle/wrapper/**'
 
-permissions:
-  contents: read
+permissions: read-all
 
 jobs:
   validation:
