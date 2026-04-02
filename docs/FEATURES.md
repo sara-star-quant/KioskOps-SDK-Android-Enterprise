@@ -69,6 +69,17 @@
 | Debug overlay | Available | Data-only SDK state snapshot |
 | Performance profiler | Available | Operation timing for enqueue, validation, PII, etc. |
 
+### Observability & Java Interop (v0.7.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Health check | Available | Structured SDK health snapshot (queue, sync, auth, encryption) |
+| Error listener | Off | Non-fatal error callbacks via `setErrorListener()` |
+| Java interop | Available | Blocking wrappers returning `CompletableFuture`; `@JvmStatic`, `@JvmOverloads` |
+| Debug log toggle | Off | ADB broadcast to change log level at runtime (debug builds only) |
+| FIPS 140 detection | Available | Runtime check for FIPS-mode Conscrypt/BoringSSL provider |
+| SBOM | CI | CycloneDX BOM generated in CI pipeline |
+
 See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
 
 ## Fleet Operations

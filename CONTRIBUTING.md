@@ -29,8 +29,8 @@ cd KioskOps-SDK-Android-Enterprise
 | Run Detekt (static analysis) | `./gradlew :kiosk-ops-sdk:detekt` |
 | Check API compatibility | `./gradlew apiCheck` |
 | Update API dump | `./gradlew apiDump` |
-| Generate API docs | `./gradlew :kiosk-ops-sdk:dokkaHtml` |
-| Generate coverage report | `./gradlew :kiosk-ops-sdk:jacocoTestReport` |
+| Generate API docs | `./gradlew :kiosk-ops-sdk:dokkaGeneratePublicationHtml` |
+| Generate coverage report | `./gradlew :kiosk-ops-sdk:koverHtmlReportDebug` |
 | Run all checks | `./gradlew check` |
 
 ## Testing
