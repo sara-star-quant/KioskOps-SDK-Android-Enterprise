@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * @since 0.4.0
  */
-class GeofenceManager(
+open class GeofenceManager(
   private val context: Context,
   private val policyProvider: () -> GeofencePolicy,
   private val profileProvider: (String) -> PolicyProfile?,
@@ -270,19 +270,25 @@ class GeofenceManager(
   }
 
   /**
-   * Register geofences with the system.
-   * Override in subclass for actual implementation with GeofencingClient.
+   * Register geofences with the platform geofencing provider.
+   *
+   * The base implementation is intentionally a no-op. Subclass [GeofenceManager]
+   * and override this method to integrate with Google Play Services
+   * `GeofencingClient` or a custom geofence provider.
+   *
+   * @param regions The geofence regions to monitor.
    */
-  protected fun registerGeofences(regions: List<GeofenceRegion>) {
-    // Base implementation is a no-op
-    // Real implementation would use Google Play Services GeofencingClient
+  protected open fun registerGeofences(regions: List<GeofenceRegion>) {
+    // No-op: override in subclass for GeofencingClient integration
   }
 
   /**
-   * Unregister all geofences.
-   * Override in subclass for actual implementation.
+   * Unregister all active geofences from the platform provider.
+   *
+   * The base implementation is intentionally a no-op. Override alongside
+   * [registerGeofences] in your subclass.
    */
-  protected fun unregisterGeofences() {
-    // Base implementation is a no-op
+  protected open fun unregisterGeofences() {
+    // No-op: override in subclass for GeofencingClient integration
   }
 }

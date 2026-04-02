@@ -24,7 +24,7 @@ import com.peterz.kioskops.sdk.validation.ValidationPolicy
  * Security (ISO 27001 A.5): All security-relevant settings are explicitly configured
  * with secure defaults. No silent data transfer occurs without explicit opt-in.
  */
-data class KioskOpsConfig(
+data class KioskOpsConfig @JvmOverloads constructor(
   val baseUrl: String,
   val locationId: String,
   val kioskEnabled: Boolean,

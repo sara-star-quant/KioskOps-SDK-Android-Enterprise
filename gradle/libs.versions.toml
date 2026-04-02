@@ -23,6 +23,7 @@ bcv = "0.16.3"
 dokka = "2.0.0"
 detekt = "1.23.7"
 kover = "0.9.1"
+cyclonedx = "2.2.0"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -32,6 +33,7 @@ androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
@@ -61,3 +63,4 @@ binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibil
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }

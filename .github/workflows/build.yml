@@ -38,6 +38,9 @@ jobs:
       - name: Generate code coverage report
         run: ./gradlew :kiosk-ops-sdk:koverXmlReportDebug :kiosk-ops-sdk:koverHtmlReportDebug --no-daemon
 
+      - name: Verify coverage threshold
+        run: ./gradlew :kiosk-ops-sdk:koverVerifyDebug --no-daemon
+
       - name: Check binary compatibility
         run: ./gradlew apiCheck --no-daemon
 
@@ -48,7 +51,10 @@ jobs:
         run: ./gradlew lintDebug --no-daemon
 
       - name: Generate API docs
-        run: ./gradlew :kiosk-ops-sdk:dokkaHtml --no-daemon
+        run: ./gradlew :kiosk-ops-sdk:dokkaGeneratePublicationHtml --no-daemon --no-configuration-cache
+
+      - name: Generate SBOM
+        run: ./gradlew :kiosk-ops-sdk:cyclonedxBom --no-daemon
 
       - name: Build SDK
         run: ./gradlew :kiosk-ops-sdk:assembleRelease --no-daemon
@@ -84,3 +90,11 @@ jobs:
           name: api-docs
           path: 'kiosk-ops-sdk/build/dokka/'
           retention-days: 7
+
+      - name: Upload SBOM
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
+        with:
+          name: sbom
+          path: 'kiosk-ops-sdk/build/reports/bom.*'
+          retention-days: 90

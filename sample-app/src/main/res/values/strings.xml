@@ -1,3 +1,20 @@
 <resources>
   <string name="app_name">KioskOps Sample</string>
+
+  <!-- Section headers -->
+  <string name="section_sdk_status">SDK Status</string>
+  <string name="section_actions">Actions</string>
+  <string name="section_result">Result</string>
+
+  <!-- Buttons -->
+  <string name="btn_enqueue">Enqueue Test Event</string>
+  <string name="btn_heartbeat">Send Heartbeat</string>
+  <string name="btn_health_check">Health Check</string>
+
+  <!-- Content descriptions for accessibility -->
+  <string name="cd_sdk_version">SDK version information</string>
+  <string name="cd_queue_status">Event queue status</string>
+  <string name="cd_enqueue">Enqueue a sample scan event to the SDK queue</string>
+  <string name="cd_heartbeat">Send a manual heartbeat with device posture and policy drift check</string>
+  <string name="cd_health_check">Run a health check showing queue depth and sync status</string>
 </resources>

@@ -61,6 +61,7 @@ import com.peterz.kioskops.sdk.transport.TransportResult
 import com.peterz.kioskops.sdk.transport.security.CertificatePinningInterceptor
 import com.peterz.kioskops.sdk.transport.security.CertificateTransparencyValidator
 import com.peterz.kioskops.sdk.transport.security.MtlsClientBuilder
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import java.io.File
@@ -159,6 +160,28 @@ class KioskOpsSdk private constructor(
    */
   fun setAnomalyDetector(detector: AnomalyDetector?) {
     anomalyDetectorOverride = detector
+  }
+
+  // v0.7.0 Error callback
+  @Volatile private var errorListener: KioskOpsErrorListener? = null
+
+  /**
+   * Set a listener for non-fatal SDK operational errors.
+   *
+   * Pass `null` to remove the listener. The listener may be called from background threads.
+   *
+   * @since 0.7.0
+   */
+  fun setErrorListener(listener: KioskOpsErrorListener?) {
+    errorListener = listener
+  }
+
+  private fun notifyError(error: KioskOpsError) {
+    try {
+      errorListener?.onError(error)
+    } catch (_: Throwable) {
+      // Listener must not crash the SDK
+    }
   }
 
   private val json = Json {
@@ -277,7 +300,10 @@ class KioskOpsSdk private constructor(
    * Backwards-compatible enqueue API.
    *
    * For enterprise pilots, prefer [enqueueDetailed] to get rejection reasons.
+   *
+   * **Threading**: Main-safe. Database IO is dispatched internally.
    */
+  @JvmOverloads
   suspend fun enqueue(
     type: String,
     payloadJson: String,
@@ -302,9 +328,12 @@ class KioskOpsSdk private constructor(
    * 11. Room Insert (with userId, dataClassification, anomalyScore)
    * 12. Audit Record (PersistentAuditTrail)
    *
+   * **Threading**: Main-safe. Database and crypto IO dispatched internally.
+   *
    * @param userId Optional user identifier for GDPR data subject tracking.
    * @since 0.5.0 userId parameter, pipeline steps 3-7 added
    */
+  @JvmOverloads
   suspend fun enqueueDetailed(
     type: String,
     payloadJson: String,
@@ -453,12 +482,16 @@ class KioskOpsSdk private constructor(
     return res
   }
 
+  /** **Threading**: Main-safe. */
   suspend fun queueDepth(): Long = queue.countActive()
 
   /**
    * Returns lightweight metadata for quarantined events (no payload).
    * Useful for support dashboards and diagnostics.
+   *
+   * **Threading**: Main-safe. Database IO dispatched internally.
    */
+  @JvmOverloads
   suspend fun quarantinedEvents(limit: Int = 50): List<com.peterz.kioskops.sdk.queue.QuarantinedEventSummary> =
     queue.quarantinedSummaries(limit)
 
@@ -466,6 +499,8 @@ class KioskOpsSdk private constructor(
    * Opt-in network sync.
    *
    * Returns a TransportResult so callers (and WorkManager) can decide whether to retry.
+   *
+   * **Threading**: Main-safe. Network IO dispatched to OkHttp dispatcher.
    */
   suspend fun syncOnce(): TransportResult<SyncOnceResult> {
     val cfg = cfg()
@@ -486,20 +521,26 @@ class KioskOpsSdk private constructor(
           "syncResult" to "success"
         )
       )
-      is TransportResult.TransientFailure -> telemetry.emit(
-        "sync_once_transient_failure",
-        mapOf(
-          "httpStatus" to (res.httpStatus?.toString() ?: ""),
-          "syncResult" to "transient_failure"
+      is TransportResult.TransientFailure -> {
+        telemetry.emit(
+          "sync_once_transient_failure",
+          mapOf(
+            "httpStatus" to (res.httpStatus?.toString() ?: ""),
+            "syncResult" to "transient_failure"
+          )
         )
-      )
-      is TransportResult.PermanentFailure -> telemetry.emit(
-        "sync_once_permanent_failure",
-        mapOf(
-          "httpStatus" to (res.httpStatus?.toString() ?: ""),
-          "syncResult" to "permanent_failure"
+        notifyError(KioskOpsError.SyncFailed(res.message, res.httpStatus, res.cause))
+      }
+      is TransportResult.PermanentFailure -> {
+        telemetry.emit(
+          "sync_once_permanent_failure",
+          mapOf(
+            "httpStatus" to (res.httpStatus?.toString() ?: ""),
+            "syncResult" to "permanent_failure"
+          )
         )
-      )
+        notifyError(KioskOpsError.SyncFailed(res.message, res.httpStatus, res.cause))
+      }
     }
     return res
   }
@@ -510,8 +551,12 @@ class KioskOpsSdk private constructor(
    * - detects policy drift (local)
    * - records an audit event
    * - applies retention across queue + telemetry + audit + exported artifacts
+   *
+   * **Threading**: Main-safe. Database and file IO dispatched internally.
    */
+  @JvmOverloads
   suspend fun heartbeat(reason: String = "periodic") {
+    lastHeartbeatReason = reason
     val cfg = cfg()
     val now = clock.nowMs()
     val depth = queue.countActive()
@@ -558,6 +603,7 @@ class KioskOpsSdk private constructor(
     purgeOldExports(cfg)
   }
 
+  /** **Threading**: Main-safe. File IO dispatched internally. */
   suspend fun exportDiagnostics(): File {
     persistentAudit.record("diagnostics_export_requested")
     telemetry.emit("diagnostics_export_requested", mapOf("sdkVersion" to SDK_VERSION))
@@ -571,7 +617,10 @@ class KioskOpsSdk private constructor(
    *
    * Returns false if no uploader is configured.
    * The SDK never auto-uploads.
+   *
+   * **Threading**: Main-safe. File and network IO dispatched internally.
    */
+  @JvmOverloads
   suspend fun uploadDiagnosticsNow(metadata: Map<String, String> = emptyMap()): Boolean {
     val uploader = diagnosticsUploader ?: return false
     persistentAudit.record("diagnostics_upload_requested")
@@ -603,7 +652,10 @@ class KioskOpsSdk private constructor(
    * @param fromTs Optional start timestamp (inclusive).
    * @param toTs Optional end timestamp (inclusive).
    * @return Verification result indicating chain validity or location of break.
+   *
+   * **Threading**: Main-safe. Database IO dispatched internally.
    */
+  @JvmOverloads
   suspend fun verifyAuditIntegrity(
     fromTs: Long? = null,
     toTs: Long? = null,
@@ -615,6 +667,8 @@ class KioskOpsSdk private constructor(
    * Get statistics about the persistent audit trail.
    *
    * @return Statistics including event counts, time range, and chain generation.
+   *
+   * **Threading**: Main-safe. Database IO dispatched internally.
    */
   suspend fun getAuditStatistics(): AuditStatistics {
     return persistentAudit.getStatistics()
@@ -628,6 +682,8 @@ class KioskOpsSdk private constructor(
    *
    * @param fromTs Start timestamp.
    * @param toTs End timestamp.
+   * **Threading**: Main-safe. File and database IO dispatched internally.
+   *
    * @return The exported file.
    */
   suspend fun exportSignedAuditRange(fromTs: Long, toTs: Long): File {
@@ -643,6 +699,8 @@ class KioskOpsSdk private constructor(
   /**
    * Get available config versions for rollback.
    *
+   * **Threading**: Main-safe. Database IO dispatched via Dispatchers.IO.
+   *
    * @return List of available config versions, newest first.
    * @since 0.3.0
    */
@@ -656,6 +714,8 @@ class KioskOpsSdk private constructor(
    * is below the minimum allowed version configured in RemoteConfigPolicy.
    *
    * @param targetVersion The version number to restore.
+   * **Threading**: Main-safe. Database IO dispatched via Dispatchers.IO.
+   *
    * @return Result indicating success or failure reason.
    * @since 0.3.0
    */
@@ -686,9 +746,12 @@ class KioskOpsSdk private constructor(
    *
    * @param triggerId Unique identifier for this trigger.
    * @param metadata Additional context.
+   * **Threading**: Main-safe. File IO dispatched internally.
+   *
    * @return Result indicating acceptance or rejection.
    * @since 0.3.0
    */
+  @JvmOverloads
   suspend fun processRemoteDiagnosticsTrigger(
     triggerId: String,
     metadata: Map<String, String> = emptyMap(),
@@ -756,6 +819,129 @@ class KioskOpsSdk private constructor(
     )
   }
 
+  // ========================================================================
+  // v0.7.0 Health Check & Java Interop
+  // ========================================================================
+
+  /**
+   * Returns a structured health snapshot of the SDK.
+   *
+   * **Threading**: Main-safe. Dispatches to IO for the queue depth query.
+   *
+   * @since 0.7.0
+   */
+  suspend fun healthCheck(): HealthCheckResult {
+    val cfg = cfg()
+    return HealthCheckResult(
+      isInitialized = true,
+      queueDepth = queue.countActive(),
+      syncEnabled = cfg.syncPolicy.enabled,
+      lastHeartbeatReason = lastHeartbeatReason,
+      authProviderConfigured = authProvider != null,
+      encryptionEnabled = cfg.securityPolicy.encryptQueuePayloads,
+      sdkVersion = SDK_VERSION,
+    )
+  }
+
+  @Volatile private var lastHeartbeatReason: String? = null
+
+  private val javaInteropScope = kotlinx.coroutines.CoroutineScope(
+    kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
+  )
+
+  /**
+   * Java-friendly wrapper for [enqueue].
+   * Returns a [java.util.concurrent.CompletableFuture] that completes on a background thread.
+   *
+   * @since 0.7.0
+   */
+  @JvmOverloads
+  fun enqueueBlocking(
+    type: String,
+    payloadJson: String,
+    userId: String? = null,
+  ): java.util.concurrent.CompletableFuture<Boolean> {
+    val future = java.util.concurrent.CompletableFuture<Boolean>()
+    javaInteropScope.launch {
+      try { future.complete(enqueue(type, payloadJson, userId)) }
+      catch (e: Throwable) { future.completeExceptionally(e) }
+    }
+    return future
+  }
+
+  /**
+   * Java-friendly wrapper for [enqueueDetailed].
+   * @since 0.7.0
+   */
+  @JvmOverloads
+  fun enqueueDetailedBlocking(
+    type: String,
+    payloadJson: String,
+    stableEventId: String? = null,
+    idempotencyKeyOverride: String? = null,
+    userId: String? = null,
+  ): java.util.concurrent.CompletableFuture<com.peterz.kioskops.sdk.queue.EnqueueResult> {
+    val future = java.util.concurrent.CompletableFuture<com.peterz.kioskops.sdk.queue.EnqueueResult>()
+    javaInteropScope.launch {
+      try { future.complete(enqueueDetailed(type, payloadJson, stableEventId, idempotencyKeyOverride, userId)) }
+      catch (e: Throwable) { future.completeExceptionally(e) }
+    }
+    return future
+  }
+
+  /**
+   * Java-friendly wrapper for [syncOnce].
+   * @since 0.7.0
+   */
+  fun syncOnceBlocking(): java.util.concurrent.CompletableFuture<TransportResult<SyncOnceResult>> {
+    val future = java.util.concurrent.CompletableFuture<TransportResult<SyncOnceResult>>()
+    javaInteropScope.launch {
+      try { future.complete(syncOnce()) }
+      catch (e: Throwable) { future.completeExceptionally(e) }
+    }
+    return future
+  }
+
+  /**
+   * Java-friendly wrapper for [heartbeat].
+   * @since 0.7.0
+   */
+  @JvmOverloads
+  fun heartbeatBlocking(reason: String = "periodic"): java.util.concurrent.CompletableFuture<Unit> {
+    val future = java.util.concurrent.CompletableFuture<Unit>()
+    javaInteropScope.launch {
+      try { future.complete(heartbeat(reason)) }
+      catch (e: Throwable) { future.completeExceptionally(e) }
+    }
+    return future
+  }
+
+  /**
+   * Java-friendly wrapper for [queueDepth].
+   * @since 0.7.0
+   */
+  fun queueDepthBlocking(): java.util.concurrent.CompletableFuture<Long> {
+    val future = java.util.concurrent.CompletableFuture<Long>()
+    javaInteropScope.launch {
+      try { future.complete(queueDepth()) }
+      catch (e: Throwable) { future.completeExceptionally(e) }
+    }
+    return future
+  }
+
+  /**
+   * Java-friendly wrapper for [healthCheck].
+   * @since 0.7.0
+   */
+  fun healthCheckBlocking(): java.util.concurrent.CompletableFuture<HealthCheckResult> {
+    val future = java.util.concurrent.CompletableFuture<HealthCheckResult>()
+    javaInteropScope.launch {
+      try { future.complete(healthCheck()) }
+      catch (e: Throwable) { future.completeExceptionally(e) }
+    }
+    return future
+  }
+
   private fun purgeOldExports(cfg: KioskOpsConfig) {
     val days = cfg.retentionPolicy.retainLogsDays.coerceAtLeast(1)
     val cutoffMs = clock.nowMs() - days.toLong() * 24 * 60 * 60 * 1000
@@ -812,10 +998,12 @@ class KioskOpsSdk private constructor(
   }
 
   companion object {
-    val SDK_VERSION: String = BuildConfig.SDK_VERSION
+    @JvmStatic val SDK_VERSION: String = BuildConfig.SDK_VERSION
 
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 
+    @JvmStatic
+    @JvmOverloads
     fun init(
       context: Context,
       configProvider: () -> KioskOpsConfig,
@@ -846,8 +1034,10 @@ class KioskOpsSdk private constructor(
       return created
     }
 
+    @JvmStatic
     fun get(): KioskOpsSdk = INSTANCE ?: throw KioskOpsNotInitializedException()
 
+    @JvmStatic
     fun getOrNull(): KioskOpsSdk? = INSTANCE
 
     @androidx.annotation.VisibleForTesting
