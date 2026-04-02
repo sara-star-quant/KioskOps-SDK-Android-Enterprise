@@ -14,8 +14,7 @@ on:
     - cron: '0 3 * * 0'  # Weekly on Sunday at 3 AM
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: read-all
 
 jobs:
   fuzz:
