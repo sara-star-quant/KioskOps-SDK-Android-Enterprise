@@ -3929,6 +3929,7 @@ public final class com/sarastarquant/kioskops/sdk/sync/SyncPolicy {
 
 public final class com/sarastarquant/kioskops/sdk/sync/SyncPolicy$Companion {
 	public final fun disabledDefaults ()Lcom/sarastarquant/kioskops/sdk/sync/SyncPolicy;
+	public final fun enabledDefaults ()Lcom/sarastarquant/kioskops/sdk/sync/SyncPolicy;
 }
 
 public final class com/sarastarquant/kioskops/sdk/telemetry/EncryptedTelemetryStore : com/sarastarquant/kioskops/sdk/telemetry/TelemetrySink {
