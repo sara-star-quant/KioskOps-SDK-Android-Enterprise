@@ -119,6 +119,13 @@ KioskOps SDK includes enterprise security features:
 - `cjisDefaults()` preset for CJIS Security Policy / law enforcement deployments
 - `asdEssentialEightDefaults()` preset for Australian government (ASD Essential Eight)
 
+### Lifecycle, PII, Anomaly & Build Integrity (v0.9.0)
+- Global PII detection patterns for 8 countries (AU TFN, UK NIN, CA SIN, DE Steuer-ID, JP My Number, IN Aadhaar, BR CPF, ZA ID)
+- Anomaly baseline seeding via `seedBaseline()` eliminates cold-start blind spot where initial events bypassed anomaly flags
+- `ProcessLifecycleOwner` heartbeat on app background transition ensures telemetry delivery even on unexpected backgrounding
+- Build attestation with artifact SHA-256 hash in CI job summary for supply chain verification
+- Detekt SARIF findings uploaded to GitHub Security tab for proactive static analysis review
+
 ### Disclaimer
 
 References to regulatory frameworks (NIST 800-53, FedRAMP, GDPR, ISO 27001,
