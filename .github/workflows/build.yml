@@ -31,32 +31,24 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --no-daemon
+      - name: Build, test, and verify
+        run: |
+          ./gradlew \
+            testDebugUnitTest \
+            :kiosk-ops-sdk:koverXmlReportDebug \
+            :kiosk-ops-sdk:koverHtmlReportDebug \
+            :kiosk-ops-sdk:koverVerifyDebug \
+            apiCheck \
+            :kiosk-ops-sdk:detekt \
+            lintDebug \
+            :kiosk-ops-sdk:assembleRelease
 
-      - name: Generate code coverage report
-        run: ./gradlew :kiosk-ops-sdk:koverXmlReportDebug :kiosk-ops-sdk:koverHtmlReportDebug --no-daemon
-
-      - name: Verify coverage threshold
-        run: ./gradlew :kiosk-ops-sdk:koverVerifyDebug --no-daemon
-
-      - name: Check binary compatibility
-        run: ./gradlew apiCheck --no-daemon
-
-      - name: Run Detekt
-        run: ./gradlew :kiosk-ops-sdk:detekt --no-daemon
-
-      - name: Run lint
-        run: ./gradlew lintDebug --no-daemon
-
-      - name: Generate API docs
-        run: ./gradlew :kiosk-ops-sdk:dokkaGeneratePublicationHtml --no-daemon --no-configuration-cache
-
-      - name: Generate SBOM
-        run: ./gradlew :kiosk-ops-sdk:cyclonedxBom --no-daemon
-
-      - name: Build SDK
-        run: ./gradlew :kiosk-ops-sdk:assembleRelease --no-daemon
+      - name: Generate docs and SBOM
+        run: |
+          ./gradlew \
+            :kiosk-ops-sdk:dokkaGeneratePublicationHtml --no-configuration-cache \
+          && ./gradlew \
+            :kiosk-ops-sdk:cyclonedxBom
 
       - name: Check AAR size
         run: |
@@ -156,6 +148,7 @@ jobs:
   instrumented-tests:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -184,21 +177,29 @@ jobs:
             "platform-tools" \
             "platforms;android-31"
 
-      - name: Create AVD
+      - name: Create and start emulator
         run: |
-          mkdir -p "$HOME/.android/avd"
+          export ANDROID_EMULATOR_HOME="$HOME/.android"
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+
           echo "no" | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
             --name "test_avd" \
             --package "system-images;android-31;default;x86_64" \
             --device "pixel_6" \
             --force
-          ls -la "$HOME/.android/avd/"
 
-      - name: Start emulator
-        run: |
-          "$ANDROID_HOME/emulator/emulator" -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
-          "$ANDROID_HOME/platform-tools/adb" wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
+          echo "AVD created:"
+          ls "$ANDROID_AVD_HOME/"
+
+          "$ANDROID_HOME/emulator/emulator" -avd test_avd \
+            -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+
+          echo "Waiting for emulator boot..."
+          "$ANDROID_HOME/platform-tools/adb" wait-for-device shell \
+            'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
           "$ANDROID_HOME/platform-tools/adb" shell input keyevent 82
+          echo "Emulator booted"
 
       - name: Run instrumented tests
         run: ./gradlew :kiosk-ops-sdk:connectedDebugAndroidTest --no-daemon
