@@ -11,39 +11,78 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!-- Header: app title (accessible heading) -->
+    <!-- Header -->
     <TextView
-      android:id="@+id/header"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="@string/app_name"
+      android:text="@string/title_batch_enqueue"
       android:textSize="24sp"
       android:textColor="#212121"
       android:accessibilityHeading="true"
       android:importantForAccessibility="yes"
       android:layout_marginBottom="16dp" />
 
-    <!-- SDK status section -->
+    <!-- Description -->
     <TextView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="@string/section_sdk_status"
+      android:text="@string/batch_description"
+      android:textSize="14sp"
+      android:textColor="#424242"
+      android:layout_marginBottom="16dp" />
+
+    <!-- Batch configuration section -->
+    <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/section_batch_config"
+      android:textSize="18sp"
+      android:textColor="#212121"
+      android:accessibilityHeading="true"
+      android:layout_marginBottom="8dp" />
+
+    <EditText
+      android:id="@+id/inputBatchSize"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:minHeight="48dp"
+      android:inputType="number"
+      android:text="100"
+      android:hint="@string/hint_batch_size"
+      android:contentDescription="@string/cd_batch_size_input"
+      android:layout_marginBottom="8dp" />
+
+    <Button
+      android:id="@+id/btnStartBatch"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:minHeight="48dp"
+      android:text="@string/btn_start_batch"
+      android:contentDescription="@string/cd_start_batch"
+      android:layout_marginBottom="16dp" />
+
+    <!-- Progress section -->
+    <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/section_batch_progress"
       android:textSize="18sp"
       android:textColor="#212121"
       android:accessibilityHeading="true"
       android:layout_marginBottom="8dp" />
 
     <TextView
-      android:id="@+id/sdkVersion"
+      android:id="@+id/progressText"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:textSize="14sp"
       android:textColor="#424242"
-      android:contentDescription="@string/cd_sdk_version"
-      android:layout_marginBottom="4dp" />
+      android:importantForAccessibility="yes"
+      android:accessibilityLiveRegion="polite"
+      android:layout_marginBottom="8dp" />
 
     <TextView
-      android:id="@+id/queueStatus"
+      android:id="@+id/queueDepthText"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:textSize="14sp"
@@ -51,78 +90,18 @@
       android:contentDescription="@string/cd_queue_status"
       android:layout_marginBottom="16dp" />
 
-    <!-- Actions section -->
+    <!-- Errors section -->
     <TextView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="@string/section_actions"
-      android:textSize="18sp"
-      android:textColor="#212121"
-      android:accessibilityHeading="true"
-      android:layout_marginBottom="8dp" />
-
-    <!-- Enqueue button: minimum 48dp touch target -->
-    <Button
-      android:id="@+id/btnEnqueue"
-      android:layout_width="match_parent"
-      android:layout_height="48dp"
-      android:minHeight="48dp"
-      android:text="@string/btn_enqueue"
-      android:contentDescription="@string/cd_enqueue"
-      android:layout_marginBottom="8dp" />
-
-    <!-- Heartbeat button -->
-    <Button
-      android:id="@+id/btnHeartbeat"
-      android:layout_width="match_parent"
-      android:layout_height="48dp"
-      android:minHeight="48dp"
-      android:text="@string/btn_heartbeat"
-      android:contentDescription="@string/cd_heartbeat"
-      android:layout_marginBottom="8dp" />
-
-    <!-- Health check button -->
-    <Button
-      android:id="@+id/btnHealthCheck"
-      android:layout_width="match_parent"
-      android:layout_height="48dp"
-      android:minHeight="48dp"
-      android:text="@string/btn_health_check"
-      android:contentDescription="@string/cd_health_check"
-      android:layout_marginBottom="8dp" />
-
-    <!-- Navigation: Batch Enqueue -->
-    <Button
-      android:id="@+id/btnBatchEnqueue"
-      android:layout_width="match_parent"
-      android:layout_height="48dp"
-      android:minHeight="48dp"
-      android:text="@string/btn_batch_enqueue"
-      android:contentDescription="@string/cd_batch_enqueue"
-      android:layout_marginBottom="8dp" />
-
-    <!-- Navigation: Data Rights -->
-    <Button
-      android:id="@+id/btnDataRights"
-      android:layout_width="match_parent"
-      android:layout_height="48dp"
-      android:minHeight="48dp"
-      android:text="@string/btn_data_rights"
-      android:contentDescription="@string/cd_data_rights"
-      android:layout_marginBottom="16dp" />
-
-    <!-- Result display -->
-    <TextView
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:text="@string/section_result"
+      android:text="@string/section_batch_errors"
       android:textSize="18sp"
       android:textColor="#212121"
       android:accessibilityHeading="true"
       android:layout_marginBottom="8dp" />
 
     <TextView
-      android:id="@+id/resultText"
+      android:id="@+id/errorText"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:textSize="14sp"

@@ -11,10 +11,42 @@
   <string name="btn_heartbeat">Send Heartbeat</string>
   <string name="btn_health_check">Health Check</string>
 
+  <!-- Navigation buttons -->
+  <string name="btn_batch_enqueue">Batch Enqueue</string>
+  <string name="btn_data_rights">Data Rights</string>
+
   <!-- Content descriptions for accessibility -->
   <string name="cd_sdk_version">SDK version information</string>
   <string name="cd_queue_status">Event queue status</string>
   <string name="cd_enqueue">Enqueue a sample scan event to the SDK queue</string>
   <string name="cd_heartbeat">Send a manual heartbeat with device posture and policy drift check</string>
   <string name="cd_health_check">Run a health check showing queue depth and sync status</string>
+  <string name="cd_batch_enqueue">Open batch enqueue demonstration</string>
+  <string name="cd_data_rights">Open data rights demonstration</string>
+
+  <!-- Batch Enqueue Activity -->
+  <string name="title_batch_enqueue">Batch Enqueue</string>
+  <string name="batch_description">Rapidly enqueue events and observe overflow behavior. The SDK uses DROP_OLDEST strategy when queue limits are exceeded, dropping the oldest events to make room for new ones.</string>
+  <string name="section_batch_config">Configuration</string>
+  <string name="hint_batch_size">Batch size</string>
+  <string name="cd_batch_size_input">Number of events to enqueue in this batch</string>
+  <string name="btn_start_batch">Start Batch</string>
+  <string name="cd_start_batch">Start batch enqueue operation</string>
+  <string name="section_batch_progress">Progress</string>
+  <string name="section_batch_errors">Errors</string>
+
+  <!-- Data Rights Activity -->
+  <string name="title_data_rights">Data Rights</string>
+  <string name="section_user_id">User Identification</string>
+  <string name="hint_user_id">User ID</string>
+  <string name="cd_user_id_input">User identifier for data rights operations</string>
+  <string name="section_data_actions">Data Rights Actions</string>
+  <string name="btn_enqueue_as_user">Enqueue as User</string>
+  <string name="cd_enqueue_as_user">Enqueue three test events attributed to this user</string>
+  <string name="btn_export_user_data">Export User Data</string>
+  <string name="cd_export_user_data">Export all local data for this user as a zip file</string>
+  <string name="btn_delete_user_data">Delete User Data</string>
+  <string name="cd_delete_user_data">Delete all local data for this user</string>
+  <string name="btn_wipe_all_data">Wipe All SDK Data</string>
+  <string name="cd_wipe_all_data">Delete all SDK data from this device</string>
 </resources>
