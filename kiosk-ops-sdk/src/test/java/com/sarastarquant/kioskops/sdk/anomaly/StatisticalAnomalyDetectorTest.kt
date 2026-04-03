@@ -18,7 +18,7 @@ class StatisticalAnomalyDetectorTest {
 
   @Test fun `oversized payload triggers size anomaly after baseline`() {
     val detector = StatisticalAnomalyDetector(
-      AnomalyPolicy(enabled = true, sensitivityLevel = SensitivityLevel.HIGH)
+      AnomalyPolicy(enabled = true, sensitivityLevel = SensitivityLevel.HIGH, baselineEventCount = 0)
     )
     // Establish baseline with very uniform small payloads (all same fields for schema baseline)
     repeat(50) { i ->
@@ -32,7 +32,9 @@ class StatisticalAnomalyDetectorTest {
   }
 
   @Test fun `unknown JSON gets anomaly flag`() {
-    val detector = StatisticalAnomalyDetector(AnomalyPolicy.enabledDefaults())
+    val detector = StatisticalAnomalyDetector(
+      AnomalyPolicy(enabled = true, baselineEventCount = 0)
+    )
     val result = detector.analyze("SCAN", "not valid json")
     assertThat(result.score).isGreaterThan(0.0f)
     assertThat(result.reasons).contains("unparseable_json")

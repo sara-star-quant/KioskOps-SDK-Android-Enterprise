@@ -19,7 +19,7 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    minSdk = 26
+    minSdk = 31
     consumerProguardFiles("consumer-rules.pro")
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("String", "SDK_VERSION", "\"${findProperty("VERSION_NAME") ?: "0.0.0-SNAPSHOT"}\"")
@@ -105,6 +105,7 @@ dependencies {
   api(libs.androidx.core.ktx)
 
   implementation(libs.androidx.startup)
+  implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.work)
 
   implementation(libs.androidx.room.runtime)

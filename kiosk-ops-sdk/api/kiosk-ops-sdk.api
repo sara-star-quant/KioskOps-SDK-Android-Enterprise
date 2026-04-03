@@ -222,6 +222,7 @@ public final class com/sarastarquant/kioskops/sdk/KioskOpsSdk {
 	public static final field Companion Lcom/sarastarquant/kioskops/sdk/KioskOpsSdk$Companion;
 	public synthetic fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/sarastarquant/kioskops/sdk/crypto/CryptoProvider;Lcom/sarastarquant/kioskops/sdk/transport/AuthProvider;Lcom/sarastarquant/kioskops/sdk/transport/RequestSigner;Lcom/sarastarquant/kioskops/sdk/transport/Transport;Lokhttp3/OkHttpClient;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun applySchedulingFromConfig ()V
+	public final fun configUpdateFlow ()Lkotlinx/coroutines/flow/Flow;
 	public final fun currentConfig ()Lcom/sarastarquant/kioskops/sdk/KioskOpsConfig;
 	public final fun currentPolicyHash ()Ljava/lang/String;
 	public final fun devicePosture ()Lcom/sarastarquant/kioskops/sdk/fleet/DevicePosture;
@@ -328,16 +329,18 @@ public abstract interface class com/sarastarquant/kioskops/sdk/anomaly/AnomalyDe
 public final class com/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy {
 	public static final field Companion Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy$Companion;
 	public fun <init> ()V
-	public fun <init> (ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFI)V
-	public synthetic fun <init> (ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFII)V
+	public synthetic fun <init> (ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()Lcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;
 	public final fun component3 ()F
 	public final fun component4 ()F
 	public final fun component5 ()I
-	public final fun copy (ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFI)Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;
-	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFIILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;
+	public final fun component6 ()I
+	public final fun copy (ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFII)Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;ZLcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;FFIIILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBaselineEventCount ()I
 	public final fun getEnabled ()Z
 	public final fun getFlagThreshold ()F
 	public final fun getRejectThreshold ()F
@@ -373,6 +376,24 @@ public final class com/sarastarquant/kioskops/sdk/anomaly/AnomalyResult$Companio
 	public final fun getNORMAL ()Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyResult;
 }
 
+public final class com/sarastarquant/kioskops/sdk/anomaly/BaselineStats {
+	public fun <init> (DDDLjava/util/Map;)V
+	public synthetic fun <init> (DDDLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (DDDLjava/util/Map;)Lcom/sarastarquant/kioskops/sdk/anomaly/BaselineStats;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/anomaly/BaselineStats;DDDLjava/util/Map;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/anomaly/BaselineStats;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKnownFieldsByEventType ()Ljava/util/Map;
+	public final fun getMeanEventRatePerMinute ()D
+	public final fun getMeanPayloadSize ()D
+	public final fun getPayloadSizeVariance ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel : java/lang/Enum {
 	public static final field HIGH Lcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;
 	public static final field LOW Lcom/sarastarquant/kioskops/sdk/anomaly/SensitivityLevel;
@@ -388,6 +409,7 @@ public final class com/sarastarquant/kioskops/sdk/anomaly/StatisticalAnomalyDete
 	public fun <init> (Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;)V
 	public synthetic fun <init> (Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyPolicy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun analyze (Ljava/lang/String;Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyResult;
+	public final fun seedBaseline (Lcom/sarastarquant/kioskops/sdk/anomaly/BaselineStats;)V
 }
 
 public final class com/sarastarquant/kioskops/sdk/anomaly/StatisticalAnomalyDetector$Companion {
@@ -1916,6 +1938,44 @@ public final class com/sarastarquant/kioskops/sdk/fleet/config/ConfigSource$Comp
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public abstract class com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent {
+}
+
+public final class com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Applied : com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Applied;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Applied;JILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Applied;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getVersion ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Rejected : com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Rejected;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Rejected;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$Rejected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$RolledBack : com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent {
+	public fun <init> (JJ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun copy (JJ)Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$RolledBack;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$RolledBack;JJILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateEvent$RolledBack;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFromVersion ()J
+	public final fun getToVersion ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract class com/sarastarquant/kioskops/sdk/fleet/config/ConfigUpdateResult {
 }
 
@@ -1985,6 +2045,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/config/RemoteConfigManag
 	public static final field KEY_AB_VARIANTS Ljava/lang/String;
 	public static final field KEY_CONFIG_SIGNATURE Ljava/lang/String;
 	public static final field KEY_CONFIG_VERSION Ljava/lang/String;
+	public final fun configUpdateFlow ()Lkotlinx/coroutines/flow/Flow;
 	public final fun getAbVariant (Ljava/lang/String;Ljava/util/List;)Ljava/lang/String;
 	public final fun getActiveVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getAvailableVersions (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -64,6 +64,12 @@ class RegexPiiDetector(
   }
 
   private fun scanValue(value: String, path: String, findings: MutableList<PiiFinding>) {
+    // Skip values that match safe patterns (UUIDs, timestamps, versions)
+    // to reduce false positives.
+    for (safe in SAFE_PATTERNS) {
+      if (safe.containsMatchIn(value)) return
+    }
+
     for ((pattern, piiType, confidence) in PATTERNS) {
       if (pattern.containsMatchIn(value)) {
         findings.add(PiiFinding(jsonPath = path, piiType = piiType, confidence = confidence))
@@ -74,6 +80,20 @@ class RegexPiiDetector(
   private data class PatternEntry(val pattern: Regex, val piiType: PiiType, val confidence: Float)
 
   companion object {
+
+    /**
+     * Safe patterns that should never be flagged as PII.
+     * If a value matches any of these, PII detection is skipped entirely.
+     */
+    private val SAFE_PATTERNS: List<Regex> = listOf(
+      // UUID (v1-v5 and similar hex-dash formats)
+      Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"),
+      // ISO 8601 timestamp
+      Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}"),
+      // Semantic version (must not have a fourth dotted segment like an IP address)
+      Regex("^\\d+\\.\\d+\\.\\d+(-[\\w.]+)?(\\+[\\w.]+)?$"),
+    )
+
     private val PATTERNS: List<PatternEntry> = listOf(
       // Email
       PatternEntry(Regex("[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}"), PiiType.EMAIL, 0.95f),
@@ -102,6 +122,18 @@ class RegexPiiDetector(
 
       // US National ID (EIN format)
       PatternEntry(Regex("\\b\\d{2}-\\d{7}\\b"), PiiType.NATIONAL_ID, 0.75f),
+
+      // Australian Tax File Number (TFN): 9 digits with optional spaces
+      PatternEntry(Regex("\\b\\d{3}\\s?\\d{3}\\s?\\d{3}\\b"), PiiType.NATIONAL_ID, 0.75f),
+
+      // UK National Insurance Number (NIN)
+      PatternEntry(Regex("\\b[A-CEGHJ-PR-TW-Z]{2}\\s?\\d{2}\\s?\\d{2}\\s?\\d{2}\\s?[A-D]\\b"), PiiType.NATIONAL_ID, 0.85f),
+
+      // Canadian Social Insurance Number (SIN): 9 digits with optional spaces
+      // (same pattern as Australian TFN; both covered by the TFN entry above)
+
+      // German Steuer-ID: 11 digits with optional spaces (XX XXX XXX XXX)
+      PatternEntry(Regex("\\b\\d{2}\\s?\\d{3}\\s?\\d{3}\\s?\\d{3}\\b"), PiiType.NATIONAL_ID, 0.75f),
     )
   }
 }
