@@ -6,7 +6,7 @@
 [![Fuzz](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pzverkov/KioskOps-SDK-Android-Enterprise/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pzverkov/KioskOps-SDK-Android-Enterprise)
 [![JitPack](https://jitpack.io/v/pzverkov/KioskOps-SDK-Android-Enterprise.svg)](https://jitpack.io/#pzverkov/KioskOps-SDK-Android-Enterprise)
-[![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
+[![API](https://img.shields.io/badge/API-31%2B-brightgreen.svg)](https://developer.android.com/about/versions/12)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-purple.svg)](https://kotlinlang.org/)
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
 
@@ -112,7 +112,7 @@ See [Features](docs/FEATURES.md) for the complete list.
 
 | Requirement | Version |
 |-------------|---------|
-| Android API | 26+ (Android 8.0) |
+| Android API | 31+ (Android 12) |
 | Java | 17+ |
 | Kotlin | 2.1+ |
 | Gradle | 8.11+ |

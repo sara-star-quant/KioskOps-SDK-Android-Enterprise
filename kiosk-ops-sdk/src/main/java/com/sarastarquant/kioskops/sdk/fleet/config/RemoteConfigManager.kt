@@ -16,6 +16,9 @@ import com.sarastarquant.kioskops.sdk.util.Clock
 import com.sarastarquant.kioskops.sdk.util.DeviceId
 import com.sarastarquant.kioskops.sdk.util.Hashing
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -43,6 +46,18 @@ class RemoteConfigManager internal constructor(
 ) {
   private val mutex = Mutex()
   private var lastApplyMs: Long = 0L
+
+  private val _configUpdates = MutableSharedFlow<ConfigUpdateEvent>(extraBufferCapacity = 16)
+
+  /**
+   * Observe configuration changes as a [Flow].
+   *
+   * Emits [ConfigUpdateEvent.Applied], [ConfigUpdateEvent.Rejected], or
+   * [ConfigUpdateEvent.RolledBack] whenever the config state changes.
+   *
+   * @since 0.9.0
+   */
+  fun configUpdateFlow(): Flow<ConfigUpdateEvent> = _configUpdates.asSharedFlow()
 
   private val json = Json {
     ignoreUnknownKeys = true
@@ -97,6 +112,7 @@ class RemoteConfigManager internal constructor(
           "received_version" to version.toString(),
           "current_version" to activeVersion.version.toString(),
         ))
+        _configUpdates.tryEmit(ConfigUpdateEvent.Rejected("version_too_old"))
         return@withContext ConfigUpdateResult.Rejected(ConfigRejectionReason.VERSION_TOO_OLD)
       }
 
@@ -108,6 +124,7 @@ class RemoteConfigManager internal constructor(
           "received_version" to version.toString(),
           "minimum_version" to policy.minimumConfigVersion.toString(),
         ))
+        _configUpdates.tryEmit(ConfigUpdateEvent.Rejected("minimum_version_violation"))
         return@withContext ConfigUpdateResult.Rejected(ConfigRejectionReason.MINIMUM_VERSION_VIOLATION)
       }
 
@@ -120,6 +137,7 @@ class RemoteConfigManager internal constructor(
             "source" to source.name,
             "version" to version.toString(),
           ))
+          _configUpdates.tryEmit(ConfigUpdateEvent.Rejected("signature_invalid"))
           return@withContext ConfigUpdateResult.Rejected(ConfigRejectionReason.SIGNATURE_INVALID)
         }
       }
@@ -161,7 +179,9 @@ class RemoteConfigManager internal constructor(
         "ab_variant" to (abVariant ?: "none"),
       ))
 
-      ConfigUpdateResult.Applied(configVersion)
+      val result = ConfigUpdateResult.Applied(configVersion)
+      _configUpdates.tryEmit(ConfigUpdateEvent.Applied(version))
+      result
     }
   }
 
@@ -210,6 +230,13 @@ class RemoteConfigManager internal constructor(
           "content_hash" to target.contentHash,
         ))
 
+        val activeVersion = versionDao.getActiveVersion()
+        _configUpdates.tryEmit(
+          ConfigUpdateEvent.RolledBack(
+            fromVersion = activeVersion?.version ?: 0L,
+            toVersion = targetVersion,
+          )
+        )
         ConfigRollbackResult.Success(configVersion)
       }
     }

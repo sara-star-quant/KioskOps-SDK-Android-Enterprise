@@ -13,6 +13,9 @@ package com.sarastarquant.kioskops.sdk.anomaly
  * @property flagThreshold Score threshold for flagging events.
  * @property rejectThreshold Score threshold for rejecting events.
  * @property slidingWindowMinutes Window size for rate-based anomaly detection.
+ * @property baselineEventCount Number of events to observe before activating scoring.
+ *   During the learning period all events return ALLOW. Use [seedBaseline][StatisticalAnomalyDetector.seedBaseline]
+ *   to skip the learning period entirely.
  * @since 0.5.0
  */
 data class AnomalyPolicy(
@@ -21,6 +24,7 @@ data class AnomalyPolicy(
   val flagThreshold: Float = 0.5f,
   val rejectThreshold: Float = 0.8f,
   val slidingWindowMinutes: Int = 5,
+  val baselineEventCount: Int = 100,
 ) {
   companion object {
     fun disabledDefaults() = AnomalyPolicy(enabled = false)
@@ -28,6 +32,7 @@ data class AnomalyPolicy(
     fun enabledDefaults() = AnomalyPolicy(
       enabled = true,
       sensitivityLevel = SensitivityLevel.MEDIUM,
+      baselineEventCount = 100,
     )
 
     fun highSecurityDefaults() = AnomalyPolicy(
@@ -35,6 +40,7 @@ data class AnomalyPolicy(
       sensitivityLevel = SensitivityLevel.HIGH,
       flagThreshold = 0.3f,
       rejectThreshold = 0.6f,
+      baselineEventCount = 50,
     )
   }
 }
