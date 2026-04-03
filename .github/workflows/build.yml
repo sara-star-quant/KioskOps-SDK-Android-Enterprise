@@ -58,6 +58,22 @@ jobs:
       - name: Build SDK
         run: ./gradlew :kiosk-ops-sdk:assembleRelease --no-daemon
 
+      - name: Check AAR size
+        run: |
+          AAR_FILE="kiosk-ops-sdk/build/outputs/aar/kiosk-ops-sdk-release.aar"
+          SIZE_BYTES=$(stat -f%z "$AAR_FILE" 2>/dev/null || stat -c%s "$AAR_FILE")
+          SIZE_KB=$((SIZE_BYTES / 1024))
+          MAX_KB=$AAR_SIZE_LIMIT_KB
+
+          echo "AAR size: ${SIZE_KB} KB (limit: ${MAX_KB} KB)" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$SIZE_KB" -gt "$MAX_KB" ]; then
+            echo "::error::AAR size ${SIZE_KB} KB exceeds limit of ${MAX_KB} KB"
+            exit 1
+          fi
+        env:
+          AAR_SIZE_LIMIT_KB: 1536
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
