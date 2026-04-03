@@ -93,6 +93,18 @@
 | CJIS preset | Available | `cjisDefaults()` for law enforcement kiosk deployments |
 | ASD Essential Eight preset | Available | `asdEssentialEightDefaults()` for Australian government deployments |
 
+### Lifecycle, Config Flow, Global PII & Distribution (v0.9.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Lifecycle observer | On | `SdkLifecycleObserver` via `ProcessLifecycleOwner`; automatic heartbeat on app background |
+| Config update flow | Available | `configUpdateFlow()` emitting `Applied`, `Rejected`, `RolledBack` events |
+| Global PII patterns | On | Country-specific detection: AU TFN, UK NIN, CA SIN, DE Steuer-ID, JP My Number, IN Aadhaar, BR CPF, ZA ID |
+| Anomaly baseline seeding | Off | Learning mode via `baselineEventCount`; `seedBaseline()` API with `BaselineStats` |
+| Maven Central distribution | Available | GPG-signed AAR, sources JAR, and javadoc JAR on Maven Central |
+| Instrumented tests | CI | Real AndroidKeyStore, on-device SQLite, WorkManager on real scheduler |
+| Build attestation | CI | CI summary with test count, coverage, AAR SHA-256, SBOM hash, toolchain versions |
+
 See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
 
 ## Fleet Operations
@@ -146,10 +158,10 @@ See [Server API Contract](openapi.yaml) for the ingest endpoint specification.
 - **Lock-task mode**: Best-effort detection; not a full kiosk controller
 - **Request signing**: Client-side only; server verification is your responsibility
 - **Room migrations**: Provided for Queue v2->v3->v4 and Audit v1->v2
-- **Key attestation**: Requires Android API 24+ for full functionality
+- **Key attestation**: Always available (minSdk 31 since v0.9.0)
 - **StrongBox**: Hardware support varies by device
-- **PII detection** (v0.5.0): Regex-based; not exhaustive; may produce false positives
-- **Anomaly detection** (v0.5.0): Requires baseline period; initial events will not trigger flags
+- **PII detection** (v0.5.0): Regex-based; expanded in v0.9.0 with 8 country-specific patterns and safe exclusions; may still produce false positives for uncommon formats
+- **Anomaly detection** (v0.5.0): Requires baseline period; baseline seeding (v0.9.0) addresses cold-start via `seedBaseline()` API
 - **GDPR APIs** (v0.5.0): Cover SDK-local data only; host app and backend data is out of scope
 
 ## Roadmap
