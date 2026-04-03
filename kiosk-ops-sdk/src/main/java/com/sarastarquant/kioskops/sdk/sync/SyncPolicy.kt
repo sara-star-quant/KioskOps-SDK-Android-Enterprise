@@ -21,5 +21,6 @@ data class SyncPolicy(
 ) {
   companion object {
     fun disabledDefaults() = SyncPolicy(enabled = false)
+    fun enabledDefaults() = SyncPolicy(enabled = true)
   }
 }
