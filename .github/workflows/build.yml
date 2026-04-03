@@ -191,12 +191,16 @@ jobs:
             --package "system-images;android-31;default;x86_64" \
             --device "pixel_6" \
             --force
+        env:
+          ANDROID_AVD_HOME: ${{ github.workspace }}/.android/avd
 
       - name: Start emulator
         run: |
           "$ANDROID_HOME/emulator/emulator" -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
           "$ANDROID_HOME/platform-tools/adb" wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
           "$ANDROID_HOME/platform-tools/adb" shell input keyevent 82
+        env:
+          ANDROID_AVD_HOME: ${{ github.workspace }}/.android/avd
 
       - name: Run instrumented tests
         run: ./gradlew :kiosk-ops-sdk:connectedDebugAndroidTest --no-daemon
