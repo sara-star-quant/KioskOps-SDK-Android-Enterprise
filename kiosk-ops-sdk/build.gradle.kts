@@ -127,6 +127,16 @@ dependencies {
   testImplementation(libs.androidx.work.testing)
   testImplementation(libs.androidx.room.testing)
 
+  // Instrumented tests (androidTest)
+  androidTestImplementation(libs.junit4)
+  androidTestImplementation(libs.truth)
+  androidTestImplementation(libs.androidx.test.core)
+  androidTestImplementation(libs.androidx.test.runner)
+  androidTestImplementation(libs.androidx.test.rules)
+  androidTestImplementation(libs.androidx.test.ext.junit)
+  androidTestImplementation(libs.kotlinx.coroutines.test)
+  androidTestImplementation(libs.androidx.work.testing)
+
   // Fuzzing (JUnit 5)
   testImplementation(libs.junit5.api)
   testRuntimeOnly(libs.junit5.engine)

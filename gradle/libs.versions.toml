@@ -20,6 +20,9 @@ junit4 = "4.13.2"
 truth = "1.4.5"
 robolectric = "4.16.1"
 androidxTestCore = "1.7.0"
+androidxTestRunner = "1.6.2"
+androidxTestRules = "1.6.1"
+androidxTestExtJunit = "1.2.1"
 bcv = "0.16.3"
 dokka = "2.0.0"
 detekt = "1.23.7"
@@ -54,6 +57,9 @@ jazzer-junit = { module = "com.code-intelligence:jazzer-junit", version.ref = "j
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTestCore" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
+androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxTestRules" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExtJunit" }
 
 [plugins]
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
