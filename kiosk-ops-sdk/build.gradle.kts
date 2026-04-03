@@ -8,6 +8,7 @@ plugins {
   alias(libs.plugins.kover)
   alias(libs.plugins.cyclonedx)
   `maven-publish`
+  signing
 }
 
 kotlin {
@@ -150,7 +151,19 @@ dependencies {
   testImplementation(libs.jazzer.junit)
 }
 
-// Publishing configuration for GitHub Packages and JitPack
+// Sources and Javadoc JARs (required by Maven Central)
+val sourcesJar by tasks.registering(Jar::class) {
+  archiveClassifier.set("sources")
+  from(android.sourceSets["main"].java.srcDirs)
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+  archiveClassifier.set("javadoc")
+  dependsOn(tasks.named("dokkaGeneratePublicationHtml"))
+  from(layout.buildDirectory.dir("dokka/html"))
+}
+
+// Publishing configuration for Maven Central, GitHub Packages, and JitPack
 afterEvaluate {
   publishing {
     publications {
@@ -160,6 +173,9 @@ afterEvaluate {
         groupId = "com.sarastarquant.kioskops"
         artifactId = "kiosk-ops-sdk"
         version = findProperty("VERSION_NAME")?.toString() ?: "0.1.0-SNAPSHOT"
+
+        artifact(sourcesJar)
+        artifact(javadocJar)
 
         pom {
           name.set("KioskOps SDK")
@@ -177,6 +193,7 @@ afterEvaluate {
             developer {
               id.set("pzverkov")
               name.set("Petro Zverkov")
+              organization.set("Sara Star Quant LLC")
             }
           }
 
@@ -198,6 +215,23 @@ afterEvaluate {
           password = System.getenv("GITHUB_TOKEN") ?: findProperty("gpr.token")?.toString()
         }
       }
+      maven {
+        name = "MavenCentral"
+        url = uri("https://central.sonatype.com/api/v1/publisher/deployments/download/")
+        credentials {
+          username = System.getenv("MAVEN_CENTRAL_USERNAME") ?: findProperty("mavenCentral.username")?.toString()
+          password = System.getenv("MAVEN_CENTRAL_PASSWORD") ?: findProperty("mavenCentral.password")?.toString()
+        }
+      }
+    }
+  }
+
+  signing {
+    val signingKey = System.getenv("GPG_SIGNING_KEY")
+    val signingPassword = System.getenv("GPG_SIGNING_PASSWORD")
+    if (signingKey != null && signingPassword != null) {
+      useInMemoryPgpKeys(signingKey, signingPassword)
+      sign(publishing.publications["release"])
     }
   }
 }
