@@ -1,6 +1,7 @@
 package com.sarastarquant.kioskops.sample
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -34,6 +35,8 @@ class MainActivity : Activity() {
     val btnEnqueue = findViewById<Button>(R.id.btnEnqueue)
     val btnHeartbeat = findViewById<Button>(R.id.btnHeartbeat)
     val btnHealthCheck = findViewById<Button>(R.id.btnHealthCheck)
+    val btnBatchEnqueue = findViewById<Button>(R.id.btnBatchEnqueue)
+    val btnDataRights = findViewById<Button>(R.id.btnDataRights)
 
     val sdk = KioskOpsSdk.get()
     sdkVersion.text = "Version: ${KioskOpsSdk.SDK_VERSION}"
@@ -71,6 +74,14 @@ class MainActivity : Activity() {
           appendLine("Encryption: ${if (health.encryptionEnabled) "on" else "off"}")
         }
       }
+    }
+
+    btnBatchEnqueue.setOnClickListener {
+      startActivity(Intent(this, BatchEnqueueActivity::class.java))
+    }
+
+    btnDataRights.setOnClickListener {
+      startActivity(Intent(this, DataRightsActivity::class.java))
     }
 
     // v0.8.0: Reactive queue depth observation via Flow.

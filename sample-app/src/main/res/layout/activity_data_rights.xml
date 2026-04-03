@@ -11,107 +11,85 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!-- Header: app title (accessible heading) -->
+    <!-- Header -->
     <TextView
-      android:id="@+id/header"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="@string/app_name"
+      android:text="@string/title_data_rights"
       android:textSize="24sp"
       android:textColor="#212121"
       android:accessibilityHeading="true"
       android:importantForAccessibility="yes"
       android:layout_marginBottom="16dp" />
 
-    <!-- SDK status section -->
+    <!-- User ID input section -->
     <TextView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="@string/section_sdk_status"
+      android:text="@string/section_user_id"
       android:textSize="18sp"
       android:textColor="#212121"
       android:accessibilityHeading="true"
       android:layout_marginBottom="8dp" />
 
-    <TextView
-      android:id="@+id/sdkVersion"
+    <EditText
+      android:id="@+id/inputUserId"
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:textSize="14sp"
-      android:textColor="#424242"
-      android:contentDescription="@string/cd_sdk_version"
-      android:layout_marginBottom="4dp" />
-
-    <TextView
-      android:id="@+id/queueStatus"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:textSize="14sp"
-      android:textColor="#424242"
-      android:contentDescription="@string/cd_queue_status"
+      android:layout_height="48dp"
+      android:minHeight="48dp"
+      android:inputType="text"
+      android:text="user-001"
+      android:hint="@string/hint_user_id"
+      android:contentDescription="@string/cd_user_id_input"
       android:layout_marginBottom="16dp" />
 
     <!-- Actions section -->
     <TextView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="@string/section_actions"
+      android:text="@string/section_data_actions"
       android:textSize="18sp"
       android:textColor="#212121"
       android:accessibilityHeading="true"
       android:layout_marginBottom="8dp" />
 
-    <!-- Enqueue button: minimum 48dp touch target -->
     <Button
-      android:id="@+id/btnEnqueue"
+      android:id="@+id/btnEnqueueAsUser"
       android:layout_width="match_parent"
       android:layout_height="48dp"
       android:minHeight="48dp"
-      android:text="@string/btn_enqueue"
-      android:contentDescription="@string/cd_enqueue"
+      android:text="@string/btn_enqueue_as_user"
+      android:contentDescription="@string/cd_enqueue_as_user"
       android:layout_marginBottom="8dp" />
 
-    <!-- Heartbeat button -->
     <Button
-      android:id="@+id/btnHeartbeat"
+      android:id="@+id/btnExportUserData"
       android:layout_width="match_parent"
       android:layout_height="48dp"
       android:minHeight="48dp"
-      android:text="@string/btn_heartbeat"
-      android:contentDescription="@string/cd_heartbeat"
+      android:text="@string/btn_export_user_data"
+      android:contentDescription="@string/cd_export_user_data"
       android:layout_marginBottom="8dp" />
 
-    <!-- Health check button -->
     <Button
-      android:id="@+id/btnHealthCheck"
+      android:id="@+id/btnDeleteUserData"
       android:layout_width="match_parent"
       android:layout_height="48dp"
       android:minHeight="48dp"
-      android:text="@string/btn_health_check"
-      android:contentDescription="@string/cd_health_check"
+      android:text="@string/btn_delete_user_data"
+      android:contentDescription="@string/cd_delete_user_data"
       android:layout_marginBottom="8dp" />
 
-    <!-- Navigation: Batch Enqueue -->
     <Button
-      android:id="@+id/btnBatchEnqueue"
+      android:id="@+id/btnWipeAllData"
       android:layout_width="match_parent"
       android:layout_height="48dp"
       android:minHeight="48dp"
-      android:text="@string/btn_batch_enqueue"
-      android:contentDescription="@string/cd_batch_enqueue"
-      android:layout_marginBottom="8dp" />
-
-    <!-- Navigation: Data Rights -->
-    <Button
-      android:id="@+id/btnDataRights"
-      android:layout_width="match_parent"
-      android:layout_height="48dp"
-      android:minHeight="48dp"
-      android:text="@string/btn_data_rights"
-      android:contentDescription="@string/cd_data_rights"
+      android:text="@string/btn_wipe_all_data"
+      android:contentDescription="@string/cd_wipe_all_data"
       android:layout_marginBottom="16dp" />
 
-    <!-- Result display -->
+    <!-- Result section -->
     <TextView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"

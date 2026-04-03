@@ -15,5 +15,13 @@
       </intent-filter>
     </activity>
 
+    <activity
+      android:name=".BatchEnqueueActivity"
+      android:exported="false" />
+
+    <activity
+      android:name=".DataRightsActivity"
+      android:exported="false" />
+
   </application>
 </manifest>
