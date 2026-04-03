@@ -279,4 +279,98 @@ class RegexPiiDetectorExtendedTest {
     assertThat(tsFindings).isEmpty()
     assertThat(result.findings.any { it.piiType == PiiType.SSN }).isTrue()
   }
+
+  // -----------------------------------------------------------------------
+  // Country-specific patterns: Japan My Number
+  // -----------------------------------------------------------------------
+
+  @Test fun `detects Japan My Number 12 digits`() {
+    val result = detector.scan("""{"myNumber":"123456789012"}""")
+    assertThat(result.hasPii).isTrue()
+    assertThat(result.findings.any { it.piiType == PiiType.NATIONAL_ID }).isTrue()
+  }
+
+  @Test fun `Japan My Number not detected when embedded in longer string`() {
+    // 13+ digit number should not match the 12-digit My Number pattern
+    val result = detector.scan("""{"serial":"1234567890123"}""")
+    val myNumberFindings = result.findings.filter {
+      it.piiType == PiiType.NATIONAL_ID && it.confidence == 0.70f
+    }
+    assertThat(myNumberFindings).isEmpty()
+  }
+
+  @Test fun `Japan My Number excluded at 75pct confidence threshold`() {
+    val strictDetector = RegexPiiDetector(minimumConfidence = 0.75f)
+    val result = strictDetector.scan("""{"myNumber":"123456789012"}""")
+    val myNumberFindings = result.findings.filter {
+      it.piiType == PiiType.NATIONAL_ID && it.confidence == 0.70f
+    }
+    assertThat(myNumberFindings).isEmpty()
+  }
+
+  // -----------------------------------------------------------------------
+  // Country-specific patterns: India Aadhaar
+  // -----------------------------------------------------------------------
+
+  @Test fun `detects India Aadhaar with spaces`() {
+    val result = detector.scan("""{"aadhaar":"2345 6789 0123"}""")
+    assertThat(result.hasPii).isTrue()
+    assertThat(result.findings.any { it.piiType == PiiType.NATIONAL_ID }).isTrue()
+  }
+
+  @Test fun `detects India Aadhaar without spaces`() {
+    val result = detector.scan("""{"aadhaar":"234567890123"}""")
+    assertThat(result.hasPii).isTrue()
+    assertThat(result.findings.any { it.piiType == PiiType.NATIONAL_ID }).isTrue()
+  }
+
+  @Test fun `India Aadhaar excluded at 80pct confidence threshold`() {
+    val strictDetector = RegexPiiDetector(minimumConfidence = 0.80f)
+    val result = strictDetector.scan("""{"aadhaar":"2345 6789 0123"}""")
+    val aadhaarFindings = result.findings.filter {
+      it.piiType == PiiType.NATIONAL_ID && it.confidence == 0.75f
+    }
+    assertThat(aadhaarFindings).isEmpty()
+  }
+
+  // -----------------------------------------------------------------------
+  // Country-specific patterns: Brazil CPF
+  // -----------------------------------------------------------------------
+
+  @Test fun `detects Brazil CPF in formatted pattern`() {
+    // Embed CPF in surrounding text so the safe version pattern (anchored
+    // with ^...$) does not suppress the entire value.
+    val result = detector.scan("""{"cpf":"CPF 123.456.789-09"}""")
+    assertThat(result.hasPii).isTrue()
+    assertThat(result.findings.any { it.piiType == PiiType.NATIONAL_ID }).isTrue()
+  }
+
+  @Test fun `Brazil CPF excluded at 95pct confidence threshold`() {
+    val strictDetector = RegexPiiDetector(minimumConfidence = 0.95f)
+    val result = strictDetector.scan("""{"cpf":"CPF 123.456.789-09"}""")
+    val cpfFindings = result.findings.filter {
+      it.piiType == PiiType.NATIONAL_ID && it.confidence == 0.90f
+    }
+    assertThat(cpfFindings).isEmpty()
+  }
+
+  // -----------------------------------------------------------------------
+  // Country-specific patterns: South Africa ID
+  // -----------------------------------------------------------------------
+
+  @Test fun `detects South Africa ID with valid date prefix`() {
+    // 9501015800085 = 1995-01-01 followed by 7 digits
+    val result = detector.scan("""{"saId":"9501015800085"}""")
+    assertThat(result.hasPii).isTrue()
+    assertThat(result.findings.any { it.piiType == PiiType.NATIONAL_ID }).isTrue()
+  }
+
+  @Test fun `South Africa ID excluded at 85pct confidence threshold`() {
+    val strictDetector = RegexPiiDetector(minimumConfidence = 0.85f)
+    val result = strictDetector.scan("""{"saId":"9501015800085"}""")
+    val saIdFindings = result.findings.filter {
+      it.piiType == PiiType.NATIONAL_ID && it.confidence == 0.80f
+    }
+    assertThat(saIdFindings).isEmpty()
+  }
 }

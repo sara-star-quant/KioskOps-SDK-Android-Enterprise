@@ -134,6 +134,18 @@ class RegexPiiDetector(
 
       // German Steuer-ID: 11 digits with optional spaces (XX XXX XXX XXX)
       PatternEntry(Regex("\\b\\d{2}\\s?\\d{3}\\s?\\d{3}\\s?\\d{3}\\b"), PiiType.NATIONAL_ID, 0.75f),
+
+      // Japan My Number (Individual Number): 12 digits starting with 1-9
+      PatternEntry(Regex("\\b[1-9]\\d{11}\\b"), PiiType.NATIONAL_ID, 0.70f),
+
+      // India Aadhaar: 12 digits starting with 2-9, grouped in fours
+      PatternEntry(Regex("\\b[2-9]\\d{3}\\s?\\d{4}\\s?\\d{4}\\b"), PiiType.NATIONAL_ID, 0.75f),
+
+      // Brazil CPF: 11 digits in xxx.xxx.xxx-xx format
+      PatternEntry(Regex("\\b\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}\\b"), PiiType.NATIONAL_ID, 0.90f),
+
+      // South Africa ID: 13 digits starting with a valid date (YYMMDD)
+      PatternEntry(Regex("\\b\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{7}\\b"), PiiType.NATIONAL_ID, 0.80f),
     )
   }
 }
