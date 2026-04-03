@@ -933,6 +933,18 @@ class KioskOpsSdk private constructor(
       }
     }
 
+  /**
+   * Observe configuration changes as a [kotlinx.coroutines.flow.Flow].
+   *
+   * Emits events when config is applied, rejected, or rolled back via
+   * [RemoteConfigManager]. Useful for reacting to config changes in the UI
+   * or triggering downstream operations.
+   *
+   * @since 0.9.0
+   */
+  fun configUpdateFlow(): kotlinx.coroutines.flow.Flow<com.sarastarquant.kioskops.sdk.fleet.config.ConfigUpdateEvent> =
+    remoteConfigManager.configUpdateFlow()
+
   // ========================================================================
   // v0.8.0 SDK Lifecycle
   // ========================================================================
@@ -1147,6 +1159,10 @@ class KioskOpsSdk private constructor(
       created.audit.record("sdk_initialized")
       created.telemetry.emit("sdk_initialized", mapOf("sdkVersion" to SDK_VERSION))
       created.applySchedulingFromConfig()
+      com.sarastarquant.kioskops.sdk.lifecycle.SdkLifecycleObserver.register(
+        sdkProvider = { INSTANCE },
+        scope = created.javaInteropScope,
+      )
       return created
     }
 
