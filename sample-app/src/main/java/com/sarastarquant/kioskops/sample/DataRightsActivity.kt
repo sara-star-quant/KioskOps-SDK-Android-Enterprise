@@ -25,6 +25,12 @@ import kotlinx.coroutines.launch
  * Provides controls for enqueuing test events as a specific user, then exercising
  * the Art. 20 (portability) and Art. 17 (erasure) APIs.
  *
+ * IMPORTANT: This is a sample app without authentication. In production, the host
+ * application MUST verify the caller's identity before invoking data rights APIs.
+ * The SDK does not enforce authorization; it deletes or exports whichever userId
+ * is provided. Without host-side authentication, any user on a shared device could
+ * access or erase another user's local data.
+ *
  * Accessibility: follows the same WCAG 2.1 AA patterns as [MainActivity].
  */
 class DataRightsActivity : Activity() {
