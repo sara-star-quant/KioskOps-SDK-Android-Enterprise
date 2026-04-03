@@ -176,12 +176,30 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Install Android emulator
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "emulator" \
+            "system-images;android-31;default;x86_64" \
+            "platform-tools" \
+            "platforms;android-31"
+
+      - name: Create AVD
+        run: |
+          echo "no" | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
+            --name "test_avd" \
+            --package "system-images;android-31;default;x86_64" \
+            --device "pixel_6" \
+            --force
+
+      - name: Start emulator
+        run: |
+          "$ANDROID_HOME/emulator/emulator" -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+          "$ANDROID_HOME/platform-tools/adb" wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
+          "$ANDROID_HOME/platform-tools/adb" shell input keyevent 82
+
       - name: Run instrumented tests
-        uses: ReactiveCircus/android-emulator-runner@0a638108440efd5c7f980e6ba145dbcdd8f32009 # v2.37.0
-        with:
-          api-level: 31
-          arch: x86_64
-          script: ./gradlew :kiosk-ops-sdk:connectedDebugAndroidTest --no-daemon
+        run: ./gradlew :kiosk-ops-sdk:connectedDebugAndroidTest --no-daemon
 
       - name: Upload instrumented test results
         if: always()
