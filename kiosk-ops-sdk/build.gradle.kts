@@ -91,6 +91,12 @@ detekt {
   baseline = file("$rootDir/config/detekt/baseline.xml")
 }
 
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+  reports {
+    sarif.required.set(true)
+  }
+}
+
 kover {
   reports {
     verify {

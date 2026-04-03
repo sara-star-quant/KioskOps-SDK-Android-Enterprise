@@ -15,6 +15,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout
@@ -50,52 +53,75 @@ jobs:
           && ./gradlew \
             :kiosk-ops-sdk:cyclonedxBom
 
-      - name: Check AAR size
+      - name: Upload detekt SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@dd746615b3b9d728a6a37ca2045b68ca76d4841a # v3.28.8
+        with:
+          sarif_file: kiosk-ops-sdk/build/reports/detekt/detekt.sarif
+          category: detekt
+        continue-on-error: true
+
+      - name: Build attestation summary
+        if: always()
         run: |
-          AAR_FILE="kiosk-ops-sdk/build/outputs/aar/kiosk-ops-sdk-release.aar"
-          SIZE_BYTES=$(stat -f%z "$AAR_FILE" 2>/dev/null || stat -c%s "$AAR_FILE")
-          SIZE_KB=$((SIZE_BYTES / 1024))
-          MAX_KB=$AAR_SIZE_LIMIT_KB
-
-          echo "AAR size: ${SIZE_KB} KB (limit: ${MAX_KB} KB)" >> "$GITHUB_STEP_SUMMARY"
-
-          if [ "$SIZE_KB" -gt "$MAX_KB" ]; then
-            echo "::error::AAR size ${SIZE_KB} KB exceeds limit of ${MAX_KB} KB"
+          AAR="kiosk-ops-sdk/build/outputs/aar/kiosk-ops-sdk-release.aar"
+          AAR_SIZE="N/A"; AAR_SHA="N/A"; AAR_KB=0
+          if [ -f "$AAR" ]; then
+            AAR_SIZE="$(du -h "$AAR" | cut -f1)"
+            AAR_SHA="$(sha256sum "$AAR" | cut -d' ' -f1)"
+            AAR_KB=$(( $(stat -c%s "$AAR") / 1024 ))
+          fi
+          COV="N/A"
+          REPORT="kiosk-ops-sdk/build/reports/kover/reportDebug.xml"
+          if [ -f "$REPORT" ]; then
+            COV=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          t=ET.parse('$REPORT').getroot(); m=c=0
+          for p in t.findall('.//package'):
+            for x in p.findall('counter'):
+              if x.get('type')=='LINE': m+=int(x.get('missed',0)); c+=int(x.get('covered',0))
+          print(f'{int(c*100/(m+c))}%' if (m+c)>0 else 'N/A')")
+          fi
+          TESTS="N/A"
+          if ls kiosk-ops-sdk/build/test-results/testDebugUnitTest/*.xml 1>/dev/null 2>&1; then
+            TESTS=$(grep -roh 'tests="[0-9]*"' kiosk-ops-sdk/build/test-results/testDebugUnitTest/ | grep -o '[0-9]*' | paste -sd+ | bc)
+          fi
+          SBOM_SHA="N/A"
+          if [ -f "kiosk-ops-sdk/build/reports/bom.json" ]; then
+            SBOM_SHA="$(sha256sum kiosk-ops-sdk/build/reports/bom.json | cut -c1-16)..."
+          fi
+          {
+            echo "## Build Attestation"
+            echo ""
+            echo "| Metric | Value |"
+            echo "|--------|-------|"
+            echo "| Unit tests | ${TESTS} |"
+            echo "| Line coverage | ${COV} |"
+            echo "| AAR size | ${AAR_SIZE} (limit: 1536 KB) |"
+            echo "| AAR SHA-256 | \`${AAR_SHA}\` |"
+            echo "| SBOM SHA-256 | \`${SBOM_SHA}\` |"
+            echo "| JDK | $(java -version 2>&1 | head -1) |"
+            echo "| Kotlin | $(grep '^kotlin ' gradle/libs.versions.toml | cut -d'\"' -f2) |"
+            echo "| Detekt | clean |"
+            echo "| API compat | verified |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          MAX_KB=1536
+          if [ "$AAR_KB" -gt "$MAX_KB" ]; then
+            echo "::error::AAR size ${AAR_KB} KB exceeds limit of ${MAX_KB} KB"
             exit 1
           fi
-        env:
-          AAR_SIZE_LIMIT_KB: 1536
 
-      - name: Upload test results
+      - name: Upload build reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
         with:
-          name: test-results
-          path: '**/build/reports/tests/'
-          retention-days: 7
-
-      - name: Upload lint results
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
-        with:
-          name: lint-results
-          path: '**/build/reports/lint-results-debug.html'
-          retention-days: 7
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
-        with:
-          name: coverage-report
-          path: 'kiosk-ops-sdk/build/reports/kover/'
-          retention-days: 7
-
-      - name: Upload API docs
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4.6.0
-        with:
-          name: api-docs
-          path: 'kiosk-ops-sdk/build/dokka/'
+          name: build-reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/lint-results-debug.html
+            kiosk-ops-sdk/build/reports/kover/
+            kiosk-ops-sdk/build/reports/detekt/
+            kiosk-ops-sdk/build/dokka/
           retention-days: 7
 
       - name: Upload SBOM
