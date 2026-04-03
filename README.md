@@ -22,7 +22,23 @@ An **enterprise-grade Android SDK** for **offline-first operational events**, **
 
 ## Installation
 
-### Option A: GitHub Packages (Recommended)
+### Option A: Maven Central (Recommended)
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}
+
+// app/build.gradle.kts
+dependencies {
+    implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:0.8.0")
+}
+```
+
+### Option B: GitHub Packages
 
 ```kotlin
 // settings.gradle.kts
@@ -44,7 +60,7 @@ dependencies {
 }
 ```
 
-### Option B: JitPack
+### Option C: JitPack
 
 ```kotlin
 // settings.gradle.kts

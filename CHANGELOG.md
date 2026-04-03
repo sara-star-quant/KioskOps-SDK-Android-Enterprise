@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-04-02
+
+Lifecycle-aware telemetry, reactive config updates, global PII patterns, anomaly baseline seeding, instrumented tests, and Maven Central publication.
+
+### Added
+
+- `SdkLifecycleObserver` with `ProcessLifecycleOwner` integration: automatic heartbeat on app background transition
+- `configUpdateFlow()` reactive API emitting `Applied`, `Rejected`, and `RolledBack` config change events from `RemoteConfigManager`
+- Country-specific PII detection patterns: Australian TFN, UK NIN, Canadian SIN, German Steuer-ID, Japan My Number, India Aadhaar, Brazil CPF, South Africa ID
+- Safe pattern exclusions for PII scanner: UUIDs, ISO timestamps, and version strings no longer trigger false positives
+- Anomaly detection baseline seeding: learning mode via `baselineEventCount`, `seedBaseline()` API, `BaselineStats` data class
+- Sample app: `BatchEnqueueActivity` (queue overflow demo), `DataRightsActivity` (GDPR Art. 17/20 walkthrough)
+- Instrumented test suite (`androidTest`): crypto on real AndroidKeyStore, Room on device SQLite, WorkManager on real scheduler
+- CI emulator step for instrumented tests (main branch only)
+- Build attestation summary in CI: test count, coverage percentage, AAR SHA-256, SBOM hash, toolchain versions
+
+### Changed
+
+- `minSdk` raised from 26 to 31 (Android 12); aligns with security baseline and simplifies API surface
+- Kover coverage threshold remains at 70%
+
+### Build
+
+- AAR size CI gate enforcing 1.5 MB limit
+- Detekt SARIF upload to GitHub Security tab for static analysis findings
+- Maven Central publication with GPG signing, sources JAR, and javadoc JAR
+- Build attestation summary (test count, coverage, AAR SHA-256, SBOM hash, toolchain versions) appended to CI job summary
+
+### Security
+
+- Global PII detection covers 8 additional country-specific identifier formats
+- Anomaly baseline seeding eliminates cold-start blind spot where initial events bypassed anomaly flags
+- `ProcessLifecycleOwner` heartbeat ensures telemetry reaches the server even when the app is backgrounded unexpectedly
+- Detekt SARIF findings visible in GitHub Security tab for proactive code quality review
+
+### Test Coverage
+
+- 1003 tests (up from 821 in v0.8.0)
+- 76.5% line coverage (up from 75.5% in v0.8.0); threshold enforced at 70%
+- Instrumented tests: AndroidKeyStore encryption round-trip, Room database operations on real SQLite, WorkManager scheduling on device
+- Country-specific PII patterns: positive and negative cases for AU TFN, UK NIN, CA SIN, DE Steuer-ID, JP My Number, IN Aadhaar, BR CPF, ZA ID
+- Safe pattern exclusions: UUIDs, timestamps, version strings verified as non-PII
+- Anomaly baseline seeding: learning mode transitions, `seedBaseline()` correctness, `BaselineStats` accuracy
+- Config update flow: `Applied`, `Rejected`, `RolledBack` event emission and subscriber lifecycle
+
+---
+
 ## [0.8.0] - 2026-04-03
 
 Compliance presets, database encryption, reactive APIs, SDK lifecycle, and comprehensive test coverage.
@@ -534,6 +581,9 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[0.9.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.9.0
+[0.8.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.8.0
+[0.7.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.7.0
 [0.6.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.6.0
 [0.5.3]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.3
 [0.5.2]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.2
