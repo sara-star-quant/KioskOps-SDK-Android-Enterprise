@@ -7,8 +7,7 @@ plugins {
   alias(libs.plugins.detekt)
   alias(libs.plugins.kover)
   alias(libs.plugins.cyclonedx)
-  `maven-publish`
-  signing
+  alias(libs.plugins.maven.publish)
 }
 
 kotlin {
@@ -158,54 +157,48 @@ val javadocJar by tasks.registering(Jar::class) {
   from(layout.buildDirectory.dir("dokka/html"))
 }
 
-// Publishing configuration for Maven Central, GitHub Packages, and JitPack
-android.publishing {
-  singleVariant("release") {
-    withSourcesJar()
-  }
-}
+// Maven Central publishing via Vanniktech plugin (handles Central Portal bundle upload)
+mavenPublishing {
+  publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+  signAllPublications()
 
-afterEvaluate {
-  publishing {
-    publications {
-      create<MavenPublication>("release") {
-        from(components["release"])
+  coordinates(
+    groupId = "com.sarastarquant.kioskops",
+    artifactId = "kiosk-ops-sdk",
+    version = findProperty("VERSION_NAME")?.toString() ?: "0.1.0-SNAPSHOT",
+  )
 
-        groupId = "com.sarastarquant.kioskops"
-        artifactId = "kiosk-ops-sdk"
-        version = findProperty("VERSION_NAME")?.toString() ?: "0.1.0-SNAPSHOT"
+  pom {
+    name.set("KioskOps SDK")
+    description.set("Enterprise-grade Android SDK for offline-first operational events, local diagnostics, and fleet-friendly observability")
+    url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
 
-        artifact(javadocJar)
-
-        pom {
-          name.set("KioskOps SDK")
-          description.set("Enterprise-grade Android SDK for offline-first operational events, local diagnostics, and fleet-friendly observability")
-          url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
-
-          licenses {
-            license {
-              name.set("Business Source License 1.1")
-              url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/blob/main/LICENSE")
-            }
-          }
-
-          developers {
-            developer {
-              id.set("pzverkov")
-              name.set("Petro Zverkov")
-              organization.set("Sara Star Quant LLC")
-            }
-          }
-
-          scm {
-            url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
-            connection.set("scm:git:git://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
-            developerConnection.set("scm:git:ssh://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
-          }
-        }
+    licenses {
+      license {
+        name.set("Business Source License 1.1")
+        url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/blob/main/LICENSE")
       }
     }
 
+    developers {
+      developer {
+        id.set("pzverkov")
+        name.set("Petro Zverkov")
+        organization.set("Sara Star Quant LLC")
+      }
+    }
+
+    scm {
+      url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+      connection.set("scm:git:git://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
+      developerConnection.set("scm:git:ssh://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
+    }
+  }
+}
+
+// GitHub Packages repository (secondary distribution)
+afterEvaluate {
+  publishing {
     repositories {
       maven {
         name = "GitHubPackages"
@@ -215,23 +208,6 @@ afterEvaluate {
           password = System.getenv("GITHUB_TOKEN") ?: findProperty("gpr.token")?.toString()
         }
       }
-      maven {
-        name = "MavenCentral"
-        url = uri("https://central.sonatype.com/api/v1/publisher/deployments/download/")
-        credentials {
-          username = System.getenv("MAVEN_CENTRAL_USERNAME") ?: findProperty("mavenCentral.username")?.toString()
-          password = System.getenv("MAVEN_CENTRAL_PASSWORD") ?: findProperty("mavenCentral.password")?.toString()
-        }
-      }
-    }
-  }
-
-  signing {
-    val signingKey = System.getenv("GPG_SIGNING_KEY")
-    val signingPassword = System.getenv("GPG_SIGNING_PASSWORD")
-    if (signingKey != null && signingPassword != null) {
-      useInMemoryPgpKeys(signingKey, signingPassword)
-      sign(publishing.publications["release"])
     }
   }
 }
