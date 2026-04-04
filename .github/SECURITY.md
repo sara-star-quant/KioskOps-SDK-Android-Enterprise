@@ -126,6 +126,12 @@ KioskOps SDK includes enterprise security features:
 - Build attestation with artifact SHA-256 hash in CI job summary for supply chain verification
 - Detekt SARIF findings uploaded to GitHub Security tab for proactive static analysis review
 
+### Data Rights Authorization (v1.0.0)
+- `DataRightsAuthorizer` callback prevents unauthorized data export, deletion, and wipe on shared kiosk devices
+- CUI and CJIS presets require authorization by default
+- All authorization decisions audit-logged for compliance visibility
+- API surface frozen under semantic versioning
+
 ### Disclaimer
 
 References to regulatory frameworks (NIST 800-53, FedRAMP, GDPR, ISO 27001,

@@ -105,6 +105,15 @@
 | Instrumented tests | CI | Real AndroidKeyStore, on-device SQLite, WorkManager on real scheduler |
 | Build attestation | CI | CI summary with test count, coverage, AAR SHA-256, SBOM hash, toolchain versions |
 
+### Data Rights Authorization (v1.0.0)
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| Data rights authorizer | Off | Host-app callback to verify caller identity before export/delete/wipe |
+| CUI/CJIS enforcement | On (in presets) | CUI and CJIS presets require authorizer; operations return Unauthorized without one |
+| Authorization audit | On | All authorization decisions logged to persistent audit trail |
+| API freeze | Stable | Semantic versioning commitment; breaking changes only in major versions |
+
 See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
 
 ## Fleet Operations
