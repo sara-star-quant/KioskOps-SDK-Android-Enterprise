@@ -81,15 +81,15 @@ jobs:
 
       - name: Publish to Maven Central
         run: |
-          ./gradlew :kiosk-ops-sdk:publishReleasePublicationToMavenCentralRepository -PVERSION_NAME="$VERSION" || {
+          ./gradlew :kiosk-ops-sdk:publishAndReleaseToMavenCentral -PVERSION_NAME="$VERSION" || {
             echo "::warning::Maven Central publish failed. Continuing."
           }
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-          GPG_SIGNING_PASSWORD: ${{ secrets.GPG_SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
 
       - name: Publish to GitHub Packages
         run: |
@@ -100,8 +100,8 @@ jobs:
           VERSION: ${{ steps.version.outputs.VERSION }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-          GPG_SIGNING_PASSWORD: ${{ secrets.GPG_SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
 
       - name: Generate release notes
         run: |

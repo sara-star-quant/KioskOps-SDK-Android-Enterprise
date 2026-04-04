@@ -28,6 +28,7 @@ dokka = "2.0.0"
 detekt = "1.23.7"
 kover = "0.9.1"
 cyclonedx = "3.2.3"
+mavenPublish = "0.30.0"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -72,3 +73,4 @@ dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
