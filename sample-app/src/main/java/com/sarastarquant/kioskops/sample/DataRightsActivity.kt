@@ -102,6 +102,7 @@ class DataRightsActivity : Activity() {
           }
           is DataExportResult.NoData -> "No data found for user '$userId'."
           is DataExportResult.Failed -> "Export failed: ${export.reason}"
+          is DataExportResult.Unauthorized -> "Export unauthorized. Configure a DataRightsAuthorizer."
         }
       }
     }
@@ -122,6 +123,7 @@ class DataRightsActivity : Activity() {
             appendLine("Audit events deleted: ${deletion.auditEventsDeleted}")
           }
           is DataDeletionResult.Failed -> "Deletion failed: ${deletion.reason}"
+          is DataDeletionResult.Unauthorized -> "Deletion unauthorized. Configure a DataRightsAuthorizer."
         }
       }
     }
@@ -136,6 +138,7 @@ class DataRightsActivity : Activity() {
             resultText.text = when (wipe) {
               is DataDeletionResult.Success -> "All SDK data wiped successfully."
               is DataDeletionResult.Failed -> "Wipe failed: ${wipe.reason}"
+              is DataDeletionResult.Unauthorized -> "Wipe unauthorized. Configure a DataRightsAuthorizer."
             }
           }
         }
