@@ -278,9 +278,9 @@ Focus: Lifecycle-aware telemetry, reactive config updates, global PII coverage, 
 Focus: Production stability, distribution, LTS commitment, and cross-platform support.
 
 ### Stability
-- [ ] API freeze and semantic versioning commitment
+- [x] API freeze and semantic versioning commitment
 - [ ] Long-term support (LTS) branch
-- [ ] Migration guides for all breaking changes
+- [x] Migration guides for all breaking changes
 
 ### Distribution
 - [x] Maven Central publication with PGP-signed artifacts (completed in v0.9.0)
