@@ -81,7 +81,7 @@ jobs:
 
       - name: Publish to Maven Central
         run: |
-          ./gradlew :kiosk-ops-sdk:publishAndReleaseToMavenCentral -PVERSION_NAME="$VERSION" || {
+          ./gradlew :kiosk-ops-sdk:publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="$VERSION" || {
             echo "::warning::Maven Central publish failed. Continuing."
           }
         env:
@@ -93,7 +93,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          ./gradlew :kiosk-ops-sdk:publishReleasePublicationToGitHubPackagesRepository -PVERSION_NAME="$VERSION" || {
+          ./gradlew :kiosk-ops-sdk:publishMavenPublicationToGitHubPackagesRepository --no-configuration-cache -PVERSION_NAME="$VERSION" || {
             echo "::warning::GitHub Packages publish failed (version may already exist). Continuing."
           }
         env:
