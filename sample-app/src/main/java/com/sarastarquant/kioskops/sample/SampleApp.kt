@@ -42,6 +42,14 @@ class SampleApp : Application() {
       Log.w("KioskOps", "SDK error: ${error.message}", error.cause)
     })
 
+    // v1.0.0: Data rights authorization callback.
+    // cuiDefaults requires authorization before export/delete/wipe operations.
+    // In production, verify the caller's identity (PIN, biometric, backend token).
+    sdk.setDataRightsAuthorizer { operation, userId ->
+      Log.i("KioskOps", "Data rights authorization requested: $operation for user=$userId")
+      true // Sample app always allows; production must verify identity
+    }
+
     // Register event schemas for validation.
     // cuiDefaults enables strict validation; unregistered event types are rejected.
     sdk.schemaRegistry.register("SCAN", """
