@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-04-04
+
+Stable release: API freeze, data rights authorization, semantic versioning commitment.
+
+### Added
+
+- `DataRightsAuthorizer` callback for host-app identity verification before export/delete/wipe operations
+- `DataRightsOperation` enum: EXPORT, DELETE, WIPE
+- `DataDeletionResult.Unauthorized` and `DataExportResult.Unauthorized` result types
+- `KioskOpsConfig.requireDataRightsAuthorization` flag (enabled by default in CUI and CJIS presets)
+- `KioskOpsSdk.setDataRightsAuthorizer()` for registering the authorization callback
+- Migration guide for v0.9.x to v1.0.0
+
+### Changed
+
+- CUI and CJIS presets now require `DataRightsAuthorizer`; without one, data rights operations return `Unauthorized`
+- API surface frozen; breaking changes only in major versions per semantic versioning
+
+### Security
+
+- Shared kiosk devices: prevents one user from accessing or erasing another user's local data
+- All authorization decisions (allowed, denied, blocked) are audit-logged
+
 ## [0.9.0] - 2026-04-04
 
 Lifecycle-aware telemetry, reactive config updates, global PII patterns, anomaly baseline seeding, instrumented tests, and Maven Central publication.
