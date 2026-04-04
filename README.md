@@ -72,7 +72,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v0.7.0")
+    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v0.9.0")
 }
 ```
 
