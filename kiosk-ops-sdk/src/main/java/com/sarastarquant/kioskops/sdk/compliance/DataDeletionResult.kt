@@ -17,4 +17,7 @@ sealed class DataDeletionResult {
   ) : DataDeletionResult()
 
   data class Failed(val reason: String) : DataDeletionResult()
+
+  /** Operation blocked by [DataRightsAuthorizer]. @since 1.0.0 */
+  data class Unauthorized(val operation: DataRightsOperation) : DataDeletionResult()
 }

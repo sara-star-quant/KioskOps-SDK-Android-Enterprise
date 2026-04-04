@@ -23,4 +23,7 @@ sealed class DataExportResult {
   data class Failed(val reason: String) : DataExportResult()
 
   data class NoData(val userId: String) : DataExportResult()
+
+  /** Operation blocked by [DataRightsAuthorizer]. @since 1.0.0 */
+  data class Unauthorized(val operation: DataRightsOperation) : DataExportResult()
 }
