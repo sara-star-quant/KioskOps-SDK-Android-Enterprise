@@ -71,6 +71,10 @@ data class KioskOpsConfig @JvmOverloads constructor(
   // v0.8.0 Database encryption
   /** Database-at-rest encryption via SQLCipher. Requires sqlcipher-android dependency. @since 0.8.0 */
   val databaseEncryptionPolicy: DatabaseEncryptionPolicy = DatabaseEncryptionPolicy.disabledDefaults(),
+
+  // v1.0.0 Data rights authorization
+  /** Require authorization callback before data rights operations. Enabled by default in CUI/CJIS presets. @since 1.0.0 */
+  val requireDataRightsAuthorization: Boolean = false,
 ) {
   companion object {
     /**
@@ -145,6 +149,7 @@ data class KioskOpsConfig @JvmOverloads constructor(
       ),
       anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
       databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
+      requireDataRightsAuthorization = true,
     )
 
     /**
@@ -176,6 +181,7 @@ data class KioskOpsConfig @JvmOverloads constructor(
       ),
       anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
       databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
+      requireDataRightsAuthorization = true,
     )
 
     /**

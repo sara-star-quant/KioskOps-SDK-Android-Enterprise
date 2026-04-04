@@ -23,7 +23,12 @@ import java.util.zip.ZipOutputStream
  *
  * Provides APIs for data export (Art. 20), erasure (Art. 17), and full device wipe.
  *
+ * When a [DataRightsAuthorizer] is configured, all destructive operations require
+ * authorization before proceeding. If [requireAuthorization] is true and no authorizer
+ * is set, operations return [DataDeletionResult.Unauthorized] or [DataExportResult.Unauthorized].
+ *
  * @since 0.5.0 Rewritten with QueueRepository and PersistentAuditTrail support.
+ * @since 1.0.0 Authorization callback support.
  */
 class DataRightsManager(
   private val context: Context,
@@ -31,7 +36,48 @@ class DataRightsManager(
   private val audit: AuditTrail,
   private val queue: QueueRepository? = null,
   private val persistentAudit: PersistentAuditTrail? = null,
+  private val requireAuthorization: Boolean = false,
 ) {
+
+  @Volatile
+  private var authorizer: DataRightsAuthorizer? = null
+
+  /**
+   * Set the authorization callback for data rights operations.
+   *
+   * Pass null to remove the authorizer. If [requireAuthorization] is true
+   * and no authorizer is configured, operations will be blocked.
+   *
+   * @since 1.0.0
+   */
+  fun setAuthorizer(authorizer: DataRightsAuthorizer?) {
+    this.authorizer = authorizer
+  }
+
+  private suspend fun checkAuthorization(
+    operation: DataRightsOperation,
+    userId: String,
+  ): Boolean {
+    val auth = authorizer
+    if (auth != null) {
+      val allowed = auth.authorize(operation, userId)
+      if (!allowed) {
+        persistentAudit?.record(
+          "data_rights_unauthorized",
+          mapOf("operation" to operation.name, "userId" to userId),
+        )
+      }
+      return allowed
+    }
+    val blocked = requireAuthorization
+    if (blocked) {
+      persistentAudit?.record(
+        "data_rights_blocked_no_authorizer",
+        mapOf("operation" to operation.name),
+      )
+    }
+    return !blocked
+  }
 
   private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
@@ -43,6 +89,9 @@ class DataRightsManager(
    * @since 0.5.0
    */
   suspend fun exportUserData(userId: String): DataExportResult {
+    if (!checkAuthorization(DataRightsOperation.EXPORT, userId)) {
+      return DataExportResult.Unauthorized(DataRightsOperation.EXPORT)
+    }
     return try {
       val exportDir = File(context.cacheDir, "kioskops_data_exports")
       exportDir.mkdirs()
@@ -168,6 +217,9 @@ class DataRightsManager(
    * @since 0.5.0
    */
   suspend fun deleteUserData(userId: String): DataDeletionResult {
+    if (!checkAuthorization(DataRightsOperation.DELETE, userId)) {
+      return DataDeletionResult.Unauthorized(DataRightsOperation.DELETE)
+    }
     return try {
       val queueDeleted = queue?.deleteByUserId(userId) ?: 0
       val auditDeleted = persistentAudit?.deleteEventsByUserId(userId) ?: 0
@@ -196,6 +248,9 @@ class DataRightsManager(
    * @since 0.5.0
    */
   suspend fun wipeAllSdkData(): DataDeletionResult {
+    if (!checkAuthorization(DataRightsOperation.WIPE, "")) {
+      return DataDeletionResult.Unauthorized(DataRightsOperation.WIPE)
+    }
     return try {
       // Delete database files
       context.deleteDatabase("kiosk_ops_queue.db")
