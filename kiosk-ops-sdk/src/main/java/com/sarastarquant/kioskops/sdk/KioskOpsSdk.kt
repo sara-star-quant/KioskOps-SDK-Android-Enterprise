@@ -300,7 +300,20 @@ class KioskOpsSdk private constructor(
   )
 
   val dataRights: DataRightsManager by lazy {
-    DataRightsManager(appContext, telemetry, audit, queue, persistentAudit)
+    DataRightsManager(appContext, telemetry, audit, queue, persistentAudit,
+      requireAuthorization = cfg().requireDataRightsAuthorization)
+  }
+
+  /**
+   * Set the authorization callback for data rights operations.
+   *
+   * On shared kiosk devices, this prevents one user from accessing or erasing
+   * another user's local data. Required when using CUI or CJIS presets.
+   *
+   * @since 1.0.0
+   */
+  fun setDataRightsAuthorizer(authorizer: com.sarastarquant.kioskops.sdk.compliance.DataRightsAuthorizer?) {
+    dataRights.setAuthorizer(authorizer)
   }
 
   private val retentionEnforcer: RetentionEnforcer by lazy {
