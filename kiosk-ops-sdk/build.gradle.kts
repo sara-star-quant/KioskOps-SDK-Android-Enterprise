@@ -151,12 +151,7 @@ dependencies {
   testImplementation(libs.jazzer.junit)
 }
 
-// Sources and Javadoc JARs (required by Maven Central)
-val sourcesJar by tasks.registering(Jar::class) {
-  archiveClassifier.set("sources")
-  from(android.sourceSets["main"].java.srcDirs)
-}
-
+// Javadoc JAR from Dokka output (required by Maven Central)
 val javadocJar by tasks.registering(Jar::class) {
   archiveClassifier.set("javadoc")
   dependsOn(tasks.named("dokkaGeneratePublicationHtml"))
@@ -164,6 +159,12 @@ val javadocJar by tasks.registering(Jar::class) {
 }
 
 // Publishing configuration for Maven Central, GitHub Packages, and JitPack
+android.publishing {
+  singleVariant("release") {
+    withSourcesJar()
+  }
+}
+
 afterEvaluate {
   publishing {
     publications {
@@ -174,7 +175,6 @@ afterEvaluate {
         artifactId = "kiosk-ops-sdk"
         version = findProperty("VERSION_NAME")?.toString() ?: "0.1.0-SNAPSHOT"
 
-        artifact(sourcesJar)
         artifact(javadocJar)
 
         pom {
