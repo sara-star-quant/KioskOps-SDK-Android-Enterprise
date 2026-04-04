@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
   title: KioskOps Events Ingest API
-  version: 0.1.0
+  version: 1.0.0
   description: |
-    Minimal ingest endpoint for the KioskOps SDK.
+    Batch ingest endpoint for the KioskOps SDK.
 
     Key properties:
       - Idempotency per event: (id, idempotencyKey)
