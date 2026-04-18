@@ -163,11 +163,10 @@ See [Server API Contract](openapi.yaml) for the ingest endpoint specification.
 
 ## Known Limitations
 
-- ~~**Audit chain is process-local**: Restarts from GENESIS on app initialization~~ **Fixed in v0.2.0**
 - **Lock-task mode**: Best-effort detection; not a full kiosk controller
 - **Request signing**: Client-side only; server verification is your responsibility
 - **Room migrations**: Provided for Queue v2->v3->v4 and Audit v1->v2
-- **Key attestation**: Always available (minSdk 31 since v0.9.0)
+- **Key attestation**: Always available (minSdk 33 since v1.1.0)
 - **StrongBox**: Hardware support varies by device
 - **PII detection** (v0.5.0): Regex-based; expanded in v0.9.0 with 8 country-specific patterns and safe exclusions; may still produce false positives for uncommon formats
 - **Anomaly detection** (v0.5.0): Requires baseline period; baseline seeding (v0.9.0) addresses cold-start via `seedBaseline()` API
