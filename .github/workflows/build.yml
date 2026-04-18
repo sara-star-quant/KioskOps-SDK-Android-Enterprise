@@ -55,7 +55,7 @@ jobs:
 
       - name: Upload detekt SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@dd746615b3b9d728a6a37ca2045b68ca76d4841a # v3.28.8
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           sarif_file: kiosk-ops-sdk/build/reports/detekt/detekt.sarif
           category: detekt
