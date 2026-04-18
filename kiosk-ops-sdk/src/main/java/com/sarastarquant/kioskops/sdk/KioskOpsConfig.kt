@@ -76,6 +76,31 @@ data class KioskOpsConfig @JvmOverloads constructor(
   /** Require authorization callback before data rights operations. Enabled by default in CUI/CJIS presets. @since 1.0.0 */
   val requireDataRightsAuthorization: Boolean = false,
 ) {
+  /**
+   * Redact [adminExitPin] in [toString]. Data-class default would emit the PIN
+   * in any accidental log line, crash report, or diagnostics bundle. The PIN
+   * is still present in [equals] / [hashCode] for reactive-config diffing.
+   * @since 1.1.0
+   */
+  override fun toString(): String = "KioskOpsConfig(" +
+    "baseUrl=$baseUrl, locationId=$locationId, kioskEnabled=$kioskEnabled, " +
+    "syncIntervalMinutes=$syncIntervalMinutes, " +
+    "adminExitPin=${if (adminExitPin == null) "null" else "***"}, " +
+    "securityPolicy=$securityPolicy, retentionPolicy=$retentionPolicy, " +
+    "telemetryPolicy=$telemetryPolicy, queueLimits=$queueLimits, " +
+    "idempotencyConfig=$idempotencyConfig, syncPolicy=$syncPolicy, " +
+    "transportSecurityPolicy=$transportSecurityPolicy, " +
+    "remoteConfigPolicy=$remoteConfigPolicy, " +
+    "diagnosticsSchedulePolicy=$diagnosticsSchedulePolicy, " +
+    "observabilityPolicy=$observabilityPolicy, geofencePolicy=$geofencePolicy, " +
+    "policyProfiles=$policyProfiles, validationPolicy=$validationPolicy, " +
+    "piiPolicy=$piiPolicy, fieldEncryptionPolicy=$fieldEncryptionPolicy, " +
+    "dataClassificationPolicy=$dataClassificationPolicy, " +
+    "anomalyPolicy=$anomalyPolicy, " +
+    "databaseEncryptionPolicy=$databaseEncryptionPolicy, " +
+    "requireDataRightsAuthorization=$requireDataRightsAuthorization" +
+    ")"
+
   companion object {
     /**
      * FedRAMP-compliant defaults (NIST 800-53).

@@ -1,5 +1,99 @@
 # Migration Guide
 
+## v1.0.x to v1.1.0
+
+v1.1.0 is a security-hardening minor release. It contains breaking source and
+runtime changes because silent fallbacks in crypto code paths were replaced
+with explicit errors. Callers that relied on the prior behavior must update.
+
+### 1. `minSdk` raised from 31 to 33
+
+Consumers must target Android 13+. If your app supports Android 12, either
+pin to KioskOps SDK 1.0.x or raise your `minSdk`.
+
+```kotlin
+// app/build.gradle.kts
+android {
+  defaultConfig {
+    minSdk = 33 // was 31 or lower
+  }
+}
+```
+
+### 2. `DatabaseEncryptionProvider.createFactory` requires `Context`
+
+```kotlin
+// Before (1.0.x)
+val factory = DatabaseEncryptionProvider.createFactory()
+
+// After (1.1.0)
+val factory = DatabaseEncryptionProvider.createFactory(context)
+```
+
+**Databases encrypted under 1.0.x cannot be decrypted under 1.1.0.** The prior
+implementation wrote a non-random passphrase on hardware-backed Keystore
+devices; the 1.1.0 implementation generates a random 256-bit passphrase and
+wraps it with the Keystore key. On first launch after upgrade, callers that
+had `databaseEncryptionPolicy.enabled = true` must delete `kiosk_ops_queue.db`
+and `kioskops_audit.db` and allow them to be recreated. `DataRightsManager.wipeAllSdkData()`
+performs this cleanly.
+
+### 3. `FieldLevelEncryptor` throws on failure
+
+```kotlin
+// Before (1.0.x): silent fallback to plaintext if the Keystore key was unavailable
+val encrypted = encryptor.encryptFields(payload, fields) // could return plaintext
+
+// After (1.1.0): explicit exception; callers must handle the failure
+try {
+  val encrypted = encryptor.encryptFields(payload, fields)
+} catch (e: FieldEncryptionException) {
+  // Do NOT forward the original payload; it may contain PII.
+}
+```
+
+The SDK's event pipeline now rejects events with
+`EnqueueResult.Rejected.FieldEncryptionFailed` when field-level encryption
+fails. If you pattern-match on `EnqueueResult.Rejected`, add a branch for
+this case.
+
+### 4. `MtlsClientBuilder` throws `MtlsConfigurationException`
+
+```kotlin
+// Before (1.0.x): silently returned base client on any error
+val client = MtlsClientBuilder.build(baseClient, mtlsConfig)
+
+// After (1.1.0): explicit exception on misconfiguration
+try {
+  val client = MtlsClientBuilder.build(baseClient, mtlsConfig)
+} catch (e: MtlsConfigurationException) {
+  // Surface to operator; do NOT proceed with an unauthenticated client.
+}
+```
+
+### 5. `CertificateTransparencyValidator` requires embedded SCTs
+
+The issuer-DN substring check that previously allowed certificates from
+"known CAs" without SCTs has been removed. Certificates must now have the
+SCT extension (OID 1.3.6.1.4.1.11129.2.4.2) embedded in the leaf, which all
+public-trust CAs have emitted since 2018. Private-CA deployments that relied
+on the bypass must either (a) configure their CA to embed SCTs, (b) disable
+`transportSecurityPolicy.certificateTransparencyEnabled`, or (c) skip CT
+enforcement for internal hosts.
+
+### 6. `KioskOpsConfig.toString()` redacts `adminExitPin`
+
+The PIN now appears as `***` in `toString()` output. Tests that asserted the
+exact `toString()` form must be updated.
+
+### 7. `wipeAllSdkData` is more thorough
+
+The wipe now removes every `kioskops*` SharedPreferences file and every
+`kioskops*` Android Keystore alias. If you wrote integration tests that
+checked for specific surviving preferences after a wipe, update them.
+
+---
+
 ## v0.9.x to v1.0.0
 
 v1.0.0 is the first stable release. The API surface is frozen; breaking changes will only occur in future major versions.
