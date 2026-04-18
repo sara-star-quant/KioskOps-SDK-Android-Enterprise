@@ -199,9 +199,9 @@ jobs:
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
             "emulator" \
-            "system-images;android-31;default;x86_64" \
+            "system-images;android-33;default;x86_64" \
             "platform-tools" \
-            "platforms;android-31"
+            "platforms;android-33"
 
       - name: Create and start emulator
         run: |
@@ -211,7 +211,7 @@ jobs:
 
           echo "no" | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
             --name "test_avd" \
-            --package "system-images;android-31;default;x86_64" \
+            --package "system-images;android-33;default;x86_64" \
             --device "pixel_6" \
             --force
 
