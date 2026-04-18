@@ -237,15 +237,21 @@ class MtlsClientBuilderTest {
   }
 
   @Test
-  fun `fromPolicy returns base client when provider returns null credentials`() {
+  fun `fromPolicy throws when provider returns null credentials`() {
     val baseClient = createBaseClient()
     val provider = ClientCertificateProvider { null }
     val policy = TransportSecurityPolicy(
       mtlsConfig = MtlsConfig(clientCertificateProvider = provider),
     )
 
-    val result = MtlsClientBuilder.fromPolicy(baseClient, policy)
-    assertThat(result).isSameInstanceAs(baseClient)
+    // mTLS must never silently downgrade to unauthenticated TLS.
+    var threw = false
+    try {
+      MtlsClientBuilder.fromPolicy(baseClient, policy)
+    } catch (_: MtlsConfigurationException) {
+      threw = true
+    }
+    assertThat(threw).isTrue()
   }
 
   // ---------------------------------------------------------------
@@ -253,13 +259,18 @@ class MtlsClientBuilderTest {
   // ---------------------------------------------------------------
 
   @Test
-  fun `build returns base client when credentials are null`() {
+  fun `build throws when credentials are null`() {
     val baseClient = createBaseClient()
     val provider = ClientCertificateProvider { null }
     val config = MtlsConfig(clientCertificateProvider = provider)
 
-    val result = MtlsClientBuilder.build(baseClient, config)
-    assertThat(result).isSameInstanceAs(baseClient)
+    var threw = false
+    try {
+      MtlsClientBuilder.build(baseClient, config)
+    } catch (_: MtlsConfigurationException) {
+      threw = true
+    }
+    assertThat(threw).isTrue()
   }
 
   @Test
@@ -281,13 +292,12 @@ class MtlsClientBuilderTest {
   }
 
   @Test
-  fun `build returns base client on exception during SSL setup`() {
+  fun `build throws on exception during SSL setup`() {
     val baseClient = createBaseClient()
 
-    // Use a valid certificate but pair it with a PrivateKey whose
-    // getEncoded() returns null. PKCS12 KeyStore.setKeyEntry calls
-    // getEncoded() on the private key, and a null return causes a
-    // NullPointerException, which is caught by the try/catch in build().
+    // Broken private key whose getEncoded() returns null triggers an exception
+    // in PKCS12 KeyStore.setKeyEntry. The SDK must surface this rather than
+    // silently downgrading to unauthenticated TLS.
     val (cert, _) = generateSelfSignedCert(cn = "CN=Test")
     val brokenKey = object : PrivateKey {
       override fun getAlgorithm(): String = "RSA"
@@ -305,9 +315,13 @@ class MtlsClientBuilderTest {
     }
 
     val config = MtlsConfig(clientCertificateProvider = provider)
-    val result = MtlsClientBuilder.build(baseClient, config)
-    // SSL setup throws internally, so base client is returned
-    assertThat(result).isSameInstanceAs(baseClient)
+    var threw = false
+    try {
+      MtlsClientBuilder.build(baseClient, config)
+    } catch (_: MtlsConfigurationException) {
+      threw = true
+    }
+    assertThat(threw).isTrue()
   }
 
   @Test
@@ -373,10 +387,10 @@ class MtlsClientBuilderTest {
   }
 
   @Test
-  fun `build falls back to base client when certificate chain is invalid`() {
-    // Independent certs that do not form a valid chain will cause
-    // PKCS12 KeyStore.setKeyEntry to throw KeyStoreException.
-    // The production code catches this and returns base client.
+  fun `build throws when certificate chain is invalid`() {
+    // Independent certs that do not form a valid chain cause
+    // PKCS12 KeyStore.setKeyEntry to throw. The SDK must propagate the failure
+    // so operators see the misconfiguration instead of running without mTLS.
     val baseClient = createBaseClient()
     val (leafCert, leafKey) = generateSelfSignedCert(cn = "CN=Leaf")
     val (unrelatedCert, _) = generateSelfSignedCert(cn = "CN=Unrelated")
@@ -390,9 +404,13 @@ class MtlsClientBuilderTest {
     }
     val config = MtlsConfig(clientCertificateProvider = provider)
 
-    val result = MtlsClientBuilder.build(baseClient, config)
-    // Invalid chain triggers exception, falls back to base client
-    assertThat(result).isSameInstanceAs(baseClient)
+    var threw = false
+    try {
+      MtlsClientBuilder.build(baseClient, config)
+    } catch (_: MtlsConfigurationException) {
+      threw = true
+    }
+    assertThat(threw).isTrue()
   }
 
   // ---------------------------------------------------------------

@@ -10,7 +10,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
-import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import androidx.core.content.getSystemService
@@ -82,11 +81,7 @@ internal class ConnectivityCollector(private val context: Context) {
     val telephonyManager = context.getSystemService<TelephonyManager>()
 
     @Suppress("DEPRECATION")
-    val networkType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      telephonyManager?.dataNetworkType
-    } else {
-      telephonyManager?.networkType
-    } ?: return@runCatching null
+    val networkType = telephonyManager?.dataNetworkType ?: return@runCatching null
 
     @Suppress("DEPRECATION")
     when (networkType) {
