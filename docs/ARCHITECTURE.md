@@ -20,7 +20,7 @@ KioskOps is intended for **enterprise frontline / kiosk-style deployments** wher
 - **Fast pilots** with opt-in idempotent batch ingest (server contract in `docs/openapi.yaml`)
 
 ### Supported
-- Android 12+ required (`minSdk 31`)
+- Android 13+ required (`minSdk 33`)
 - Works on any OEM Android device
 - Integrates with **Android Enterprise / Samsung Knox** managed configurations (app restrictions)
 

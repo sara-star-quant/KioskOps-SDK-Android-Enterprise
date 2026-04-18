@@ -252,30 +252,87 @@ class DataRightsManager(
       return DataDeletionResult.Unauthorized(DataRightsOperation.WIPE)
     }
     return try {
-      // Delete database files
       context.deleteDatabase("kiosk_ops_queue.db")
       context.deleteDatabase("kioskops_audit.db")
       context.deleteDatabase("kioskops_config.db")
 
-      // Delete telemetry and audit files
       val filesDir = context.filesDir
       listOf("kioskops_telemetry", "kioskops_audit", "kioskops_logs").forEach { dirName ->
         File(filesDir, dirName).deleteRecursively()
       }
 
-      // Delete exported files
       listOf("kioskops_data_exports", "kioskops_audit_exports").forEach { dirName ->
         File(context.cacheDir, dirName).deleteRecursively()
       }
 
-      // Clear SharedPreferences
-      listOf("kioskops_policy", "kioskops_device_id", "kioskops_install_secret").forEach { prefName ->
-        context.getSharedPreferences(prefName, Context.MODE_PRIVATE).edit().clear().apply()
-      }
+      clearAllKioskopsSharedPreferences()
+      deleteAllKioskopsKeystoreEntries()
 
       DataDeletionResult.Success(queueEventsDeleted = -1, auditEventsDeleted = -1)
     } catch (e: Exception) {
       DataDeletionResult.Failed("Wipe failed: ${e.message}")
+    }
+  }
+
+  /**
+   * Enumerate and clear every SharedPreferences file whose name starts with
+   * `kioskops`. Covers documented names (policy, device_id, install_secret,
+   * key metadata, db encryption, PII baselines) plus future additions, so a
+   * GDPR Art. 17 wipe leaves no per-device state behind. Enumerating the
+   * `shared_prefs` directory directly catches files registered by other
+   * SDK modules without requiring a central registry.
+   */
+  private fun clearAllKioskopsSharedPreferences() {
+    val sharedPrefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
+    val prefNames = mutableSetOf(
+      "kioskops_policy",
+      "kioskops_device_id",
+      "kioskops_install_secret",
+      "kioskops_ids",
+      "kioskops_db_encryption",
+    )
+    if (sharedPrefsDir.isDirectory) {
+      sharedPrefsDir.listFiles()?.forEach { file ->
+        val name = file.name
+        if (name.endsWith(".xml") && name.startsWith("kioskops")) {
+          prefNames += name.removeSuffix(".xml")
+        }
+      }
+    }
+    for (prefName in prefNames) {
+      context.getSharedPreferences(prefName, Context.MODE_PRIVATE).edit().clear().apply()
+    }
+  }
+
+  /**
+   * Delete every Android Keystore entry whose alias identifies an SDK key
+   * family. This matches all aliases created by [AesGcmKeystoreCryptoProvider],
+   * [VersionedCryptoProvider], [KeystoreAttestationProvider], and
+   * [DatabaseEncryptionProvider]. Errors are aggregated; a single failing
+   * deletion does not prevent the rest from running.
+   */
+  private fun deleteAllKioskopsKeystoreEntries() {
+    val keyStore = try {
+      java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    } catch (_: Exception) {
+      // Keystore unavailable (emulator, Robolectric). Non-fatal: data files
+      // and preferences have already been removed above.
+      return
+    }
+    for (alias in keyStore.aliases().toList()) {
+      if (alias.startsWith("kioskops")) {
+        deleteKeystoreEntryQuietly(keyStore, alias)
+      }
+    }
+  }
+
+  private fun deleteKeystoreEntryQuietly(keyStore: java.security.KeyStore, alias: String) {
+    try {
+      keyStore.deleteEntry(alias)
+    } catch (_: Exception) {
+      // Skip entries that can't be deleted (hardware fault, TEE busy);
+      // they remain cryptographically isolated and will be cleaned
+      // up on reinstall. Presence alone discloses no data.
     }
   }
 

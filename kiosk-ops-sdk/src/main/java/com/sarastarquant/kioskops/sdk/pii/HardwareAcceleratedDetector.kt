@@ -5,15 +5,14 @@
 
 package com.sarastarquant.kioskops.sdk.pii
 
-import android.os.Build
 import com.sarastarquant.kioskops.sdk.ExperimentalKioskOpsApi
 
 /**
  * Optional NNAPI-backed PII detector wrapper.
  *
- * Wraps a [PiiDetector] with hardware acceleration on API 27+.
- * Falls back to the provided [fallback] detector if NNAPI is unavailable
- * or if model integrity checks fail.
+ * Wraps a [PiiDetector] with hardware acceleration. NNAPI is present on all
+ * supported devices (minSdk 33 > 27). Falls back to [fallback] if NNAPI is
+ * unavailable or model integrity checks fail.
  *
  * Security:
  * - Model integrity: SHA-256 hash verification before loading (NIST SI-7).
@@ -32,23 +31,9 @@ class HardwareAcceleratedDetector(
   private val mlTimeoutMs: Long = 200L,
 ) : PiiDetector {
 
-  private val nnapiAvailable: Boolean by lazy {
-    Build.VERSION.SDK_INT >= 27 && checkNnapiAvailability()
-  }
-
   override fun scan(payloadJson: String): PiiScanResult {
     // Currently delegates to fallback. Actual NNAPI integration requires
     // the kiosk-ops-sdk-ml companion artifact with TFLite model.
     return fallback.scan(payloadJson)
-  }
-
-  private fun checkNnapiAvailability(): Boolean {
-    return try {
-      // NNAPI availability check. Actual implementation would verify
-      // NeuralNetworksCompat availability and model file integrity.
-      Build.VERSION.SDK_INT >= 27
-    } catch (_: Exception) {
-      false
-    }
   }
 }

@@ -6,12 +6,25 @@
 package com.sarastarquant.kioskops.sdk.transport.security
 
 import okhttp3.OkHttpClient
+import java.io.IOException
 import java.security.KeyStore
 import java.security.SecureRandom
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
+
+/**
+ * Thrown when mTLS configuration fails. The SDK does NOT silently downgrade to
+ * unauthenticated TLS — callers that intend mTLS will see this exception and can
+ * decide whether to retry, surface to an operator, or proceed explicitly.
+ *
+ * @since 1.1.0
+ */
+class MtlsConfigurationException(
+  message: String,
+  cause: Throwable? = null,
+) : IOException(message, cause)
 
 /**
  * Builder for OkHttpClient with mutual TLS (mTLS) support.
@@ -44,19 +57,23 @@ object MtlsClientBuilder {
     mtlsConfig: MtlsConfig,
   ): OkHttpClient {
     val credentials = mtlsConfig.clientCertificateProvider.getCertificateAndKey()
-      ?: return baseClient // No credentials available, return unmodified client
+    return buildOrFail(baseClient, credentials)
+  }
 
+  private fun buildOrFail(baseClient: OkHttpClient, credentials: CertificateCredentials?): OkHttpClient {
+    if (credentials == null) {
+      throw MtlsConfigurationException(
+        "mTLS is configured but client certificate provider returned no credentials",
+      )
+    }
     return try {
       val sslContext = createSslContext(credentials)
       val trustManager = getDefaultTrustManager()
-
       baseClient.newBuilder()
         .sslSocketFactory(sslContext.socketFactory, trustManager)
         .build()
     } catch (e: Exception) {
-      // If mTLS setup fails, return the base client
-      // The caller should handle authentication failures at the HTTP level
-      baseClient
+      throw MtlsConfigurationException("mTLS setup failed: ${e.message}", e)
     }
   }
 

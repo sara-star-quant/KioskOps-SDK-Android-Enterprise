@@ -68,8 +68,21 @@ class CertificateTransparencyValidator(
   /**
    * Validate certificate transparency for the given certificate chain.
    *
-   * This implementation checks for Signed Certificate Timestamps (SCTs)
-   * embedded in the certificate or provided via TLS extension.
+   * Checks for Signed Certificate Timestamps (SCTs) embedded in the leaf
+   * certificate (X.509v3 extension OID 1.3.6.1.4.1.11129.2.4.2).
+   *
+   * NOTE: This is an SCT *presence* check. Full CT validation additionally
+   * verifies SCT signatures against the public keys of IANA-approved CT
+   * logs, checks log inclusion proofs, and compares SCT timestamps against
+   * the certificate's validity window. Presence-only is a pragmatic default
+   * for modern CAs (all public-trust CAs have embedded SCTs since 2018) but
+   * is not a full CT enforcement implementation. Consumers requiring full
+   * verification should supplement this interceptor with a library like
+   * `com.appmattus.certificatetransparency` on the OkHttpClient.
+   *
+   * Previous versions contained an `isFromKnownCa` issuer-string bypass
+   * which was removed in 1.1.0 because substring matching on the issuer DN
+   * is not a security boundary.
    */
   private fun validateCertificateTransparency(
     hostname: String,
@@ -83,24 +96,12 @@ class CertificateTransparencyValidator(
     }
 
     val leafCertificate = certificates.first()
-
-    // Check for embedded SCTs in the certificate
-    val hasEmbeddedScts = hasEmbeddedScts(leafCertificate)
-
-    // For production use, you would also check:
-    // 1. SCTs from TLS extension (during handshake)
-    // 2. SCTs from OCSP stapling
-    // 3. Verify SCT signatures against known CT log public keys
-    // 4. Check SCT timestamps are within acceptable range
-
-    // For now, we accept certificates with embedded SCTs
-    // or certificates from well-known CAs (most modern CAs embed SCTs)
-    return if (hasEmbeddedScts || isFromKnownCa(leafCertificate)) {
+    return if (hasEmbeddedScts(leafCertificate)) {
       CtValidationResult(isValid = true, reason = "")
     } else {
       CtValidationResult(
         isValid = false,
-        reason = "No Signed Certificate Timestamps found"
+        reason = "No embedded Signed Certificate Timestamps in leaf certificate",
       )
     }
   }
@@ -114,39 +115,6 @@ class CertificateTransparencyValidator(
   private fun hasEmbeddedScts(certificate: X509Certificate): Boolean {
     val sctOid = "1.3.6.1.4.1.11129.2.4.2"
     return certificate.getExtensionValue(sctOid) != null
-  }
-
-  /**
-   * Check if certificate is from a known CA that embeds SCTs.
-   *
-   * Most major CAs now embed SCTs in their certificates by default.
-   * This is a fallback for legacy certificates that may not have
-   * embedded SCTs but are still valid.
-   */
-  private fun isFromKnownCa(certificate: X509Certificate): Boolean {
-    // Check for well-known CA issuers
-    val issuer = certificate.issuerX500Principal.name.lowercase()
-
-    val knownCas = listOf(
-      "digicert",
-      "let's encrypt",
-      "letsencrypt",
-      "comodo",
-      "sectigo",
-      "globalsign",
-      "godaddy",
-      "amazon",
-      "google trust services",
-      "microsoft",
-      "baltimore",
-      "verisign",
-      "entrust",
-      "geotrust",
-      "thawte",
-      "rapidssl",
-    )
-
-    return knownCas.any { ca -> issuer.contains(ca) }
   }
 
   companion object {

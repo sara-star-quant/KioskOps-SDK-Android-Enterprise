@@ -6,7 +6,6 @@
 package com.sarastarquant.kioskops.sdk.audit
 
 import android.content.Context
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
@@ -15,6 +14,7 @@ import java.io.DataOutputStream
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
+import java.security.SecureRandom
 import java.security.Signature
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -180,13 +180,7 @@ class KeystoreAttestationProvider(
     )
       .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA384, KeyProperties.DIGEST_SHA512)
       .setAlgorithmParameterSpec(java.security.spec.ECGenParameterSpec("secp256r1"))
-
-    // Request attestation on API 24+
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      // Use a device-specific challenge for attestation
-      val challenge = generateAttestationChallenge()
-      specBuilder.setAttestationChallenge(challenge)
-    }
+      .setAttestationChallenge(generateAttestationChallenge())
 
     keyPairGenerator.initialize(specBuilder.build())
     val keyPair = keyPairGenerator.generateKeyPair()
@@ -194,11 +188,22 @@ class KeystoreAttestationProvider(
     return keyPair.private
   }
 
+  /**
+   * Generate a cryptographically random 32-byte challenge for key attestation.
+   *
+   * The challenge is bound into the attestation certificate by the TEE and
+   * protects against replay of captured attestation blobs across same-model
+   * devices. A predictable challenge (prior behavior: `Build.MODEL:Build.MANUFACTURER:currentTimeMillis`)
+   * allowed trivial replay and was replaced in 1.1.0.
+   *
+   * For remote attestation flows where the verifier needs nonce binding,
+   * use [generateAttestationChallengeResponse] on a related reporter and
+   * pass the server-provided challenge explicitly.
+   */
   private fun generateAttestationChallenge(): ByteArray {
-    // Generate a challenge that includes device-specific info
-    // This helps verify the attestation came from this device
-    val deviceInfo = "${Build.MODEL}:${Build.MANUFACTURER}:${System.currentTimeMillis()}"
-    return deviceInfo.toByteArray(Charsets.UTF_8).copyOf(32)
+    val challenge = ByteArray(32)
+    SecureRandom().nextBytes(challenge)
+    return challenge
   }
 
   private fun checkHardwareBacked(): Boolean {
@@ -210,12 +215,7 @@ class KeystoreAttestationProvider(
         "AndroidKeyStore"
       )
       val keyInfo = factory.getKeySpec(key, KeyInfo::class.java)
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
-      } else {
-        @Suppress("DEPRECATION")
-        keyInfo.isInsideSecureHardware
-      }
+      keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
     } catch (e: Exception) {
       false
     }
@@ -226,10 +226,6 @@ class KeystoreAttestationProvider(
      * Check if the device supports hardware-backed attestation.
      */
     fun isAttestationSupported(context: Context): Boolean {
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-        return false
-      }
-
       return try {
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
         val testAlias = "kioskops_attestation_support_test"
