@@ -233,12 +233,25 @@ class CtValidationTest {
   }
 
   // ---------------------------------------------------------------
-  // isFromKnownCa() -- all known CAs (case-insensitive substring)
+  // Issuer-string bypass was removed in 1.1.0. Validation now requires
+  // embedded SCTs regardless of which CA issued the certificate. The
+  // issuer DN is not a security boundary.
   // ---------------------------------------------------------------
 
   @Test
-  fun `intercept succeeds for DigiCert issued certificate`() {
-    val cert = stubCert("CN=DigiCert Global Root G2, O=DigiCert Inc, C=US")
+  fun `intercept rejects DigiCert cert without embedded SCTs`() {
+    val cert = stubCert("CN=DigiCert Global Root G2, O=DigiCert Inc, C=US", hasSct = false)
+    val validator = CertificateTransparencyValidator(enabled = true)
+    val chain = buildFakeChain(certificates = listOf(cert))
+
+    assertThrows(CertificateTransparencyException::class.java) {
+      validator.intercept(chain)
+    }
+  }
+
+  @Test
+  fun `intercept accepts DigiCert cert with embedded SCTs`() {
+    val cert = stubCert("CN=DigiCert Global Root G2, O=DigiCert Inc, C=US", hasSct = true)
     val validator = CertificateTransparencyValidator(enabled = true)
     val chain = buildFakeChain(certificates = listOf(cert))
 
@@ -247,167 +260,7 @@ class CtValidationTest {
   }
 
   @Test
-  fun `intercept succeeds for Lets Encrypt issued certificate`() {
-    val cert = stubCert("CN=R3, O=Let's Encrypt, C=US")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Comodo issued certificate`() {
-    val cert = stubCert("CN=COMODO RSA DV CA, O=COMODO CA Limited")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Sectigo issued certificate`() {
-    val cert = stubCert("CN=Sectigo RSA DV CA, O=Sectigo Limited")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for GlobalSign issued certificate`() {
-    val cert = stubCert("CN=GlobalSign Atlas R3, O=GlobalSign nv-sa")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for GoDaddy issued certificate`() {
-    val cert = stubCert("CN=Go Daddy Secure CA, O=GoDaddy.com")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Amazon issued certificate`() {
-    val cert = stubCert("CN=Amazon RSA 2048 M02, O=Amazon, C=US")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Google Trust Services issued certificate`() {
-    val cert = stubCert("CN=GTS CA 1C3, O=Google Trust Services LLC, C=US")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Microsoft issued certificate`() {
-    val cert = stubCert("CN=Microsoft Azure TLS CA, O=Microsoft Corporation")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Baltimore issued certificate`() {
-    val cert = stubCert("CN=Baltimore CyberTrust Root, O=Baltimore")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for VeriSign issued certificate`() {
-    val cert = stubCert("CN=VeriSign Class 3 CA, O=VeriSign Inc")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Entrust issued certificate`() {
-    val cert = stubCert("CN=Entrust CA, O=Entrust")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for GeoTrust issued certificate`() {
-    val cert = stubCert("CN=GeoTrust Global CA, O=GeoTrust Inc")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for Thawte issued certificate`() {
-    val cert = stubCert("CN=thawte DV SSL CA, O=thawte Inc")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for RapidSSL issued certificate`() {
-    val cert = stubCert("CN=RapidSSL TLS DV RSA, O=DigiCert Inc")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `intercept succeeds for LetsEncrypt alternate spelling`() {
-    val cert = stubCert("CN=LetsEncrypt Authority X3, O=LetsEncrypt")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `isFromKnownCa is case insensitive`() {
-    val cert = stubCert("CN=DIGICERT GLOBAL ROOT, O=DIGICERT INC")
-    val validator = CertificateTransparencyValidator(enabled = true)
-    val chain = buildFakeChain(certificates = listOf(cert))
-
-    val response = validator.intercept(chain)
-    assertThat(response.code).isEqualTo(200)
-  }
-
-  @Test
-  fun `isFromKnownCa returns false for unknown CA`() {
+  fun `intercept rejects unknown CA without embedded SCTs`() {
     val cert = stubCert("CN=My Private Root CA, O=Evil Corp, C=XX")
     val validator = CertificateTransparencyValidator(enabled = true)
     val chain = buildFakeChain(certificates = listOf(cert))
@@ -445,7 +298,7 @@ class CtValidationTest {
     }
 
     assertThat(callbackHostname).isEqualTo("evil.example.com")
-    assertThat(callbackReason).isEqualTo("No Signed Certificate Timestamps found")
+    assertThat(callbackReason).contains("No embedded Signed Certificate Timestamps")
   }
 
   @Test
@@ -472,7 +325,7 @@ class CtValidationTest {
       onValidationFailure = { _, _ -> callbackCalled = true },
     )
 
-    val cert = stubCert("CN=DigiCert Root, O=DigiCert Inc")
+    val cert = stubCert("CN=Any Issuer, O=Any", hasSct = true)
     val chain = buildFakeChain(certificates = listOf(cert))
 
     validator.intercept(chain)
@@ -532,7 +385,7 @@ class CtValidationTest {
       validator.intercept(chain)
     }
     assertThat(exception.message).contains("target.example.com")
-    assertThat(exception.message).contains("No Signed Certificate Timestamps found")
+    assertThat(exception.message).contains("No embedded Signed Certificate Timestamps")
   }
 
   // ---------------------------------------------------------------
@@ -541,8 +394,8 @@ class CtValidationTest {
 
   @Test
   fun `intercept validates leaf certificate from chain of multiple certs`() {
-    val leafCert = stubCert("CN=DigiCert SHA2 EV Server CA, O=DigiCert Inc")
-    val intermediateCert = stubCert("CN=DigiCert High Assurance EV Root CA")
+    val leafCert = stubCert("CN=Leaf, O=Test", hasSct = true)
+    val intermediateCert = stubCert("CN=Intermediate", hasSct = false)
 
     val validator = CertificateTransparencyValidator(enabled = true)
     val chain = buildFakeChain(certificates = listOf(leafCert, intermediateCert))
@@ -585,7 +438,7 @@ class CtValidationTest {
 
   @Test
   fun `default constructor has enabled true`() {
-    val cert = stubCert("CN=DigiCert Root CA, O=DigiCert")
+    val cert = stubCert("CN=Any Root, O=Any", hasSct = true)
     val validator = CertificateTransparencyValidator()
     val chain = buildFakeChain(certificates = listOf(cert))
 

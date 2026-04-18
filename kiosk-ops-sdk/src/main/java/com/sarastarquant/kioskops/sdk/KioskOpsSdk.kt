@@ -122,7 +122,7 @@ class KioskOpsSdk private constructor(
   // v0.8.0 Database encryption (SQLCipher)
   private val dbOpenHelperFactory: androidx.sqlite.db.SupportSQLiteOpenHelper.Factory? =
     if (cfg().databaseEncryptionPolicy.enabled) {
-      com.sarastarquant.kioskops.sdk.crypto.DatabaseEncryptionProvider.createFactory()
+      com.sarastarquant.kioskops.sdk.crypto.DatabaseEncryptionProvider.createFactory(appContext)
     } else {
       null
     }
@@ -364,7 +364,7 @@ class KioskOpsSdk private constructor(
    * @param userId Optional user identifier for GDPR data subject tracking.
    * @since 0.5.0 userId parameter, pipeline steps 3-7 added
    */
-  @Suppress("ReturnCount")
+  @Suppress("ReturnCount", "CyclomaticComplexMethod", "LongMethod")
   @JvmOverloads
   suspend fun enqueueDetailed(
     type: String,
@@ -398,15 +398,28 @@ class KioskOpsSdk private constructor(
       null
     }
 
-    // Step 7: Field-Level Encryption
+    // Step 7: Field-Level Encryption.
+    // If encryption fails we REJECT the event. Silently falling back to plaintext
+    // would leak the same PII the feature exists to protect.
     if (cfg.fieldEncryptionPolicy.enabled) {
-      try {
-        val fields = cfg.fieldEncryptionPolicy.fieldsForEventType(type)
-        if (fields.isNotEmpty()) {
+      val fields = cfg.fieldEncryptionPolicy.fieldsForEventType(type)
+      if (fields.isNotEmpty()) {
+        try {
           processedPayload = fieldEncryptor.encryptFields(processedPayload, fields)
+        } catch (e: com.sarastarquant.kioskops.sdk.crypto.FieldEncryptionException) {
+          val rejection = EnqueueResult.Rejected.FieldEncryptionFailed(
+            reason = e.message ?: "field encryption failed",
+          )
+          persistentAudit.record(
+            "event_rejected",
+            mapOf("type" to type, "reason" to "FieldEncryptionFailed"),
+          )
+          telemetry.emit(
+            "event_rejected",
+            mapOf("type" to type, "reason" to "FieldEncryptionFailed"),
+          )
+          return rejection
         }
-      } catch (_: Exception) {
-        // Fail-safe: field encryption failure must not block the pipeline
       }
     }
 

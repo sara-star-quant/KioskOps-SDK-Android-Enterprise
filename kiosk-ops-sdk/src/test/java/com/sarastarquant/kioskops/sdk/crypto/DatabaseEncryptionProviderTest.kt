@@ -5,6 +5,7 @@
 
 package com.sarastarquant.kioskops.sdk.crypto
 
+import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,12 +16,13 @@ class DatabaseEncryptionProviderTest {
 
   @Test
   fun `createFactory throws when SQLCipher not on classpath`() {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     // On Robolectric, AndroidKeyStore is not available, so createFactory will fail
     // either at key generation or at SQLCipher class loading.
     // We verify it does not silently succeed.
     var threw = false
     try {
-      DatabaseEncryptionProvider.createFactory()
+      DatabaseEncryptionProvider.createFactory(context)
     } catch (_: Exception) {
       threw = true
     }

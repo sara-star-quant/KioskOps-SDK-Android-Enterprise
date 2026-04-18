@@ -273,20 +273,85 @@ Focus: Lifecycle-aware telemetry, reactive config updates, global PII coverage, 
 
 ---
 
-## v1.0.0 Stable Release and Platform Expansion
+## v1.0.0 Stable Release and Platform Expansion [RELEASED]
 
 Focus: Production stability, distribution, LTS commitment, and cross-platform support.
 
 ### Stability
 - [x] API freeze and semantic versioning commitment
-- [ ] Long-term support (LTS) branch
+- [ ] Long-term support (LTS) branch (deferred to v1.2.0)
 - [x] Migration guides for all breaking changes
 
 ### Distribution
 - [x] Maven Central publication with PGP-signed artifacts (completed in v0.9.0)
-- [ ] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for coordinated version management
-- [ ] Gradle Version Catalog snippet for consumers
+- [ ] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for coordinated version management (deferred to v1.2.0)
+- [ ] Gradle Version Catalog snippet for consumers (deferred to v1.2.0)
 - [x] Source JAR and Javadoc JAR published alongside the AAR (completed in v0.9.0)
+
+---
+
+## v1.1.0 Security Hardening [RELEASED]
+
+Focus: Fix audit-surfaced defects from the 1.0.0 release, raise the Android
+baseline to the current minimum security posture, and close silent-failure
+paths in cryptographic and transport code.
+
+### Critical crypto and transport fixes
+- [x] `DatabaseEncryptionProvider` now wraps a random 256-bit SQLCipher passphrase
+  with the Keystore AES-GCM key; removed the broken `key.encoded ?: key.toString()`
+  fallback that produced a non-random passphrase on hardware-backed devices
+- [x] `FieldLevelEncryptor` throws `FieldEncryptionException` on failure instead
+  of silently falling back to plaintext; event pipeline rejects events with
+  `EnqueueResult.Rejected.FieldEncryptionFailed`
+- [x] `MtlsClientBuilder` throws `MtlsConfigurationException` on failure instead
+  of silently downgrading to unauthenticated TLS
+- [x] `CertificateTransparencyValidator.isFromKnownCa` issuer-string bypass removed;
+  validation now requires embedded SCTs regardless of issuer DN
+
+### High-severity fixes
+- [x] `DataRightsManager.wipeAllSdkData` enumerates all `kioskops*` SharedPreferences
+  files and all `kioskops*` Android Keystore aliases
+- [x] `KeystoreAttestationProvider` generates 32-byte `SecureRandom` attestation
+  challenges (was: predictable device-model + timestamp)
+- [x] `VersionedCryptoProvider.deleteKeyVersion` logs Keystore deletion failures
+  and retains metadata so a future cleanup retries
+- [x] `KioskOpsConfig.toString()` redacts `adminExitPin`
+
+### Platform baseline
+- [x] `minSdk` raised from 31 to 33 (Android 13). Drops Android 12 / 12L support
+- [x] Simplified `Build.VERSION.SDK_INT >= S` / `>= N` / `>= 27` branches in
+  crypto, attestation, and connectivity modules
+
+### Dependency hygiene
+- [x] Dependabot PR triage for GitHub Actions bumps (safe minor/patch)
+- [x] Open Dependabot alerts (bouncycastle 1.79, plexus-utils) reviewed; all
+  occur only in buildscript classpath (AGP, cyclonedx plugin) and do not
+  ship in the published AAR; tracked for AGP 9.x evaluation in v1.2.0
+
+### OpenSSF Scorecard follow-ups
+- [x] Binary-Artifacts: documented gradle-wrapper.jar as required-binary
+  (gradle-wrapper-validation workflow already present)
+- [x] Fuzzing: Jazzer integration already exists; tracked to enable the
+  `fuzzTest` task in a scheduled workflow so Scorecard sees it
+- [x] Branch-Protection / Code-Review: documented as single-maintainer
+  constraint; tracked for CII Best Practices badge application in v1.2.0
+
+---
+
+## v1.2.0 Distribution and Platform Expansion
+
+Focus: Coordinate multi-module version management, expand the Dependabot/
+toolchain surface, and prepare for cross-platform consumers.
+
+### Stability
+- [ ] Long-term support (LTS) branch (cherry-pick security fixes to v1.1.x)
+- [ ] AGP 9.x evaluation — brings Bouncy Castle 1.84+ and closes the
+  remaining build-classpath CVE exposure
+
+### Distribution
+- [ ] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for coordinated
+  version management
+- [ ] Gradle Version Catalog snippet for consumers
 
 ### Platform Support
 - [ ] Kotlin Multiplatform (KMP) with iOS target
@@ -294,13 +359,31 @@ Focus: Production stability, distribution, LTS commitment, and cross-platform su
 - [ ] Flutter plugin
 
 ### Documentation
-- [ ] API reference documentation (Dokka)
+- [ ] API reference documentation (Dokka) published to GitHub Pages
 - [ ] Video tutorials and integration walkthroughs
 - [ ] Sample apps for common use cases (retail, logistics, field service)
 
-### Security
+### Security and assurance
 - [ ] Pre-filled SIG (Standardized Information Gathering) questionnaire template
 - [ ] Third-party penetration test (annual, recognized firm)
+- [ ] OpenSSF CII Best Practices badge (passing)
+- [ ] Scheduled weekly fuzzing workflow on `main`
+- [ ] Full SCT signature verification in `CertificateTransparencyValidator`
+  (integrate `com.appmattus:certificatetransparency` or equivalent)
+
+### Audit follow-ups (from 1.0.0 review, medium-severity)
+- [ ] Replace `SecureKeyDerivation.deriveDeterministic` ISO-8859-1 bridge with
+  HKDF-based byte construction and explicit length prefixing
+- [ ] Lock `FileSink` size counter under a dedicated mutex to prevent negative
+  values under concurrent emit
+- [ ] Switch `CertificatePinningInterceptor` to OkHttp's native
+  `certificatePinner`, so pin validation runs during the TLS handshake
+  before the request body is exchanged
+- [ ] High-security presets (`fedRampDefaults`, `cuiDefaults`, `cjisDefaults`)
+  validate that `baseUrl` HTTPS endpoints have pins configured or CT
+  enabled; log `ERROR` if not
+- [ ] `RemoteConfigPolicy.pilotDefaults` marked `@RequiresOptIn` /
+  `@Deprecated(WARNING)` to prevent accidental production use
 
 ---
 
