@@ -19,7 +19,7 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    minSdk = 31
+    minSdk = 33
     consumerProguardFiles("consumer-rules.pro")
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("String", "SDK_VERSION", "\"${findProperty("VERSION_NAME") ?: "0.0.0-SNAPSHOT"}\"")
