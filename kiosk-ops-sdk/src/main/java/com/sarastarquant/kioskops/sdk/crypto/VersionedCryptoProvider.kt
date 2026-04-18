@@ -6,7 +6,6 @@
 package com.sarastarquant.kioskops.sdk.crypto
 
 import android.content.Context
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
@@ -240,12 +239,7 @@ class VersionedCryptoProvider(
     return try {
       val factory = SecretKeyFactory.getInstance(key.algorithm, "AndroidKeyStore")
       val keyInfo = factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
-      } else {
-        @Suppress("DEPRECATION")
-        keyInfo.isInsideSecureHardware
-      }
+      keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
     } catch (e: Exception) {
       false
     }
@@ -274,15 +268,23 @@ class VersionedCryptoProvider(
   }
 
   private fun deleteKeyVersion(version: Int) {
-    // Delete from Keystore
-    try {
+    // Delete from Keystore. If it fails, retain the metadata so a future
+    // cleanup cycle can retry — removing the metadata first would orphan
+    // the Keystore entry with no way to find it again.
+    val keystoreDeleted = try {
       val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
       keyStore.deleteEntry(aliasForVersion(version))
+      true
     } catch (e: Exception) {
-      // Ignore deletion errors
+      android.util.Log.w(
+        "KioskOpsSdk",
+        "Failed to delete Keystore entry ${aliasForVersion(version)} during rotation cleanup: ${e.message}",
+      )
+      false
     }
 
-    // Delete metadata
-    metadataStore.deleteKeyMetadata(version)
+    if (keystoreDeleted) {
+      metadataStore.deleteKeyMetadata(version)
+    }
   }
 }

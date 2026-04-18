@@ -6,7 +6,6 @@
 package com.sarastarquant.kioskops.sdk.crypto
 
 import android.content.Context
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
@@ -62,12 +61,7 @@ class KeyAttestationReporter(
       val factory = SecretKeyFactory.getInstance(key.algorithm, "AndroidKeyStore")
       val keyInfo = factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo
 
-      val isHwBacked = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
-      } else {
-        @Suppress("DEPRECATION")
-        keyInfo.isInsideSecureHardware
-      }
+      val isHwBacked = keyInfo.securityLevel != KeyProperties.SECURITY_LEVEL_SOFTWARE
 
       KeyAttestationStatus(
         isHardwareBacked = isHwBacked,
@@ -106,10 +100,6 @@ class KeyAttestationReporter(
     alias: String,
     challenge: ByteArray,
   ): AttestationResponse? {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-      return null // Key attestation requires API 24+
-    }
-
     return try {
       // Create or get attestation key pair
       val attestationAlias = "${alias}_attestation"
@@ -152,8 +142,6 @@ class KeyAttestationReporter(
    * Check if the device supports hardware-backed key attestation.
    */
   fun isHardwareAttestationSupported(): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return false
-
     return try {
       // Try to create an attestation key
       val testAlias = "kioskops_attestation_test"
@@ -217,29 +205,18 @@ class KeyAttestationReporter(
   }
 
   private fun determineSecurityLevel(keyInfo: KeyInfo): SecurityLevel {
-    return when {
-      Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-        when (keyInfo.securityLevel) {
-          KeyProperties.SECURITY_LEVEL_STRONGBOX -> SecurityLevel.STRONGBOX
-          KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT -> SecurityLevel.TEE
-          KeyProperties.SECURITY_LEVEL_SOFTWARE -> SecurityLevel.SOFTWARE
-          else -> SecurityLevel.UNKNOWN
-        }
-      }
-      @Suppress("DEPRECATION")
-      keyInfo.isInsideSecureHardware -> SecurityLevel.TEE
-      else -> SecurityLevel.SOFTWARE
+    return when (keyInfo.securityLevel) {
+      KeyProperties.SECURITY_LEVEL_STRONGBOX -> SecurityLevel.STRONGBOX
+      KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT -> SecurityLevel.TEE
+      KeyProperties.SECURITY_LEVEL_SOFTWARE -> SecurityLevel.SOFTWARE
+      else -> SecurityLevel.UNKNOWN
     }
   }
 
   private fun getKeyCreationTime(keyInfo: KeyInfo): Long? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      try {
-        keyInfo.keyValidityStart?.time
-      } catch (e: Exception) {
-        null
-      }
-    } else {
+    return try {
+      keyInfo.keyValidityStart?.time
+    } catch (e: Exception) {
       null
     }
   }

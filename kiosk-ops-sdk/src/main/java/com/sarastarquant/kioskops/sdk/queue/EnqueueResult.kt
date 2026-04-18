@@ -24,6 +24,13 @@ sealed class EnqueueResult {
     data class PiiDetected(val findings: List<String>) : Rejected()
     /** @since 0.5.0 */
     data class AnomalyRejected(val score: Float, val reasons: List<String>) : Rejected()
+    /**
+     * Field-level encryption was required but failed (Keystore unavailable,
+     * hardware fault, or corrupt key). Event NOT enqueued — plaintext PII is
+     * never forwarded when this occurs.
+     * @since 1.1.0
+     */
+    data class FieldEncryptionFailed(val reason: String) : Rejected()
     data class Unknown(val reason: String) : Rejected()
   }
 
