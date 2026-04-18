@@ -345,7 +345,7 @@ toolchain surface, and prepare for cross-platform consumers.
 
 ### Stability
 - [ ] Long-term support (LTS) branch (cherry-pick security fixes to v1.1.x)
-- [ ] AGP 9.x evaluation — brings Bouncy Castle 1.84+ and closes the
+- [ ] AGP 9.x evaluation - brings Bouncy Castle 1.84+ and closes the
   remaining build-classpath CVE exposure
 
 ### Distribution
