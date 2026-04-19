@@ -34,10 +34,31 @@ class FileSinkTest {
     for (i in 1..5) {
       sink.emit(entry(message = "msg-$i"))
     }
-    // After 5 emits with capacity 3, entries should be trimmed to at most 3
-    val entries = sink.getEntries()
-    assertThat(entries.size).isAtMost(4) // ConcurrentLinkedDeque may have 1 extra due to trim timing
-    assertThat(entries.size).isGreaterThan(0)
+    assertThat(sink.getEntries()).hasSize(3)
+    assertThat(sink.size()).isEqualTo(3)
+  }
+
+  @Test
+  fun `concurrent emit keeps size in step with buffer and never goes negative`() {
+    val sink = FileSink(maxLines = 50)
+    val threads = 8
+    val perThread = 200
+    val pool = java.util.concurrent.Executors.newFixedThreadPool(threads)
+    val latch = java.util.concurrent.CountDownLatch(threads)
+    repeat(threads) { t ->
+      pool.submit {
+        repeat(perThread) { i -> sink.emit(entry(message = "t$t-$i")) }
+        latch.countDown()
+      }
+    }
+    latch.await()
+    pool.shutdown()
+
+    assertThat(sink.size()).isEqualTo(sink.getEntries().size)
+    assertThat(sink.size()).isAtLeast(0)
+    assertThat(sink.size()).isAtMost(50)
+    // With 1600 writes and cap 50, the buffer must be at capacity, not drained.
+    assertThat(sink.size()).isEqualTo(50)
   }
 
   @Test
