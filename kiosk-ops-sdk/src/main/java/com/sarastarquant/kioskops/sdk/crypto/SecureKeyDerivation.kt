@@ -103,37 +103,32 @@ class SecureKeyDerivation(
   }
 
   /**
-   * Derive a deterministic key from input material.
+   * Derive a deterministic key from input material using HKDF (RFC 5869) with HMAC-SHA256.
    *
-   * This is used for deterministic idempotency key generation where
-   * the same input should always produce the same output.
+   * Used for reproducible derivations (e.g., idempotency keys) where the same IKM, salt,
+   * and context must always yield the same output. HKDF is the correct primitive for this:
+   * PBKDF2 is designed for password stretching and routing raw bytes through a char-based
+   * PBEKeySpec is lossy across provider implementations.
    *
-   * @param inputMaterial The input bytes to derive from.
-   * @param context A context string to domain-separate the derivation.
-   * @param salt Fixed salt for deterministic output.
-   * @return The derived key bytes.
+   * Output length matches [KeyDerivationConfig.keyLengthBits] (must be a multiple of 8).
+   *
+   * @param inputMaterial Input keying material (IKM).
+   * @param context Context / info parameter for domain separation.
+   * @param salt HKDF salt; public, should be non-empty for best PRK quality.
+   * @return The derived bytes, length `keyLengthBits / 8`.
    */
   fun deriveDeterministic(
     inputMaterial: ByteArray,
     context: String,
     salt: ByteArray,
   ): ByteArray {
-    // Combine input material with context for domain separation
-    val combined = inputMaterial + context.toByteArray(Charsets.UTF_8)
-
-    val spec = PBEKeySpec(
-      String(combined, Charsets.ISO_8859_1).toCharArray(),
-      salt,
-      config.iterationCount,
-      config.keyLengthBits,
+    require(config.keyLengthBits % 8 == 0) { "keyLengthBits must be a multiple of 8" }
+    return hkdfSha256(
+      ikm = inputMaterial,
+      salt = salt,
+      info = context.toByteArray(Charsets.UTF_8),
+      outLen = config.keyLengthBits / 8,
     )
-
-    return try {
-      val factory = SecretKeyFactory.getInstance(config.algorithm)
-      factory.generateSecret(spec).encoded
-    } finally {
-      spec.clearPassword()
-    }
   }
 }
 
