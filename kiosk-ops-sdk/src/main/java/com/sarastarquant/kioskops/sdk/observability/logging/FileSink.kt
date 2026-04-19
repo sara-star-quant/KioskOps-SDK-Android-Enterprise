@@ -7,7 +7,6 @@ package com.sarastarquant.kioskops.sdk.observability.logging
 
 import com.sarastarquant.kioskops.sdk.observability.LogLevel
 import java.util.concurrent.ConcurrentLinkedDeque
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * In-memory ring buffer logging sink with file persistence support.
@@ -34,16 +33,23 @@ class FileSink(
 ) : LoggingSink {
 
   private val buffer = ConcurrentLinkedDeque<LogEntry>()
-  private val size = AtomicInteger(0)
+  // Guards the (buffer, size) pair as a single view. The prior AtomicInteger + lock-free
+  // trim was racy: the trim loop read a stale captured size so a single over-capacity emit
+  // drained the whole buffer, and concurrent emits could let size drift negative because
+  // pollFirst returning null skipped the decrement while a concurrent emit had already
+  // incremented. Serialising emit and trim under one monitor is cheap (emit is not hot)
+  // and gives us a single well-defined invariant: size == buffer.size.
+  private val lock = Any()
+
+  @Volatile
+  private var bufferSize: Int = 0
 
   override fun emit(entry: LogEntry) {
-    buffer.addLast(entry)
-    val currentSize = size.incrementAndGet()
-
-    // Trim if over capacity
-    while (currentSize > maxLines && buffer.isNotEmpty()) {
-      if (buffer.pollFirst() != null) {
-        size.decrementAndGet()
+    synchronized(lock) {
+      buffer.addLast(entry)
+      bufferSize++
+      while (bufferSize > maxLines) {
+        if (buffer.pollFirst() != null) bufferSize-- else break
       }
     }
   }
@@ -112,14 +118,16 @@ class FileSink(
   /**
    * Get current buffer size.
    */
-  fun size(): Int = size.get()
+  fun size(): Int = bufferSize
 
   /**
    * Clear all buffered entries.
    */
   fun clear() {
-    buffer.clear()
-    size.set(0)
+    synchronized(lock) {
+      buffer.clear()
+      bufferSize = 0
+    }
   }
 
   /**
