@@ -13,7 +13,7 @@
 ### Clone and Build
 
 ```bash
-git clone https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git
+git clone https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise.git
 cd KioskOps-SDK-Android-Enterprise
 ./gradlew build
 ```
@@ -92,7 +92,7 @@ Report: `kiosk-ops-sdk/build/reports/lint-results-debug.html`
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/issues) for:
+Use [GitHub Issues](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/issues) for:
 - Bug reports
 - Feature requests
 - Documentation improvements
