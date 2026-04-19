@@ -1,8 +1,8 @@
 [versions]
 agp = "8.10.1"
 ksp = "2.1.0-1.0.29"
-kotlin = "2.1.0"
-serializationJson = "1.8.0"
+kotlin = "2.3.20"
+serializationJson = "1.11.0"
 jazzer = "0.22.1"
 junit5 = "6.0.3"
 
@@ -23,10 +23,10 @@ androidxTestCore = "1.7.0"
 androidxTestRunner = "1.6.2"
 androidxTestRules = "1.6.1"
 androidxTestExtJunit = "1.2.1"
-bcv = "0.16.3"
+bcv = "0.18.1"
 dokka = "2.2.0"
 detekt = "1.23.7"
-kover = "0.9.1"
+kover = "0.9.8"
 cyclonedx = "3.2.3"
 mavenPublish = "0.30.0"
 
