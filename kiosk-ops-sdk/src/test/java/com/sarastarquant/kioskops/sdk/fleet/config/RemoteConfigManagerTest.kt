@@ -196,4 +196,25 @@ class RemoteConfigManagerTest {
     assertThat(result).isInstanceOf(ConfigUpdateResult.Rejected::class.java)
     assertThat((result as ConfigUpdateResult.Rejected).reason).isEqualTo(ConfigRejectionReason.PARSE_ERROR)
   }
+
+  @Test
+  fun `configUpdateFlow accepts bursts beyond buffer without hanging`() = runTest {
+    // Burst more events than the 16-slot buffer can hold. With the default SUSPEND overflow
+    // policy and a slow or absent collector, the emitter stalls; with DROP_OLDEST it rolls.
+    // Advance the clock between bundles so each one is eligible past the apply cooldown.
+    val burst = 50
+    val interval = policy.configApplyCooldownMs + 1
+    repeat(burst) { i ->
+      nowMs += interval
+      manager.processConfigBundle(
+        configBundle(i.toLong() + 10L, mapOf("k" to "$i")),
+        ConfigSource.MANAGED_CONFIG,
+      )
+    }
+
+    // Manager processed every bundle without hanging; the latest won.
+    val latest = db.configVersionDao().getActiveVersion()
+    assertThat(latest).isNotNull()
+    assertThat(latest!!.version).isEqualTo(10L + burst - 1)
+  }
 }
