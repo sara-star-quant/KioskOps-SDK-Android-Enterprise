@@ -47,7 +47,12 @@ class RemoteConfigManager internal constructor(
   private val mutex = Mutex()
   private var lastApplyMs: Long = 0L
 
-  private val _configUpdates = MutableSharedFlow<ConfigUpdateEvent>(extraBufferCapacity = 16)
+  // DROP_OLDEST so a slow collector cannot stall the emitter; missing an older config
+  // transition in fleet telemetry is preferable to back-pressuring the manager's critical path.
+  private val _configUpdates = MutableSharedFlow<ConfigUpdateEvent>(
+    extraBufferCapacity = 16,
+    onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST,
+  )
 
   /**
    * Observe configuration changes as a [Flow].

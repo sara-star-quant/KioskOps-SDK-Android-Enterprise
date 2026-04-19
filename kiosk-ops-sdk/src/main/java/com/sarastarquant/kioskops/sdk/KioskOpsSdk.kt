@@ -877,7 +877,11 @@ class KioskOpsSdk private constructor(
       .build()
 
     val wm = WorkManager.getInstance(appContext)
-    wm.enqueueUniquePeriodicWork(KioskOpsSyncWorker.WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, heartbeat)
+    // KEEP preserves WorkManager's exponential backoff counter across restarts; UPDATE would
+    // replace an existing run and reset backoff, effectively retrying immediately after a
+    // crash-loop. Config changes that legitimately need to re-schedule should go through a
+    // dedicated reschedule path that cancels and re-enqueues.
+    wm.enqueueUniquePeriodicWork(KioskOpsSyncWorker.WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, heartbeat)
 
     // Network sync is scheduled only when explicitly enabled.
     if (cfg.syncPolicy.enabled) {
@@ -891,7 +895,7 @@ class KioskOpsSdk private constructor(
         .setConstraints(constraints)
         .build()
 
-      wm.enqueueUniquePeriodicWork(KioskOpsEventSyncWorker.WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, netSync)
+      wm.enqueueUniquePeriodicWork(KioskOpsEventSyncWorker.WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, netSync)
     }
 
     // v0.3.0: Schedule diagnostics collection based on policy
@@ -1002,16 +1006,20 @@ class KioskOpsSdk private constructor(
   /**
    * Gracefully shut down the SDK.
    *
-   * Cancels background coroutine scopes, closes databases, and flushes
-   * pending audit records. After calling this method, the SDK instance
-   * is no longer usable; call [init] to create a new instance.
+   * Flushes a final audit record and telemetry event before cancelling the SDK's coroutine
+   * scope, so the teardown entry actually reaches the audit trail. After cancellation, the
+   * SDK instance is no longer usable; call [init] to create a new instance.
    *
    * @since 0.8.0
    */
   suspend fun shutdown() {
+    // Record teardown while the scope is still live. Wrap in NonCancellable in case the
+    // caller's coroutine is itself being cancelled (e.g. Activity onDestroy).
+    kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+      persistentAudit.record("sdk_shutdown")
+      telemetry.emit("sdk_shutdown", mapOf("sdkVersion" to SDK_VERSION))
+    }
     sdkJob.cancel()
-    persistentAudit.record("sdk_shutdown")
-    telemetry.emit("sdk_shutdown", mapOf("sdkVersion" to SDK_VERSION))
     INSTANCE = null
   }
 
@@ -1139,9 +1147,16 @@ class KioskOpsSdk private constructor(
    * the transport security policy from the initial config.
    */
   private fun buildSecureHttpClient(): OkHttpClient {
-    val policy = cfg().transportSecurityPolicy
+    val snapshot = cfg()
+    val policy = snapshot.transportSecurityPolicy
+    val syncPolicy = snapshot.syncPolicy
 
-    var client = OkHttpClient.Builder().build()
+    var client = OkHttpClient.Builder()
+      .connectTimeout(syncPolicy.connectTimeoutSeconds, TimeUnit.SECONDS)
+      .readTimeout(syncPolicy.readTimeoutSeconds, TimeUnit.SECONDS)
+      .writeTimeout(syncPolicy.writeTimeoutSeconds, TimeUnit.SECONDS)
+      .callTimeout(syncPolicy.callTimeoutSeconds, TimeUnit.SECONDS)
+      .build()
 
     // Apply certificate pinning interceptor
     CertificatePinningInterceptor.fromPolicy(policy) { hostname, reason ->
