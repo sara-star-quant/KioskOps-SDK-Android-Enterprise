@@ -22,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@OptIn(RemoteConfigPolicy.PilotConfig::class)
 @RunWith(RobolectricTestRunner::class)
 class RemoteConfigManagerTest {
 
