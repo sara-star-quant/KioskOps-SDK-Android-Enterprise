@@ -32,6 +32,24 @@ interface QueueDao {
   @Query("UPDATE queue_events SET state = 'SENT', lastError = NULL, updatedAtEpochMs = :nowMs WHERE id = :id")
   suspend fun markSent(id: String, nowMs: Long)
 
+  /**
+   * Rescue SENDING rows stranded across a process restart. An event is marked SENDING just
+   * before transport; if the process dies mid-flight, the row stays SENDING forever and
+   * loadNextBatch never picks it up (it only selects PENDING/FAILED), so the event silently
+   * rots until retention deletes it.
+   *
+   * [staleBeforeEpochMs] is an age gate so a concurrently-running process's genuinely in-flight
+   * rows aren't reset mid-send. Callers pass e.g. now - 2 x callTimeout.
+   *
+   * Returns the number of rows reset.
+   * @since 1.2.0
+   */
+  @Query(
+    "UPDATE queue_events SET state = 'PENDING', updatedAtEpochMs = :nowMs " +
+      "WHERE state = 'SENDING' AND updatedAtEpochMs < :staleBeforeEpochMs"
+  )
+  suspend fun reconcileStaleSending(staleBeforeEpochMs: Long, nowMs: Long): Int
+
   @Query(
     "UPDATE queue_events SET " +
       "state = CASE WHEN :permanentFailure = 1 THEN 'QUARANTINED' ELSE 'FAILED' END, " +
@@ -50,6 +68,32 @@ interface QueueDao {
     nextAttemptAtMs: Long,
     permanentFailure: Int,
     nowMs: Long
+  )
+
+  /**
+   * Record a batch-level failure without bumping per-event attempts. Used when the whole
+   * batch fails for reasons outside the individual event (network transient, auth error,
+   * schema-level permanent). Without this, a single 30-minute outage processed as 50-event
+   * batches would march every event to `maxAttemptsPerEvent` and quarantine the fleet's
+   * backlog despite nothing being wrong with the events.
+   *
+   * Still sets state=FAILED and records the error + next-attempt gate so the event is
+   * eligible again after backoff.
+   * @since 1.2.0
+   */
+  @Query(
+    "UPDATE queue_events SET " +
+      "state = 'FAILED', " +
+      "lastError = :error, " +
+      "nextAttemptAtEpochMs = :nextAttemptAtMs, " +
+      "updatedAtEpochMs = :nowMs " +
+      "WHERE id = :id"
+  )
+  suspend fun markBatchFailureNoAttemptBump(
+    id: String,
+    error: String,
+    nextAttemptAtMs: Long,
+    nowMs: Long,
   )
 
   @Query("DELETE FROM queue_events WHERE id = :id")

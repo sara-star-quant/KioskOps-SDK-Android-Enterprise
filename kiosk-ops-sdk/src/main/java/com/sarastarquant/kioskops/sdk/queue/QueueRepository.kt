@@ -188,8 +188,29 @@ class QueueRepository(
 
   suspend fun markSending(id: String) = dao.markSending(id, System.currentTimeMillis())
 
+  /**
+   * Reset SENDING rows older than [staleBeforeEpochMs] back to PENDING. Called on SDK init
+   * so crash-abandoned events don't rot forever. Returns number of rows rescued.
+   * @since 1.2.0
+   */
+  suspend fun reconcileStaleSending(staleBeforeEpochMs: Long): Int {
+    val reset = dao.reconcileStaleSending(staleBeforeEpochMs, System.currentTimeMillis())
+    if (reset > 0) {
+      logs.w("Queue", "Reset $reset stale SENDING rows to PENDING on init")
+    }
+    return reset
+  }
+
   suspend fun markFailed(id: String, err: String, nextAttemptAtMs: Long, permanentFailure: Int, quarantineReason: String? = null) =
     dao.markFailed(id, err, quarantineReason, nextAttemptAtMs, permanentFailure, System.currentTimeMillis())
+
+  /**
+   * Record a batch-level failure for an event without incrementing its attempts counter.
+   * See [QueueDao.markBatchFailureNoAttemptBump].
+   * @since 1.2.0
+   */
+  suspend fun markBatchFailureNoAttemptBump(id: String, err: String, nextAttemptAtMs: Long) =
+    dao.markBatchFailureNoAttemptBump(id, err, nextAttemptAtMs, System.currentTimeMillis())
 
   suspend fun markSent(id: String) = dao.markSent(id, System.currentTimeMillis())
 
