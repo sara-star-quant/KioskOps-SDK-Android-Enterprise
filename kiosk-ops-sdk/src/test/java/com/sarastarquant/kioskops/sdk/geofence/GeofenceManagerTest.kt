@@ -649,7 +649,7 @@ class GeofenceManagerTest {
     manager.removeTransitionListener(listener)
     manager.handleTransition("region-b", TransitionType.ENTER)
 
-    // Should still be 1 -- region-b notification was not delivered
+    // Should still be 1: region-b notification was not delivered
     assertThat(enteredRegions).hasSize(1)
   }
 
@@ -718,7 +718,7 @@ class GeofenceManagerTest {
       manager.handleTransition("r2", TransitionType.ENTER)
       assertThat(manager.getCurrentProfileName()).isEqualTo("shared-profile")
 
-      // Exit highest priority -- r1 still active with same profile
+      // Exit highest priority: r1 still active with same profile
       manager.handleTransition("r2", TransitionType.EXIT)
       assertThat(manager.getCurrentProfileName()).isEqualTo("shared-profile")
       assertThat(manager.getActiveRegionIds()).containsExactly("r1")

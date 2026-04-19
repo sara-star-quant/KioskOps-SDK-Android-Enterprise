@@ -34,7 +34,7 @@ class CertificatePinningHostMatchTest {
   }
 
   // ---------------------------------------------------------------------------
-  // hasPinsForHost / matchesHostname -- tested indirectly through intercept()
+  // hasPinsForHost / matchesHostname: tested indirectly through intercept()
   // ---------------------------------------------------------------------------
 
   @Test
@@ -60,7 +60,7 @@ class CertificatePinningHostMatchTest {
   fun `wildcard hostname match triggers pin validation for single-level subdomain`() {
     server.enqueue(MockResponse.Builder().code(200).body("ok").build())
 
-    // Pin *.localhost -- if the server hostname is "api.localhost", it should match
+    // Pin *.localhost: if the server hostname is "api.localhost", it should match
     // In practice, we test this by pinning *.example.com and requesting a
     // non-pinned host to show passthrough vs pinned behavior
     val interceptor = CertificatePinningInterceptor(
@@ -99,7 +99,7 @@ class CertificatePinningHostMatchTest {
   }
 
   // ---------------------------------------------------------------------------
-  // matchesHostname -- wildcard edge cases via fromPolicy + intercept behavior
+  // matchesHostname: wildcard edge cases via fromPolicy + intercept behavior
   // ---------------------------------------------------------------------------
 
   @Test
@@ -148,14 +148,14 @@ class CertificatePinningHostMatchTest {
   }
 
   // ---------------------------------------------------------------------------
-  // matchesHostname -- unit-level via dedicated interceptors
+  // matchesHostname: unit-level via dedicated interceptors
   // ---------------------------------------------------------------------------
 
   @Test
   fun `matchesHostname exact match verified via pin failure`() {
     server.enqueue(MockResponse.Builder().code(200).body("ok").build())
 
-    // Exact-match "localhost" -- should trigger pin check and fail
+    // Exact-match "localhost": should trigger pin check and fail
     val interceptor = CertificatePinningInterceptor(
       pins = listOf(
         CertificatePin("localhost", listOf("sha256/ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ="))
@@ -174,7 +174,7 @@ class CertificatePinningHostMatchTest {
     server.enqueue(MockResponse.Builder().code(200).body("ok").build())
 
     // "example.com" should NOT match "api.example.com"
-    // Use a host that is exactly "example.com" -- since server is localhost,
+    // Use a host that is exactly "example.com": since server is localhost,
     // localhost won't match example.com and will pass through.
     val interceptor = CertificatePinningInterceptor(
       pins = listOf(
@@ -190,7 +190,7 @@ class CertificatePinningHostMatchTest {
   }
 
   // ---------------------------------------------------------------------------
-  // hasPinsForHost -- wildcard matching edge cases via constructor + intercept
+  // hasPinsForHost: wildcard matching edge cases via constructor + intercept
   // ---------------------------------------------------------------------------
 
   @Test
@@ -206,7 +206,7 @@ class CertificatePinningHostMatchTest {
     )
     val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
 
-    // "localhost" does not match "*.localhost" -- should pass through
+    // "localhost" does not match "*.localhost": should pass through
     val response = client.newCall(
       Request.Builder().url(server.url("/wildcard-bare")).build()
     ).execute()

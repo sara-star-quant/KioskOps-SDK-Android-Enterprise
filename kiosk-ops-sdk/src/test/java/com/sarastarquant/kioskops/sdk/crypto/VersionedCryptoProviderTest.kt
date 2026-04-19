@@ -74,7 +74,7 @@ class VersionedCryptoProviderTest {
   }
 
   // ---------------------------------------------------------------------------
-  // shouldRotate -- policy-driven, does not touch Keystore
+  // shouldRotate: policy-driven, does not touch Keystore
   // ---------------------------------------------------------------------------
 
   @Test
@@ -176,7 +176,7 @@ class VersionedCryptoProviderTest {
   }
 
   // ---------------------------------------------------------------------------
-  // rotateKey -- Keystore operations will fail, but policy guard is testable
+  // rotateKey: Keystore operations will fail, but policy guard is testable
   // ---------------------------------------------------------------------------
 
   @Test
@@ -264,7 +264,7 @@ class VersionedCryptoProviderTest {
   }
 
   // ---------------------------------------------------------------------------
-  // decrypt -- blob validation (rejects malformed blobs before Keystore call)
+  // decrypt: blob validation (rejects malformed blobs before Keystore call)
   // ---------------------------------------------------------------------------
 
   @Test(expected = IllegalArgumentException::class)
@@ -319,7 +319,7 @@ class VersionedCryptoProviderTest {
     try {
       provider.decrypt(blob)
       // If we get here without exception, the Robolectric AndroidKeyStore
-      // shadow loaded -- that is acceptable but uncommon
+      // shadow loaded: that is acceptable but uncommon
     } catch (e: IllegalStateException) {
       assertThat(e.message).contains("not available")
     } catch (_: Exception) {
@@ -328,7 +328,7 @@ class VersionedCryptoProviderTest {
   }
 
   // ---------------------------------------------------------------------------
-  // encrypt -- header validation (Keystore will fail, but we verify the attempt)
+  // encrypt: header validation (Keystore will fail, but we verify the attempt)
   // ---------------------------------------------------------------------------
 
   @Test
@@ -338,12 +338,12 @@ class VersionedCryptoProviderTest {
       provider.encrypt("hello".toByteArray())
       // Unlikely to succeed without AndroidKeyStore
     } catch (_: Exception) {
-      // Expected -- AndroidKeyStore not available in Robolectric
+      // Expected: AndroidKeyStore not available in Robolectric
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Blob format -- software implementation for round-trip testing
+  // Blob format: software implementation for round-trip testing
   // ---------------------------------------------------------------------------
 
   @Test

@@ -58,7 +58,7 @@ class AuditTrailExtendedTest {
     )
   }
 
-  // -- record() stores event with correct fields --
+  // record() stores event with correct fields --
 
   @Test
   fun `record stores event with correct name and timestamp`() {
@@ -89,7 +89,7 @@ class AuditTrailExtendedTest {
     assertThat(event.fields).hasSize(2)
   }
 
-  // -- Hash chain linking --
+  // Hash chain linking --
 
   @Test
   fun `first record uses GENESIS as prevHash`() {
@@ -137,7 +137,7 @@ class AuditTrailExtendedTest {
     assertThat(event.hash).isEqualTo(expectedHash)
   }
 
-  // -- record() with empty name --
+  // record() with empty name --
 
   @Test
   fun `record with empty name stores event with empty name field`() {
@@ -150,7 +150,7 @@ class AuditTrailExtendedTest {
     assertThat(event.name).isEmpty()
   }
 
-  // -- File-based day-slicing --
+  // File-based day-slicing --
 
   @Test
   fun `events on different days produce separate files`() {
@@ -192,7 +192,7 @@ class AuditTrailExtendedTest {
     assertThat(files[0].name).doesNotContain(".enc")
   }
 
-  // -- Retention enforcement --
+  // Retention enforcement --
 
   @Test
   fun `purgeOldFiles deletes files older than retention window`() {
@@ -284,7 +284,7 @@ class AuditTrailExtendedTest {
     assertThat(remaining[0].name).contains("2026-03-16")
   }
 
-  // -- Concurrent writes --
+  // Concurrent writes --
 
   @Test
   fun `concurrent writes do not corrupt state`() {
@@ -316,7 +316,7 @@ class AuditTrailExtendedTest {
     assertThat(totalLines).isEqualTo(threadCount * eventsPerThread)
   }
 
-  // -- listFiles ordering --
+  // listFiles ordering --
 
   @Test
   fun `listFiles returns files sorted by name`() {
@@ -358,7 +358,7 @@ class AuditTrailExtendedTest {
     assertThat(files).isEmpty()
   }
 
-  // -- Multiple records chain integrity --
+  // Multiple records chain integrity --
 
   @Test
   fun `chain of five records has correct linkage`() {

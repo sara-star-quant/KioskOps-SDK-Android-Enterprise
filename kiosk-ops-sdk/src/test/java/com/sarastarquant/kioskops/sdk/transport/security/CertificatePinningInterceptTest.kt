@@ -36,7 +36,7 @@ class CertificatePinningInterceptTest {
   }
 
   // ---------------------------------------------------------------------------
-  // intercept() -- unpinned host passthrough (hasPinsForHost returns false)
+  // intercept(): unpinned host passthrough (hasPinsForHost returns false)
   // ---------------------------------------------------------------------------
 
   @Test
@@ -75,7 +75,7 @@ class CertificatePinningInterceptTest {
   }
 
   // ---------------------------------------------------------------------------
-  // intercept() -- pin validation failure invokes callback and throws
+  // intercept(): pin validation failure invokes callback and throws
   // ---------------------------------------------------------------------------
 
   @Test
@@ -102,7 +102,7 @@ class CertificatePinningInterceptTest {
         Request.Builder().url(server.url("/pinned")).build()
       ).execute()
     } catch (_: Exception) {
-      // Expected -- pin mismatch
+      // Expected: pin mismatch
     }
 
     assertThat(callbackHostname).isEqualTo("localhost")
@@ -178,14 +178,14 @@ class CertificatePinningInterceptTest {
   }
 
   // ---------------------------------------------------------------------------
-  // intercept() -- pin format normalization exercised via real request
+  // intercept(): pin format normalization exercised via real request
   // ---------------------------------------------------------------------------
 
   @Test
   fun `intercept with pin missing sha256 prefix still validates`() {
     server.enqueue(MockResponse.Builder().code(200).body("ok").build())
 
-    // Pin without sha256/ prefix -- buildPinner should add it
+    // Pin without sha256/ prefix: buildPinner should add it
     val interceptor = CertificatePinningInterceptor(
       pins = listOf(
         CertificatePin("localhost", listOf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="))
@@ -206,7 +206,7 @@ class CertificatePinningInterceptTest {
   }
 
   // ---------------------------------------------------------------------------
-  // intercept() -- successful request passthrough when no pins for host
+  // intercept(): successful request passthrough when no pins for host
   // ---------------------------------------------------------------------------
 
   @Test
@@ -272,7 +272,7 @@ class CertificatePinningInterceptTest {
   }
 
   // ---------------------------------------------------------------------------
-  // intercept() -- multiple pins per host, multiple hosts
+  // intercept(): multiple pins per host, multiple hosts
   // ---------------------------------------------------------------------------
 
   @Test
@@ -319,7 +319,7 @@ class CertificatePinningInterceptTest {
   }
 
   // ---------------------------------------------------------------------------
-  // intercept() -- callback details
+  // intercept(): callback details
   // ---------------------------------------------------------------------------
 
   @Test
@@ -373,7 +373,7 @@ class CertificatePinningInterceptTest {
   }
 
   // ---------------------------------------------------------------------------
-  // intercept() -- request method variations
+  // intercept(): request method variations
   // ---------------------------------------------------------------------------
 
   @Test
@@ -438,7 +438,7 @@ class CertificatePinningInterceptTest {
     )
     val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
 
-    // Both pins are normalized but neither matches the real cert -- should fail
+    // Both pins are normalized but neither matches the real cert: should fail
     val thrown = assertThrows(Exception::class.java) {
       client.newCall(Request.Builder().url(server.url("/mixed")).build()).execute()
     }
