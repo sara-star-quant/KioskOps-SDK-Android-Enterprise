@@ -98,7 +98,7 @@ remain the host organization's responsibility.
 
 ## Related docs
 
-- [HARDENING](HARDENING.md) -- operational hardening checklist for production.
-- [VULNERABILITY_RESPONSE](VULNERABILITY_RESPONSE.md) -- disclosure and remediation SLA.
-- [SECURITY_COMPLIANCE](SECURITY_COMPLIANCE.md) -- feature-by-framework crosswalk.
-- [TROUBLESHOOTING](TROUBLESHOOTING.md) -- operator runbook for common symptoms.
+- [HARDENING](HARDENING.md): operational hardening checklist for production.
+- [VULNERABILITY_RESPONSE](VULNERABILITY_RESPONSE.md): disclosure and remediation SLA.
+- [SECURITY_COMPLIANCE](SECURITY_COMPLIANCE.md): feature-by-framework crosswalk.
+- [TROUBLESHOOTING](TROUBLESHOOTING.md): operator runbook for common symptoms.

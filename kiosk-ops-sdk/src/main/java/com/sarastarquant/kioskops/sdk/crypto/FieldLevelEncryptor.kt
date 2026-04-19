@@ -14,7 +14,7 @@ import java.util.Base64
 
 /**
  * Thrown when field-level encryption or decryption fails. Callers MUST NOT forward
- * the original plaintext when this is raised — doing so defeats the purpose of
+ * the original plaintext when this is raised; doing so defeats the purpose of
  * field-level encryption. Instead, reject the event or surface the failure to an
  * error listener.
  *
