@@ -16,7 +16,7 @@ import javax.net.ssl.X509TrustManager
 
 /**
  * Thrown when mTLS configuration fails. The SDK does NOT silently downgrade to
- * unauthenticated TLS — callers that intend mTLS will see this exception and can
+ * unauthenticated TLS; callers that intend mTLS will see this exception and can
  * decide whether to retry, surface to an operator, or proceed explicitly.
  *
  * @since 1.1.0
