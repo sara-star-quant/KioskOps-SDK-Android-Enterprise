@@ -89,4 +89,19 @@ class KioskOpsSdkInitTest {
     KioskOpsSdk.init(ctx, configProvider = { testConfig }, cryptoProviderOverride = NoopCryptoProvider)
     assertThat(KioskOpsSdk.SDK_VERSION).isNotEmpty()
   }
+
+  @Test
+  fun `shutdown records teardown audit before cancelling scope`() = kotlinx.coroutines.test.runTest {
+    val sdk = KioskOpsSdk.init(ctx, configProvider = { testConfig }, cryptoProviderOverride = NoopCryptoProvider)
+    val before = sdk.getAuditStatistics().totalEvents
+    sdk.shutdown()
+
+    // Re-init onto the same persistent audit DB. The sdk_shutdown record from the previous
+    // instance must be present; before the ordering fix it was dropped because sdkJob was
+    // cancelled first.
+    val sdk2 = KioskOpsSdk.init(ctx, configProvider = { testConfig }, cryptoProviderOverride = NoopCryptoProvider)
+    val after = sdk2.getAuditStatistics().totalEvents
+    // after includes: before + sdk_shutdown + sdk_initialized (from re-init).
+    assertThat(after).isAtLeast(before + 2L)
+  }
 }
