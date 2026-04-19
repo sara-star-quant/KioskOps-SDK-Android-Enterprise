@@ -18,6 +18,7 @@ import com.sarastarquant.kioskops.sdk.compliance.SecurityPolicy
 import com.sarastarquant.kioskops.sdk.crypto.NoopCryptoProvider
 import com.sarastarquant.kioskops.sdk.pii.DataClassificationPolicy
 import com.sarastarquant.kioskops.sdk.pii.PiiPolicy
+import com.sarastarquant.kioskops.sdk.util.InstallSecret
 import com.sarastarquant.kioskops.sdk.validation.ValidationPolicy
 import org.junit.After
 import org.junit.Before
@@ -45,11 +46,15 @@ abstract class PipelineTestBase {
         .setMinimumLoggingLevel(android.util.Log.DEBUG)
         .build(),
     )
+    // Robolectric has no AndroidKeyStore; inject a fixed secret so deterministic
+    // idempotency tests can run without Keystore.
+    InstallSecret.testSecretOverride = ByteArray(32) { it.toByte() }
   }
 
   @After
   open fun tearDown() {
     KioskOpsSdk.resetForTesting()
+    InstallSecret.testSecretOverride = null
   }
 
   protected fun initSdk(config: KioskOpsConfig): KioskOpsSdk {

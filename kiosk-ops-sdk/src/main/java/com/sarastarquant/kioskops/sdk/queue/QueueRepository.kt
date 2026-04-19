@@ -140,7 +140,11 @@ class QueueRepository(
       val icfg = cfg.idempotencyConfig
       if (icfg.deterministicEnabled && !stableEventId.isNullOrBlank()) {
         val secret = InstallSecret.getOrCreate(appContext)
-        Idempotency.compute(secret = secret, type = type, stableEventId = stableEventId, nowMs = now, cfg = icfg)
+        try {
+          Idempotency.compute(secret = secret, type = type, stableEventId = stableEventId, nowMs = now, cfg = icfg)
+        } finally {
+          InstallSecret.zeroize(secret)
+        }
       } else {
         Ids.uuid()
       }
