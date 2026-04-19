@@ -1143,45 +1143,88 @@ class KioskOpsSdk private constructor(
   /**
    * Build OkHttpClient with transport security features.
    *
-   * Applies certificate pinning, mTLS, and CT validation based on
-   * the transport security policy from the initial config.
+   * Pins run during the TLS handshake via OkHttp's native [okhttp3.CertificatePinner], so a
+   * misconfigured or rogue certificate fails the connection before any request body is
+   * transmitted. Full SCT verification is delegated to appmattus/certificatetransparency,
+   * which checks SCT signatures against IANA-approved CT logs (not just presence). Both
+   * failures surface through an [okhttp3.EventListener] so the host-provided error listener
+   * and the audit trail see the event without running our own extra interceptor.
+   *
+   * mTLS is applied last so its SSLSocketFactory sees all previous builder mutations.
    */
   private fun buildSecureHttpClient(): OkHttpClient {
     val snapshot = cfg()
     val policy = snapshot.transportSecurityPolicy
     val syncPolicy = snapshot.syncPolicy
 
-    var client = OkHttpClient.Builder()
+    val builder = OkHttpClient.Builder()
       .connectTimeout(syncPolicy.connectTimeoutSeconds, TimeUnit.SECONDS)
       .readTimeout(syncPolicy.readTimeoutSeconds, TimeUnit.SECONDS)
       .writeTimeout(syncPolicy.writeTimeoutSeconds, TimeUnit.SECONDS)
       .callTimeout(syncPolicy.callTimeoutSeconds, TimeUnit.SECONDS)
-      .build()
 
-    // Apply certificate pinning interceptor
-    CertificatePinningInterceptor.fromPolicy(policy) { hostname, reason ->
-      logs.w("TransportSecurity", "Certificate pinning failed for $hostname: $reason")
-      audit.record("certificate_pin_failure", mapOf("hostname" to hostname, "reason" to reason))
-    }?.let { interceptor ->
-      client = client.newBuilder()
-        .addInterceptor(interceptor)
-        .build()
+    if (policy.certificatePins.isNotEmpty()) {
+      builder.certificatePinner(buildCertificatePinner(policy))
+      builder.eventListenerFactory(buildPinFailureEventListenerFactory())
     }
 
-    // Apply Certificate Transparency validation
-    CertificateTransparencyValidator.fromPolicy(policy) { hostname, reason ->
-      logs.w("TransportSecurity", "CT validation failed for $hostname: $reason")
-      audit.record("certificate_transparency_failure", mapOf("hostname" to hostname, "reason" to reason))
-    }?.let { validator ->
-      client = client.newBuilder()
-        .addInterceptor(validator)
-        .build()
+    if (policy.certificateTransparencyEnabled) {
+      builder.addNetworkInterceptor(
+        com.appmattus.certificatetransparency.certificateTransparencyInterceptor {
+          logger = object : com.appmattus.certificatetransparency.CTLogger {
+            override fun log(host: String, result: com.appmattus.certificatetransparency.VerificationResult) {
+              if (result is com.appmattus.certificatetransparency.VerificationResult.Failure) {
+                val reason = result::class.java.simpleName
+                logs.w("TransportSecurity", "CT verification failed for $host: $reason")
+                audit.record(
+                  "certificate_transparency_failure",
+                  mapOf("hostname" to host, "reason" to reason),
+                )
+              }
+            }
+          }
+        }
+      )
     }
 
-    // Apply mTLS configuration
-    client = MtlsClientBuilder.fromPolicy(client, policy)
+    return MtlsClientBuilder.fromPolicy(builder.build(), policy)
+  }
 
-    return client
+  private fun buildCertificatePinner(
+    policy: com.sarastarquant.kioskops.sdk.transport.security.TransportSecurityPolicy,
+  ): okhttp3.CertificatePinner {
+    val pinnerBuilder = okhttp3.CertificatePinner.Builder()
+    for (pin in policy.certificatePins) {
+      for (sha256 in pin.sha256Pins) {
+        val formatted = if (sha256.startsWith("sha256/")) sha256 else "sha256/$sha256"
+        pinnerBuilder.add(pin.hostname, formatted)
+      }
+    }
+    return pinnerBuilder.build()
+  }
+
+  private fun buildPinFailureEventListenerFactory(): okhttp3.EventListener.Factory {
+    return okhttp3.EventListener.Factory { _ ->
+      object : okhttp3.EventListener() {
+        override fun connectFailed(
+          call: okhttp3.Call,
+          inetSocketAddress: java.net.InetSocketAddress,
+          proxy: java.net.Proxy,
+          protocol: okhttp3.Protocol?,
+          ioe: java.io.IOException,
+        ) {
+          if (ioe is javax.net.ssl.SSLPeerUnverifiedException) {
+            val host = call.request().url.host
+            val reason = ioe.message ?: ioe::class.java.simpleName
+            logs.w("TransportSecurity", "Certificate pinning failed for $host: $reason")
+            audit.record(
+              "certificate_pin_failure",
+              mapOf("hostname" to host, "reason" to reason),
+            )
+          }
+        }
+      }
+    }
   }
 
   companion object {

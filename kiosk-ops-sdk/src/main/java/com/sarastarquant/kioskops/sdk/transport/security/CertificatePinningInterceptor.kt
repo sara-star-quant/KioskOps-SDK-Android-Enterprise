@@ -14,18 +14,26 @@ import javax.net.ssl.SSLPeerUnverifiedException
 /**
  * OkHttp interceptor for certificate pinning validation.
  *
- * This interceptor validates server certificates against configured pins
- * and emits audit events on pin validation failures.
+ * Deprecated in 1.2.0: pin validation here runs after the TLS handshake and body exchange,
+ * so a misconfigured or rogue certificate can observe the request body before the
+ * interceptor rejects the response. The SDK wires [okhttp3.CertificatePinner] directly on
+ * the [okhttp3.OkHttpClient.Builder] instead, which fails the handshake itself. The
+ * host-provided error listener and audit trail still see the failure via an
+ * [okhttp3.EventListener] installed on the SDK-built client; callers using the SDK's
+ * HTTP stack get this behavior for free from [TransportSecurityPolicy.certificatePins].
  *
- * Certificate pinning provides defense-in-depth against:
- * - Compromised Certificate Authorities
- * - Man-in-the-middle attacks with forged certificates
- * - SSL inspection proxies (when not desired)
+ * Retained for source compatibility; scheduled for removal in 1.4.0.
  *
  * @property pins List of certificate pins per hostname.
  * @property onPinValidationFailure Callback invoked when pin validation fails.
  *           Receives hostname and exception details for audit logging.
  */
+@Deprecated(
+  message = "Pin validation here runs post-handshake; use okhttp3.CertificatePinner on " +
+    "OkHttpClient.Builder and observe failures via EventListener instead. The SDK wires " +
+    "this automatically when TransportSecurityPolicy.certificatePins is non-empty.",
+  level = DeprecationLevel.WARNING,
+)
 class CertificatePinningInterceptor(
   private val pins: List<CertificatePin>,
   private val onPinValidationFailure: ((String, String) -> Unit)? = null,
