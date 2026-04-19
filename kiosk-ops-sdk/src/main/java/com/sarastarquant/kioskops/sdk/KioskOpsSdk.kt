@@ -1145,13 +1145,17 @@ class KioskOpsSdk private constructor(
    *
    * Pins run during the TLS handshake via OkHttp's native [okhttp3.CertificatePinner], so a
    * misconfigured or rogue certificate fails the connection before any request body is
-   * transmitted. Full SCT verification is delegated to appmattus/certificatetransparency,
-   * which checks SCT signatures against IANA-approved CT logs (not just presence). Both
-   * failures surface through an [okhttp3.EventListener] so the host-provided error listener
-   * and the audit trail see the event without running our own extra interceptor.
+   * transmitted. Pin failures surface through an [okhttp3.EventListener] into the audit
+   * trail and the host error listener.
+   *
+   * Certificate Transparency uses [CertificateTransparencyValidator]'s SCT-presence check
+   * for now. Full SCT verification (signature + inclusion proof + IANA log-list integration
+   * per RFC 6962) is tracked for v1.3; see ROADMAP.md. The placeholder is still safer than
+   * disabling CT entirely: a certificate without any SCT extension is rejected.
    *
    * mTLS is applied last so its SSLSocketFactory sees all previous builder mutations.
    */
+  @Suppress("DEPRECATION")
   private fun buildSecureHttpClient(): OkHttpClient {
     val snapshot = cfg()
     val policy = snapshot.transportSecurityPolicy
@@ -1168,23 +1172,11 @@ class KioskOpsSdk private constructor(
       builder.eventListenerFactory(buildPinFailureEventListenerFactory())
     }
 
-    if (policy.certificateTransparencyEnabled) {
-      builder.addNetworkInterceptor(
-        com.appmattus.certificatetransparency.certificateTransparencyInterceptor {
-          logger = object : com.appmattus.certificatetransparency.CTLogger {
-            override fun log(host: String, result: com.appmattus.certificatetransparency.VerificationResult) {
-              if (result is com.appmattus.certificatetransparency.VerificationResult.Failure) {
-                val reason = result::class.java.simpleName
-                logs.w("TransportSecurity", "CT verification failed for $host: $reason")
-                audit.record(
-                  "certificate_transparency_failure",
-                  mapOf("hostname" to host, "reason" to reason),
-                )
-              }
-            }
-          }
-        }
-      )
+    CertificateTransparencyValidator.fromPolicy(policy) { hostname, reason ->
+      logs.w("TransportSecurity", "CT validation failed for $hostname: $reason")
+      audit.record("certificate_transparency_failure", mapOf("hostname" to hostname, "reason" to reason))
+    }?.let { validator ->
+      builder.addInterceptor(validator)
     }
 
     return MtlsClientBuilder.fromPolicy(builder.build(), policy)
