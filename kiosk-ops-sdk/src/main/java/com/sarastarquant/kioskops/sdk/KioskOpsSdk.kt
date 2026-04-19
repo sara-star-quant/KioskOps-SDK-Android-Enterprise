@@ -213,10 +213,17 @@ class KioskOpsSdk private constructor(
   }
 
   private fun notifyError(error: KioskOpsError) {
+    @Suppress("TooGenericExceptionCaught")
     try {
       errorListener?.onError(error)
-    } catch (_: Throwable) {
-      // Listener must not crash the SDK
+    } catch (t: Throwable) {
+      // Listener must not crash the SDK. Surface the listener-side bug at warn level so
+      // host-app teams can notice their handler is failing; before 1.2 we swallowed
+      // silently and the listener misbehavior was invisible.
+      logs.w(
+        "SDK",
+        "KioskOpsErrorListener threw: ${t::class.java.simpleName}: ${t.message ?: "no message"}",
+      )
     }
   }
 
@@ -825,6 +832,7 @@ class KioskOpsSdk private constructor(
    * @param experimentId Unique experiment identifier.
    * @param variants List of variant names.
    * @return Assigned variant name.
+   * **Threading**: Main-safe. No IO; pure deterministic assignment.
    * @since 0.3.0
    */
   fun getAbTestVariant(experimentId: String, variants: List<String>): String =
@@ -861,6 +869,7 @@ class KioskOpsSdk private constructor(
    * Get remaining remote diagnostics triggers allowed today.
    *
    * @return Number of triggers remaining.
+   * **Threading**: Main-safe. In-memory counter read; no IO.
    * @since 0.3.0
    */
   fun getRemainingDiagnosticsTriggersToday(): Int =
@@ -869,6 +878,9 @@ class KioskOpsSdk private constructor(
   /**
    * Schedules periodic heartbeat work.
    * The worker intentionally does NOT upload data; it only maintains local observability.
+   *
+   * **Threading**: Main-safe. Delegates to WorkManager.enqueueUniquePeriodicWork which
+   * hands off to the WorkManager scheduler thread.
    */
   fun applySchedulingFromConfig() {
     val cfg = cfg()
@@ -960,6 +972,7 @@ class KioskOpsSdk private constructor(
    * relied on the ticker as a refresh cue should drive their own ticker and combine.
    *
    * @param intervalMs Ignored since 1.2.0; retained for source/binary compatibility.
+   * **Threading**: Main-safe. Collection dispatches Room IO on the collector's context.
    * @since 0.8.0
    */
   @Suppress("UNUSED_PARAMETER")
@@ -975,6 +988,8 @@ class KioskOpsSdk private constructor(
    * DB-reactive arm ensures queue-depth UI updates are immediate.
    *
    * @param intervalMs Fallback tick interval in milliseconds. Default 10000ms.
+   * **Threading**: Main-safe. Each emission runs [healthCheck] which dispatches IO
+   * internally; the ticker runs on the collector's context.
    * @since 0.8.0
    */
   fun healthStatusFlow(intervalMs: Long = 10000L): kotlinx.coroutines.flow.Flow<HealthCheckResult> {
@@ -997,6 +1012,8 @@ class KioskOpsSdk private constructor(
    * [RemoteConfigManager]. Useful for reacting to config changes in the UI
    * or triggering downstream operations.
    *
+   * **Threading**: Main-safe. Backed by a `MutableSharedFlow` with `DROP_OLDEST`
+   * overflow since 1.2.0, so a slow collector cannot back-pressure the applier.
    * @since 0.9.0
    */
   fun configUpdateFlow(): kotlinx.coroutines.flow.Flow<com.sarastarquant.kioskops.sdk.fleet.config.ConfigUpdateEvent> =
@@ -1019,6 +1036,8 @@ class KioskOpsSdk private constructor(
    * scope, so the teardown entry actually reaches the audit trail. After cancellation, the
    * SDK instance is no longer usable; call [init] to create a new instance.
    *
+   * **Threading**: Main-safe. Final record/emit run under `NonCancellable` on the SDK's
+   * IO scope; this suspends until those writes complete, then cancels the scope.
    * @since 0.8.0
    */
   suspend fun shutdown() {
