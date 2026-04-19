@@ -414,7 +414,7 @@ earned after 1.2. Deferred from the original v1.2 scope.
   with backport automation
 
 ### Platform
-- [ ] AGP 9.x evaluation -- brings Bouncy Castle 1.84+ and closes the
+- [ ] AGP 9.x evaluation. Brings Bouncy Castle 1.84+ and closes the
   remaining build-classpath CVE exposure root cause
 
 ### Security

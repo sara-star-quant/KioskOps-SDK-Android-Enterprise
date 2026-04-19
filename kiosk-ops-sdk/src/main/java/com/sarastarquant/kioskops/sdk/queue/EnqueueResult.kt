@@ -26,7 +26,7 @@ sealed class EnqueueResult {
     data class AnomalyRejected(val score: Float, val reasons: List<String>) : Rejected()
     /**
      * Field-level encryption was required but failed (Keystore unavailable,
-     * hardware fault, or corrupt key). Event NOT enqueued — plaintext PII is
+     * hardware fault, or corrupt key). Event NOT enqueued; plaintext PII is
      * never forwarded when this occurs.
      * @since 1.1.0
      */
