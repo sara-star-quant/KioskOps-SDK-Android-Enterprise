@@ -111,4 +111,49 @@ class SecureKeyDerivationTest {
     val result = derivation.deriveKey("password")
     assertThat(result.key.algorithm).isEqualTo("AES")
   }
+
+  @Test
+  fun `HKDF matches RFC 5869 test vector 1 SHA-256`() {
+    // RFC 5869 Appendix A.1
+    val ikm = ByteArray(22) { 0x0b }
+    val salt = byteArrayOf(
+      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+      0x08, 0x09, 0x0a, 0x0b, 0x0c,
+    )
+    val info = byteArrayOf(
+      0xf0.toByte(), 0xf1.toByte(), 0xf2.toByte(), 0xf3.toByte(),
+      0xf4.toByte(), 0xf5.toByte(), 0xf6.toByte(), 0xf7.toByte(),
+      0xf8.toByte(), 0xf9.toByte(),
+    )
+    val expected = hexToBytes(
+      "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865"
+    )
+
+    val out = hkdfSha256(ikm, salt, info, expected.size)
+    assertThat(out).isEqualTo(expected)
+  }
+
+  @Test
+  fun `HKDF empty salt still produces deterministic output`() {
+    val ikm = "input".toByteArray()
+    val out1 = hkdfSha256(ikm, salt = ByteArray(0), info = "ctx".toByteArray(), outLen = 32)
+    val out2 = hkdfSha256(ikm, salt = ByteArray(0), info = "ctx".toByteArray(), outLen = 32)
+    assertThat(out1).isEqualTo(out2)
+    assertThat(out1).hasLength(32)
+  }
+
+  @Test
+  fun `deriveDeterministic output length matches keyLengthBits`() {
+    val input = "payload".toByteArray()
+    val salt = ByteArray(16) { it.toByte() }
+    val out = derivation.deriveDeterministic(input, "idempotency", salt)
+    assertThat(out.size * 8).isEqualTo(KeyDerivationConfig.fastForTesting().keyLengthBits)
+  }
+
+  private fun hexToBytes(hex: String): ByteArray {
+    require(hex.length % 2 == 0)
+    return ByteArray(hex.length / 2) { i ->
+      hex.substring(i * 2, i * 2 + 2).toInt(16).toByte()
+    }
+  }
 }
