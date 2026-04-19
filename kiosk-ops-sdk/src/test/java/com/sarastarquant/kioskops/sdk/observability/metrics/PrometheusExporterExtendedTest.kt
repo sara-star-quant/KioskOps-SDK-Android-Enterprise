@@ -20,7 +20,7 @@ class PrometheusExporterExtendedTest {
     exporter = PrometheusExporter(registry)
   }
 
-  // -- Counter export format --
+  // Counter export format --
 
   @Test
   fun `counter export includes TYPE and HELP lines`() {
@@ -60,7 +60,7 @@ class PrometheusExporterExtendedTest {
     assertThat(output).contains("# TYPE no_desc counter")
   }
 
-  // -- Gauge export format --
+  // Gauge export format --
 
   @Test
   fun `gauge export includes TYPE and HELP lines`() {
@@ -91,7 +91,7 @@ class PrometheusExporterExtendedTest {
     assertThat(output).contains("temperature{floor=\"2\",sensor=\"main\"} 22.5")
   }
 
-  // -- Export with labels --
+  // Export with labels --
 
   @Test
   fun `export with multiple labels sorts them alphabetically`() {
@@ -130,7 +130,7 @@ class PrometheusExporterExtendedTest {
     assertThat(output).contains("say \\\"hello\\\"")
   }
 
-  // -- Export multiple metrics --
+  // Export multiple metrics --
 
   @Test
   fun `export multiple counters`() {
@@ -181,7 +181,7 @@ class PrometheusExporterExtendedTest {
     assertThat(output).contains("http_total{method=\"POST\"} 30.0")
   }
 
-  // -- Export empty registry --
+  // Export empty registry --
 
   @Test
   fun `export empty registry returns empty string`() {
@@ -196,7 +196,7 @@ class PrometheusExporterExtendedTest {
     assertThat(output).contains("# Exported at:")
   }
 
-  // -- Sanitized metric names --
+  // Sanitized metric names --
 
   @Test
   fun `metric name with dots replaced by underscores`() {
@@ -236,7 +236,7 @@ class PrometheusExporterExtendedTest {
     assertThat(output).contains("host_name=\"server-1\"")
   }
 
-  // -- Histogram export format --
+  // Histogram export format --
 
   @Test
   fun `histogram export has cumulative bucket counts`() {
@@ -286,7 +286,7 @@ class PrometheusExporterExtendedTest {
     assertThat(output).doesNotContain("empty_hist_bucket")
   }
 
-  // -- CONTENT_TYPE constant --
+  // CONTENT_TYPE constant --
 
   @Test
   fun `CONTENT_TYPE is valid Prometheus format`() {

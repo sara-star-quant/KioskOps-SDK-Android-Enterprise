@@ -70,7 +70,7 @@ class KioskOpsSdkIntegrationTest {
     )
   }
 
-  // -- enqueue pipeline end-to-end ------------------------------------------
+  // enqueue pipeline end-to-end ------------------------------------------
 
   @Test
   fun `enqueue returns true for valid event`() = runTest {
@@ -101,7 +101,7 @@ class KioskOpsSdkIntegrationTest {
     assertThat(sdk.queueDepth()).isEqualTo(2)
   }
 
-  // -- heartbeat ------------------------------------------------------------
+  // heartbeat ------------------------------------------------------------
 
   @Test
   fun `heartbeat completes without error`() = runTest {
@@ -110,7 +110,7 @@ class KioskOpsSdkIntegrationTest {
     sdk.heartbeat("integration_test")
   }
 
-  // -- health check ---------------------------------------------------------
+  // health check ---------------------------------------------------------
 
   @Test
   fun `healthCheck returns valid HealthCheckResult`() = runTest {
@@ -133,7 +133,7 @@ class KioskOpsSdkIntegrationTest {
     assertThat(health.queueDepth).isEqualTo(1)
   }
 
-  // -- config and policy ----------------------------------------------------
+  // config and policy ----------------------------------------------------
 
   @Test
   fun `currentConfig returns the configured values`() {
@@ -164,7 +164,7 @@ class KioskOpsSdkIntegrationTest {
     assertThat(hash1).isEqualTo(hash2)
   }
 
-  // -- device posture -------------------------------------------------------
+  // device posture -------------------------------------------------------
 
   @Test
   fun `devicePosture returns non-null posture`() {
@@ -175,7 +175,7 @@ class KioskOpsSdkIntegrationTest {
     assertThat(posture.manufacturer).isNotNull()
   }
 
-  // -- error listener -------------------------------------------------------
+  // error listener -------------------------------------------------------
 
   @Test
   fun `setErrorListener receives errors on sync failure`() = runTest {
@@ -212,7 +212,7 @@ class KioskOpsSdkIntegrationTest {
     assertThat(callbackCount).isEqualTo(0)
   }
 
-  // -- quarantined events ---------------------------------------------------
+  // quarantined events ---------------------------------------------------
 
   @Test
   fun `quarantinedEvents returns list`() = runTest {
@@ -222,7 +222,7 @@ class KioskOpsSdkIntegrationTest {
     assertThat(quarantined).isEmpty()
   }
 
-  // -- enqueue pipeline with multiple events --------------------------------
+  // enqueue pipeline with multiple events --------------------------------
 
   @Test
   fun `enqueueDetailed multiple events are all Accepted`() = runTest {
@@ -248,7 +248,7 @@ class KioskOpsSdkIntegrationTest {
     assertThat(r1.idempotencyKey).isNotEqualTo(r2.idempotencyKey)
   }
 
-  // -- heartbeat updates healthCheck ----------------------------------------
+  // heartbeat updates healthCheck ----------------------------------------
 
   @Test
   fun `heartbeat reason is reflected in healthCheck`() = runTest {

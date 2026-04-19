@@ -65,7 +65,7 @@ class MtlsClientBuilderTest {
 
   /**
    * Generate a CA certificate and a leaf certificate signed by that CA.
-   * Returns (leafCert, leafKey, caCert) -- the caCert serves as an
+   * Returns (leafCert, leafKey, caCert); the caCert serves as an
    * intermediate in the chain.
    */
   @Suppress("LongMethod")
@@ -414,7 +414,7 @@ class MtlsClientBuilderTest {
   }
 
   // ---------------------------------------------------------------
-  // getDefaultTrustManager() -- tested via reflection
+  // getDefaultTrustManager(): tested via reflection
   // ---------------------------------------------------------------
 
   @Test
@@ -436,7 +436,7 @@ class MtlsClientBuilderTest {
   }
 
   // ---------------------------------------------------------------
-  // createSslContext() -- tested via reflection
+  // createSslContext(): tested via reflection
   // ---------------------------------------------------------------
 
   @Test
