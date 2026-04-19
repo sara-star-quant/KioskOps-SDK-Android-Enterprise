@@ -13,25 +13,20 @@ import java.security.cert.X509Certificate
 /**
  * SCT-presence-only check for Certificate Transparency.
  *
- * Deprecated in 1.2.0: this validator only verifies that a Signed Certificate Timestamp
- * (SCT) extension is present on the leaf certificate; it does not verify the SCT signature
- * against IANA-approved CT logs, check inclusion proofs, or compare SCT timestamps to the
- * certificate's validity window. The SDK now delegates to
- * `com.appmattus.certificatetransparency` via a network interceptor when
- * [TransportSecurityPolicy.certificateTransparencyEnabled] is on, which performs full SCT
- * verification against the IANA log list.
+ * Verifies that a Signed Certificate Timestamp (SCT) extension is present on the leaf
+ * certificate. Does NOT verify SCT signatures against IANA-approved CT logs, check
+ * inclusion proofs, or compare SCT timestamps to the certificate's validity window. Full
+ * verification per RFC 6962 is tracked for v1.3; see ROADMAP.md.
  *
- * Retained for source compatibility; scheduled for removal in 1.4.0.
+ * This partial check still raises the bar vs no CT enforcement at all: every public-trust
+ * CA has embedded SCTs since 2018, so a certificate with no SCT extension is either from a
+ * private CA (which pin validation should catch first) or a malformed issuance. A rogue
+ * certificate from a compromised public CA can still pass this presence check; a full log
+ * verification would catch that.
  *
  * @property enabled Whether CT validation is active.
  * @property onValidationFailure Callback invoked when CT validation fails.
  */
-@Deprecated(
-  message = "SCT presence-only check. Use appmattus certificateTransparencyInterceptor " +
-    "on OkHttpClient.Builder for full verification; the SDK wires this automatically when " +
-    "TransportSecurityPolicy.certificateTransparencyEnabled is true.",
-  level = DeprecationLevel.WARNING,
-)
 class CertificateTransparencyValidator(
   private val enabled: Boolean = true,
   private val onValidationFailure: ((String, String) -> Unit)? = null,
