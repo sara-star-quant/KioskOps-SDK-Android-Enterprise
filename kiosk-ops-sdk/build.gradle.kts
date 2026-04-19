@@ -123,6 +123,7 @@ dependencies {
   implementation(libs.okhttp)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.serialization.json)
+  implementation(libs.certificate.transparency.android)
 
   testImplementation(libs.junit4)
   testImplementation(libs.truth)
