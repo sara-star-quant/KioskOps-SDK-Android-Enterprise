@@ -11,17 +11,17 @@ It defaults to a **security/compliance-maximalist posture**:
 
 ## 1) Add the dependency
 
-Today this repo is a source-based integration:
+The SDK is published to Maven Central. Add it to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation(project(":kiosk-ops-sdk"))
+  implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:<latest>")
 }
 ```
 
-When publishing, recommended Maven coordinates:
-- groupId: `com.sarastarquant.kioskops`
-- artifact: `kioskops-sdk`
+See the [README Installation](../README.md#installation) section for the current
+release version, GitHub Packages coordinates, and the JitPack fallback. In-repo
+consumers (sample-app) continue to use `implementation(project(":kiosk-ops-sdk"))`.
 
 ---
 

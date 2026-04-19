@@ -166,11 +166,14 @@ class SyncEngine(
       }
 
       is TransportResult.TransientFailure -> {
+        // Batch-level transient failure is not the event's fault; do not bump per-event
+        // attempts. A long outage would otherwise march every event to maxAttemptsPerEvent
+        // and quarantine the backlog for no good reason.
         var nextBackoffMs = 0L
         for (e in batch) {
           val delay = Backoff.nextDelayMs(e.attempts)
           nextBackoffMs = maxOf(nextBackoffMs, delay)
-          queue.markFailed(e.id, res.message, nextAttemptAtMs = now + delay, permanentFailure = 0)
+          queue.markBatchFailureNoAttemptBump(e.id, res.message, nextAttemptAtMs = now + delay)
         }
 
         audit.record("sync_batch_transient_failure", mapOf("httpStatus" to (res.httpStatus?.toString() ?: "")))
@@ -189,11 +192,12 @@ class SyncEngine(
       }
 
       is TransportResult.PermanentFailure -> {
-        // Auth/config/schema errors. Do not auto-perma-fail queued events here;
-        // the operator may fix config and retry.
+        // Auth/config/schema errors: batch-level, not per-event. Do not auto-perma-fail or
+        // bump attempts; the operator may fix config and retry. Consistent with
+        // TransientFailure above.
         for (e in batch) {
           val delay = Backoff.nextDelayMs(e.attempts)
-          queue.markFailed(e.id, res.message, nextAttemptAtMs = now + delay, permanentFailure = 0)
+          queue.markBatchFailureNoAttemptBump(e.id, res.message, nextAttemptAtMs = now + delay)
         }
 
         audit.record("sync_batch_permanent_failure", mapOf("httpStatus" to (res.httpStatus?.toString() ?: "")))

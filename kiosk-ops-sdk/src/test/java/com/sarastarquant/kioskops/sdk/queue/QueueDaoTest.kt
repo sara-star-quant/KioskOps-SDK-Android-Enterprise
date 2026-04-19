@@ -212,4 +212,53 @@ class QueueDaoTest {
     dao.insert(entity(id = "e1", idempotencyKey = "shared-key"))
     dao.insert(entity(id = "e2", idempotencyKey = "shared-key"))
   }
+
+  @Test
+  fun `reconcileStaleSending resets only old SENDING rows`() = runTest {
+    // Simulate crash: three events marked SENDING at different times.
+    dao.insert(entity(id = "old1", idempotencyKey = "k-old1"))
+    dao.insert(entity(id = "old2", idempotencyKey = "k-old2"))
+    dao.insert(entity(id = "fresh", idempotencyKey = "k-fresh"))
+    dao.markSending("old1", now - 10 * 60 * 1000) // 10 min old
+    dao.markSending("old2", now - 6 * 60 * 1000) // 6 min old
+    dao.markSending("fresh", now - 30 * 1000) // 30s old
+
+    val threshold = now - 5 * 60 * 1000 // 5 minute window
+    val reset = dao.reconcileStaleSending(staleBeforeEpochMs = threshold, nowMs = now)
+    assertThat(reset).isEqualTo(2)
+
+    // Only the fresh row stays SENDING (not eligible); the two old rows are now PENDING.
+    val eligible = dao.loadNextBatch(now + 1000, 10).map { it.id }.toSet()
+    assertThat(eligible).containsExactly("old1", "old2")
+  }
+
+  @Test
+  fun `reconcileStaleSending leaves PENDING and FAILED untouched`() = runTest {
+    dao.insert(entity(id = "p1", idempotencyKey = "kp1"))
+    dao.insert(entity(id = "f1", idempotencyKey = "kf1"))
+    dao.markFailed("f1", "x", null, now + 1000, 0, now - 10 * 60 * 1000)
+
+    val reset = dao.reconcileStaleSending(staleBeforeEpochMs = now, nowMs = now)
+    assertThat(reset).isEqualTo(0)
+  }
+
+  @Test
+  fun `markBatchFailureNoAttemptBump preserves attempts counter`() = runTest {
+    dao.insert(entity())
+    // Bump attempts once via a real per-event failure so we can observe the counter later.
+    dao.markFailed("evt-1", "per_event_err", null, now + 1000, 0, now + 100)
+
+    val afterFirst = dao.loadNextBatch(now + 2000, 10).first()
+    assertThat(afterFirst.attempts).isEqualTo(1)
+
+    // Batch transient: 5 times, attempts must stay at 1.
+    repeat(5) {
+      dao.markBatchFailureNoAttemptBump("evt-1", "network_5xx", now + 1000, now + 200)
+    }
+
+    val afterBatch = dao.loadNextBatch(now + 2000, 10).first()
+    assertThat(afterBatch.attempts).isEqualTo(1)
+    assertThat(afterBatch.lastError).isEqualTo("network_5xx")
+    assertThat(afterBatch.state).isEqualTo(QueueStates.FAILED)
+  }
 }

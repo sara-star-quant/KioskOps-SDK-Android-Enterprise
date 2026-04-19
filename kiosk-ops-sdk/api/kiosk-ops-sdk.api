@@ -3832,9 +3832,11 @@ public abstract interface class com/sarastarquant/kioskops/sdk/queue/QueueDao {
 	public abstract fun insert (Lcom/sarastarquant/kioskops/sdk/queue/QueueEventEntity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun loadNextBatch (JILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun loadQuarantinedSummaries (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun markBatchFailureNoAttemptBump (Ljava/lang/String;Ljava/lang/String;JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun markFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JIJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun markSending (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun markSent (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun reconcileStaleSending (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun sumNotSentBytes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -3853,9 +3855,11 @@ public final class com/sarastarquant/kioskops/sdk/queue/QueueDao_Impl : com/sara
 	public fun insert (Lcom/sarastarquant/kioskops/sdk/queue/QueueEventEntity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun loadNextBatch (JILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun loadQuarantinedSummaries (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun markBatchFailureNoAttemptBump (Ljava/lang/String;Ljava/lang/String;JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun markFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JIJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun markSending (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun markSent (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun reconcileStaleSending (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun sumNotSentBytes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -3939,6 +3943,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QueueRepository {
 	public static synthetic fun enqueue$default (Lcom/sarastarquant/kioskops/sdk/queue/QueueRepository;Ljava/lang/String;Ljava/lang/String;Lcom/sarastarquant/kioskops/sdk/KioskOpsConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Float;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun getAnomalous (FLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun markBatchFailureNoAttemptBump (Ljava/lang/String;Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun markFailed (Ljava/lang/String;Ljava/lang/String;JILjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun markFailed$default (Lcom/sarastarquant/kioskops/sdk/queue/QueueRepository;Ljava/lang/String;Ljava/lang/String;JILjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun markSending (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -3947,6 +3952,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QueueRepository {
 	public static synthetic fun nextBatch$default (Lcom/sarastarquant/kioskops/sdk/queue/QueueRepository;JILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun quarantinedSummaries (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun quarantinedSummaries$default (Lcom/sarastarquant/kioskops/sdk/queue/QueueRepository;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun reconcileStaleSending (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/sarastarquant/kioskops/sdk/queue/QueueStates {
