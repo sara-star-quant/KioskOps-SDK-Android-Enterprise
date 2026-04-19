@@ -75,7 +75,7 @@ class DiagnosticsWorkerTest {
   }
 
   // -------------------------------------------------------------------------
-  // doWork -- SDK not initialized
+  // doWork: SDK not initialized
   // -------------------------------------------------------------------------
 
   @Test
@@ -86,7 +86,7 @@ class DiagnosticsWorkerTest {
   }
 
   // -------------------------------------------------------------------------
-  // doWork -- scheduled disabled
+  // doWork: scheduled disabled
   // -------------------------------------------------------------------------
 
   @Test
@@ -111,7 +111,7 @@ class DiagnosticsWorkerTest {
       DiagnosticsSchedulePolicy.enterpriseDefaults()
     )
 
-    // Then schedule with disabled policy -- should cancel
+    // Then schedule with disabled policy: should cancel
     DiagnosticsSchedulerWorker.schedule(
       ctx,
       DiagnosticsSchedulePolicy.disabledDefaults()
@@ -203,7 +203,7 @@ class DiagnosticsWorkerTest {
       DiagnosticsSchedulePolicy.enterpriseDefaults()
     )
 
-    // Re-schedule with weekly defaults -- should replace (UPDATE policy)
+    // Re-schedule with weekly defaults: should replace (UPDATE policy)
     DiagnosticsSchedulerWorker.schedule(
       ctx,
       DiagnosticsSchedulePolicy.weeklyDefaults()

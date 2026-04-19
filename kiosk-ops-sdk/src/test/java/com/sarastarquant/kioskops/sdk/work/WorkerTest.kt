@@ -87,7 +87,7 @@ class WorkerTest {
     initSdk()
     val worker = TestListenableWorkerBuilder<KioskOpsEventSyncWorker>(ctx).build()
     val result = worker.doWork()
-    // PermanentFailure maps to success() (no retry -- operator must fix config)
+    // PermanentFailure maps to success() (no retry: operator must fix config)
     assertThat(result).isEqualTo(ListenableWorker.Result.success())
   }
 }
