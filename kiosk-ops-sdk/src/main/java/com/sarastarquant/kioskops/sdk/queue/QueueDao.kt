@@ -102,6 +102,15 @@ interface QueueDao {
   @Query("SELECT COUNT(*) FROM queue_events WHERE state != 'SENT'")
   suspend fun countNotSent(): Long
 
+  /**
+   * Room-reactive variant of [countNotSent]. Emits a new value whenever rows matching the
+   * `state != 'SENT'` predicate are inserted, updated, or deleted. Cheaper and more
+   * responsive than polling on a timer.
+   * @since 1.2.0
+   */
+  @Query("SELECT COUNT(*) FROM queue_events WHERE state != 'SENT'")
+  fun countNotSentFlow(): kotlinx.coroutines.flow.Flow<Long>
+
   @Query("SELECT IFNULL(SUM(payloadBytes), 0) FROM queue_events WHERE state != 'SENT'")
   suspend fun sumNotSentBytes(): Long
 

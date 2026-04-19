@@ -948,38 +948,47 @@ class KioskOpsSdk private constructor(
   // ========================================================================
 
   /**
-   * Observe queue depth as a polling-based [kotlinx.coroutines.flow.Flow].
+   * Observe queue depth as a Room-reactive [kotlinx.coroutines.flow.Flow].
    *
-   * Emits the current queue depth at the specified interval. The flow completes
-   * when the collector is cancelled. Not database-reactive; polls on interval.
+   * Emits the current queue depth whenever the underlying `queue_events` table changes
+   * in a way that affects the non-SENT row count (insert, state transition, delete).
+   * Does not tick on a timer, so the flow is quiet when the queue is quiet.
    *
-   * @param intervalMs Polling interval in milliseconds. Default 5000ms.
+   * **Behavior change in 1.2.0**: previously timer-based, emitting every `intervalMs`;
+   * now emits on database change only. The [intervalMs] parameter is retained for
+   * binary compatibility with 0.8.0-1.1.x callers but is ignored. UI consumers that
+   * relied on the ticker as a refresh cue should drive their own ticker and combine.
+   *
+   * @param intervalMs Ignored since 1.2.0; retained for source/binary compatibility.
    * @since 0.8.0
    */
+  @Suppress("UNUSED_PARAMETER")
   fun queueDepthFlow(intervalMs: Long = 5000L): kotlinx.coroutines.flow.Flow<Long> =
-    kotlinx.coroutines.flow.flow {
-      while (true) {
-        emit(queueDepth())
-        kotlinx.coroutines.delay(intervalMs)
-      }
-    }
+    queue.countActiveFlow()
 
   /**
-   * Observe SDK health status as a polling-based [kotlinx.coroutines.flow.Flow].
+   * Observe SDK health status as a [kotlinx.coroutines.flow.Flow].
    *
-   * Emits a [HealthCheckResult] at the specified interval. The flow completes
-   * when the collector is cancelled. Not database-reactive; polls on interval.
+   * Emits a [HealthCheckResult] on either a queue-depth change or a fixed interval,
+   * whichever fires first. The ticker ensures that fields that are not Room-reactive
+   * (connectivity, auth state, last sync timestamp) still refresh on schedule; the
+   * DB-reactive arm ensures queue-depth UI updates are immediate.
    *
-   * @param intervalMs Polling interval in milliseconds. Default 10000ms.
+   * @param intervalMs Fallback tick interval in milliseconds. Default 10000ms.
    * @since 0.8.0
    */
-  fun healthStatusFlow(intervalMs: Long = 10000L): kotlinx.coroutines.flow.Flow<HealthCheckResult> =
-    kotlinx.coroutines.flow.flow {
+  fun healthStatusFlow(intervalMs: Long = 10000L): kotlinx.coroutines.flow.Flow<HealthCheckResult> {
+    val ticker = kotlinx.coroutines.flow.flow {
       while (true) {
-        emit(healthCheck())
+        emit(Unit)
         kotlinx.coroutines.delay(intervalMs)
       }
     }
+    return kotlinx.coroutines.flow.combine(
+      queue.countActiveFlow(),
+      ticker,
+    ) { _, _ -> healthCheck() }
+  }
 
   /**
    * Observe configuration changes as a [kotlinx.coroutines.flow.Flow].
