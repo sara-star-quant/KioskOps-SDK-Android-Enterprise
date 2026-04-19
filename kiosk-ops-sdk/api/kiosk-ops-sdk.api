@@ -1630,9 +1630,10 @@ public final class com/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsExporte
 public final class com/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy {
 	public static final field Companion Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$Companion;
 	public fun <init> ()V
-	public fun <init> (ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZ)V
-	public synthetic fun <init> (ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZJ)V
+	public synthetic fun <init> (ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
+	public final fun component10 ()J
 	public final fun component2 ()Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;
 	public final fun component3 ()I
 	public final fun component4 ()I
@@ -1641,11 +1642,12 @@ public final class com/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedul
 	public final fun component7 ()J
 	public final fun component8 ()Z
 	public final fun component9 ()Z
-	public final fun copy (ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZ)Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;
-	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;
+	public final fun copy (ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZJ)Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;ZLcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy$ScheduleType;IIZIJZZJILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/diagnostics/DiagnosticsSchedulePolicy;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoUploadEnabled ()Z
 	public final fun getIncludeExtendedPosture ()Z
+	public final fun getMaxExportBytes ()J
 	public final fun getMaxRemoteTriggersPerDay ()I
 	public final fun getRemoteTriggerCooldownMs ()J
 	public final fun getRemoteTriggerEnabled ()Z

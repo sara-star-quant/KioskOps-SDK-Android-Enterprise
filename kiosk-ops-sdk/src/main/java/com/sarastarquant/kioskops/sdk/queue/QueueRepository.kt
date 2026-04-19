@@ -12,6 +12,12 @@ import com.sarastarquant.kioskops.sdk.util.Idempotency
 import com.sarastarquant.kioskops.sdk.util.Ids
 import com.sarastarquant.kioskops.sdk.util.InstallSecret
 
+// Caps arbitrary server-returned error strings written into queue_events.lastError.
+// Server error bodies can be lorem-ipsum long or carry accidental PII; 256 characters
+// is enough for meaningful diagnostic context without letting the queue DB bloat.
+private const val MAX_LAST_ERROR_CHARS = 256
+private const val TRUNCATED_MARKER = "...[truncated]"
+
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class QueueRepository(
   context: Context,
@@ -206,7 +212,14 @@ class QueueRepository(
   }
 
   suspend fun markFailed(id: String, err: String, nextAttemptAtMs: Long, permanentFailure: Int, quarantineReason: String? = null) =
-    dao.markFailed(id, err, quarantineReason, nextAttemptAtMs, permanentFailure, System.currentTimeMillis())
+    dao.markFailed(
+      id,
+      capErrorMessage(err),
+      quarantineReason?.let { capErrorMessage(it) },
+      nextAttemptAtMs,
+      permanentFailure,
+      System.currentTimeMillis(),
+    )
 
   /**
    * Record a batch-level failure for an event without incrementing its attempts counter.
@@ -214,7 +227,12 @@ class QueueRepository(
    * @since 1.2.0
    */
   suspend fun markBatchFailureNoAttemptBump(id: String, err: String, nextAttemptAtMs: Long) =
-    dao.markBatchFailureNoAttemptBump(id, err, nextAttemptAtMs, System.currentTimeMillis())
+    dao.markBatchFailureNoAttemptBump(id, capErrorMessage(err), nextAttemptAtMs, System.currentTimeMillis())
+
+  private fun capErrorMessage(msg: String): String {
+    return if (msg.length <= MAX_LAST_ERROR_CHARS) msg
+    else msg.substring(0, MAX_LAST_ERROR_CHARS - TRUNCATED_MARKER.length) + TRUNCATED_MARKER
+  }
 
   suspend fun markSent(id: String) = dao.markSent(id, System.currentTimeMillis())
 

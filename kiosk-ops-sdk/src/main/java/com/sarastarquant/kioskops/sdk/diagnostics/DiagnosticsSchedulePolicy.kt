@@ -34,6 +34,17 @@ data class DiagnosticsSchedulePolicy(
   val remoteTriggerCooldownMs: Long = 3_600_000L,
   val autoUploadEnabled: Boolean = false,
   val includeExtendedPosture: Boolean = true,
+  /**
+   * Maximum size in bytes for the diagnostics ZIP produced by
+   * [com.sarastarquant.kioskops.sdk.KioskOpsSdk.exportDiagnostics]. On a deep backlog the
+   * export can otherwise reach hundreds of MiB, stalling the host-supplied uploader or
+   * running the device out of memory. When the cap is exceeded, later telemetry/audit/log
+   * entries are omitted and a `truncation.txt` marker entry is added to the ZIP.
+   *
+   * Default 50 MiB. Set to 0 to disable the cap.
+   * @since 1.2.0
+   */
+  val maxExportBytes: Long = 50L * 1024L * 1024L,
 ) {
   /**
    * Schedule type for diagnostics collection.
@@ -50,6 +61,7 @@ data class DiagnosticsSchedulePolicy(
     require(scheduleDayOfWeek in 1..7) { "scheduleDayOfWeek must be 1-7" }
     require(maxRemoteTriggersPerDay >= 0) { "maxRemoteTriggersPerDay must be non-negative" }
     require(remoteTriggerCooldownMs >= 0) { "remoteTriggerCooldownMs must be non-negative" }
+    require(maxExportBytes >= 0) { "maxExportBytes must be non-negative" }
   }
 
   companion object {
