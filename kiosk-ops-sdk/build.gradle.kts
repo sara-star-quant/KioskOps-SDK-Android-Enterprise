@@ -171,12 +171,12 @@ mavenPublishing {
   pom {
     name.set("KioskOps SDK")
     description.set("Enterprise-grade Android SDK for offline-first operational events, local diagnostics, and fleet-friendly observability")
-    url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+    url.set("https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise")
 
     licenses {
       license {
         name.set("Business Source License 1.1")
-        url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/blob/main/LICENSE")
+        url.set("https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/blob/main/LICENSE")
       }
     }
 
@@ -189,9 +189,9 @@ mavenPublishing {
     }
 
     scm {
-      url.set("https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
-      connection.set("scm:git:git://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
-      developerConnection.set("scm:git:ssh://github.com/pzverkov/KioskOps-SDK-Android-Enterprise.git")
+      url.set("https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise")
+      connection.set("scm:git:git://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise.git")
+      developerConnection.set("scm:git:ssh://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise.git")
     }
   }
 }
@@ -202,7 +202,7 @@ afterEvaluate {
     repositories {
       maven {
         name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+        url = uri("https://maven.pkg.github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise")
         credentials {
           username = System.getenv("GITHUB_ACTOR") ?: findProperty("gpr.user")?.toString()
           password = System.getenv("GITHUB_TOKEN") ?: findProperty("gpr.token")?.toString()
