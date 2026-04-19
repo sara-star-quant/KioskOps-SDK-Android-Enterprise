@@ -269,7 +269,7 @@ class VersionedCryptoProvider(
 
   private fun deleteKeyVersion(version: Int) {
     // Delete from Keystore. If it fails, retain the metadata so a future
-    // cleanup cycle can retry — removing the metadata first would orphan
+    // cleanup cycle can retry; removing the metadata first would orphan
     // the Keystore entry with no way to find it again.
     val keystoreDeleted = try {
       val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
