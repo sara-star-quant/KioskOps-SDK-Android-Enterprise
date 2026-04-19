@@ -103,28 +103,68 @@ data class KioskOpsConfig @JvmOverloads constructor(
 
   companion object {
     /**
+     * Log an ERROR if a high-security preset is used against an HTTPS endpoint without
+     * either certificate pinning or Certificate Transparency enabled. FedRAMP, NIST 800-171
+     * (CUI), CJIS, and ASD Essential Eight all expect transport-layer integrity controls
+     * beyond the CA system; a high-security preset with default [TransportSecurityPolicy]
+     * silently relies on the device trust store alone, which is the wrong default for these
+     * compliance targets.
+     *
+     * This is advisory logging only (no exception) because the preset may be used for
+     * testing or staging against an intentionally-unpinned endpoint. For production, set
+     * [TransportSecurityPolicy.certificatePins] or
+     * [TransportSecurityPolicy.certificateTransparencyEnabled] on the returned config via
+     * `.copy(transportSecurityPolicy = ...)`.
+     *
+     * @since 1.2.0
+     */
+    private fun warnIfHttpsWithoutTransportSecurity(presetName: String, baseUrl: String) {
+      if (!baseUrl.startsWith("https://", ignoreCase = true)) return
+      val policy = TransportSecurityPolicy()
+      if (policy.certificatePins.isEmpty() && !policy.certificateTransparencyEnabled) {
+        android.util.Log.e(
+          "KioskOpsConfig",
+          "$presetName used with HTTPS baseUrl but no certificate pins or Certificate " +
+            "Transparency are configured. Compliance targets for this preset expect " +
+            "transport-layer integrity beyond the device trust store. Set " +
+            "TransportSecurityPolicy.certificatePins or " +
+            "TransportSecurityPolicy.certificateTransparencyEnabled on the returned config.",
+        )
+      }
+    }
+
+    /**
      * FedRAMP-compliant defaults (NIST 800-53).
      *
      * Enables all security features: validation (strict), PII detection (reject),
      * field encryption, anomaly detection, signed audit, and 365-day audit retention.
      *
+     * **Transport security**: logs an ERROR if [baseUrl] is HTTPS without
+     * [TransportSecurityPolicy.certificatePins] or
+     * [TransportSecurityPolicy.certificateTransparencyEnabled]; see
+     * [warnIfHttpsWithoutTransportSecurity]. The returned config still uses defaults; set
+     * transport security on the returned object via `.copy(transportSecurityPolicy = ...)`.
+     *
      * @since 0.5.0
      */
-    fun fedRampDefaults(baseUrl: String, locationId: String) = KioskOpsConfig(
-      baseUrl = baseUrl,
-      locationId = locationId,
-      kioskEnabled = true,
-      securityPolicy = SecurityPolicy.highSecurityDefaults(),
-      retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-        retainAuditDays = 365,
-        minimumAuditRetentionDays = 365,
-      ),
-      validationPolicy = ValidationPolicy.strictDefaults(),
-      piiPolicy = PiiPolicy.rejectDefaults(),
-      fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
-      dataClassificationPolicy = DataClassificationPolicy.enabledDefaults(),
-      anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
-    )
+    fun fedRampDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
+      warnIfHttpsWithoutTransportSecurity("fedRampDefaults", baseUrl)
+      return KioskOpsConfig(
+        baseUrl = baseUrl,
+        locationId = locationId,
+        kioskEnabled = true,
+        securityPolicy = SecurityPolicy.highSecurityDefaults(),
+        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
+          retainAuditDays = 365,
+          minimumAuditRetentionDays = 365,
+        ),
+        validationPolicy = ValidationPolicy.strictDefaults(),
+        piiPolicy = PiiPolicy.rejectDefaults(),
+        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
+        dataClassificationPolicy = DataClassificationPolicy.enabledDefaults(),
+        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
+      )
+    }
 
     /**
      * GDPR-compliant defaults.
@@ -157,25 +197,28 @@ data class KioskOpsConfig @JvmOverloads constructor(
      *
      * @since 0.8.0
      */
-    fun cuiDefaults(baseUrl: String, locationId: String) = KioskOpsConfig(
-      baseUrl = baseUrl,
-      locationId = locationId,
-      kioskEnabled = true,
-      securityPolicy = SecurityPolicy.highSecurityDefaults(),
-      retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-        retainAuditDays = 365,
-        minimumAuditRetentionDays = 365,
-      ),
-      validationPolicy = ValidationPolicy.strictDefaults(),
-      piiPolicy = PiiPolicy.rejectDefaults(),
-      fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
-      dataClassificationPolicy = DataClassificationPolicy.enabledDefaults().copy(
-        defaultClassification = DataClassification.CONFIDENTIAL,
-      ),
-      anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
-      databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
-      requireDataRightsAuthorization = true,
-    )
+    fun cuiDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
+      warnIfHttpsWithoutTransportSecurity("cuiDefaults", baseUrl)
+      return KioskOpsConfig(
+        baseUrl = baseUrl,
+        locationId = locationId,
+        kioskEnabled = true,
+        securityPolicy = SecurityPolicy.highSecurityDefaults(),
+        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
+          retainAuditDays = 365,
+          minimumAuditRetentionDays = 365,
+        ),
+        validationPolicy = ValidationPolicy.strictDefaults(),
+        piiPolicy = PiiPolicy.rejectDefaults(),
+        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
+        dataClassificationPolicy = DataClassificationPolicy.enabledDefaults().copy(
+          defaultClassification = DataClassification.CONFIDENTIAL,
+        ),
+        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
+        databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
+        requireDataRightsAuthorization = true,
+      )
+    }
 
     /**
      * CJIS Security Policy defaults for law enforcement kiosk deployments.
@@ -189,25 +232,28 @@ data class KioskOpsConfig @JvmOverloads constructor(
      *
      * @since 0.8.0
      */
-    fun cjisDefaults(baseUrl: String, locationId: String) = KioskOpsConfig(
-      baseUrl = baseUrl,
-      locationId = locationId,
-      kioskEnabled = true,
-      securityPolicy = SecurityPolicy.highSecurityDefaults(),
-      retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-        retainAuditDays = 365,
-        minimumAuditRetentionDays = 365,
-      ),
-      validationPolicy = ValidationPolicy.strictDefaults(),
-      piiPolicy = PiiPolicy.rejectDefaults(),
-      fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
-      dataClassificationPolicy = DataClassificationPolicy.enabledDefaults().copy(
-        defaultClassification = DataClassification.CONFIDENTIAL,
-      ),
-      anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
-      databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
-      requireDataRightsAuthorization = true,
-    )
+    fun cjisDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
+      warnIfHttpsWithoutTransportSecurity("cjisDefaults", baseUrl)
+      return KioskOpsConfig(
+        baseUrl = baseUrl,
+        locationId = locationId,
+        kioskEnabled = true,
+        securityPolicy = SecurityPolicy.highSecurityDefaults(),
+        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
+          retainAuditDays = 365,
+          minimumAuditRetentionDays = 365,
+        ),
+        validationPolicy = ValidationPolicy.strictDefaults(),
+        piiPolicy = PiiPolicy.rejectDefaults(),
+        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
+        dataClassificationPolicy = DataClassificationPolicy.enabledDefaults().copy(
+          defaultClassification = DataClassification.CONFIDENTIAL,
+        ),
+        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
+        databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
+        requireDataRightsAuthorization = true,
+      )
+    }
 
     /**
      * ASD Essential Eight defaults for Australian government deployments.
@@ -218,20 +264,23 @@ data class KioskOpsConfig @JvmOverloads constructor(
      *
      * @since 0.8.0
      */
-    fun asdEssentialEightDefaults(baseUrl: String, locationId: String) = KioskOpsConfig(
-      baseUrl = baseUrl,
-      locationId = locationId,
-      kioskEnabled = true,
-      securityPolicy = SecurityPolicy.highSecurityDefaults(),
-      retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-        retainAuditDays = 365,
-        minimumAuditRetentionDays = 365,
-      ),
-      validationPolicy = ValidationPolicy.strictDefaults(),
-      piiPolicy = PiiPolicy.redactDefaults(),
-      fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
-      dataClassificationPolicy = DataClassificationPolicy.enabledDefaults(),
-      anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
-    )
+    fun asdEssentialEightDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
+      warnIfHttpsWithoutTransportSecurity("asdEssentialEightDefaults", baseUrl)
+      return KioskOpsConfig(
+        baseUrl = baseUrl,
+        locationId = locationId,
+        kioskEnabled = true,
+        securityPolicy = SecurityPolicy.highSecurityDefaults(),
+        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
+          retainAuditDays = 365,
+          minimumAuditRetentionDays = 365,
+        ),
+        validationPolicy = ValidationPolicy.strictDefaults(),
+        piiPolicy = PiiPolicy.redactDefaults(),
+        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
+        dataClassificationPolicy = DataClassificationPolicy.enabledDefaults(),
+        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
+      )
+    }
   }
 }

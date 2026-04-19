@@ -2141,6 +2141,9 @@ public final class com/sarastarquant/kioskops/sdk/fleet/config/RemoteConfigPolic
 	public final fun pilotDefaults ()Lcom/sarastarquant/kioskops/sdk/fleet/config/RemoteConfigPolicy;
 }
 
+public abstract interface annotation class com/sarastarquant/kioskops/sdk/fleet/config/RemoteConfigPolicy$PilotConfig : java/lang/annotation/Annotation {
+}
+
 public abstract class com/sarastarquant/kioskops/sdk/fleet/config/db/ConfigDatabase : androidx/room/RoomDatabase {
 	public static final field Companion Lcom/sarastarquant/kioskops/sdk/fleet/config/db/ConfigDatabase$Companion;
 	public fun <init> ()V
