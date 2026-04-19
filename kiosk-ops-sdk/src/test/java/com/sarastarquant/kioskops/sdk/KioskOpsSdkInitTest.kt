@@ -96,12 +96,13 @@ class KioskOpsSdkInitTest {
     val before = sdk.getAuditStatistics().totalEvents
     sdk.shutdown()
 
-    // Re-init onto the same persistent audit DB. The sdk_shutdown record from the previous
-    // instance must be present; before the ordering fix it was dropped because sdkJob was
-    // cancelled first.
+    // Re-init onto the same persistent audit DB to query it. Before the ordering fix,
+    // sdk_shutdown was dropped because sdkJob was cancelled first; after the fix, the
+    // NonCancellable block flushes the record before the scope is torn down. sdk_initialized
+    // routes to the file-based audit trail, not the Room persistent one, so we expect
+    // exactly one new persistent entry: sdk_shutdown itself.
     val sdk2 = KioskOpsSdk.init(ctx, configProvider = { testConfig }, cryptoProviderOverride = NoopCryptoProvider)
     val after = sdk2.getAuditStatistics().totalEvents
-    // after includes: before + sdk_shutdown + sdk_initialized (from re-init).
-    assertThat(after).isAtLeast(before + 2L)
+    assertThat(after).isAtLeast(before + 1L)
   }
 }
