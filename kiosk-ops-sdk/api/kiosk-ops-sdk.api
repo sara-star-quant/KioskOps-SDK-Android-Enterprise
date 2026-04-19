@@ -440,7 +440,7 @@ public final class com/sarastarquant/kioskops/sdk/audit/AuditEvent {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/audit/AuditEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/audit/AuditEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/audit/AuditEvent$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/audit/AuditEvent;
@@ -448,6 +448,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/audit/AuditEvent$$serializ
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/audit/AuditEvent;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/audit/AuditEvent$Companion {
@@ -639,7 +640,7 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/db/AuditDao
 	public abstract fun getLatestEvent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getOldestEvent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun insertEvent (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun insertEventWithChainUpdate (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun insertEventWithChainUpdate (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun upsertChainState (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -1233,7 +1234,7 @@ public final class com/sarastarquant/kioskops/sdk/crypto/KeyMetadata {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/crypto/KeyMetadata$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/crypto/KeyMetadata$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/crypto/KeyMetadata$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/crypto/KeyMetadata;
@@ -1241,6 +1242,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/crypto/KeyMetadata$$serial
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/crypto/KeyMetadata;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/crypto/KeyMetadata$Companion {
@@ -1718,7 +1720,7 @@ public final class com/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot;
@@ -1726,6 +1728,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/diagnostics/HealthSnapshot$Companion {
@@ -1795,7 +1798,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/DefaultDeviceGroupProvid
 public abstract interface class com/sarastarquant/kioskops/sdk/fleet/DeviceGroupProvider {
 	public abstract fun addToGroup (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getDeviceGroups ()Ljava/util/List;
-	public abstract fun isInGroup (Ljava/lang/String;)Z
+	public fun isInGroup (Ljava/lang/String;)Z
 	public abstract fun removeFromGroup (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setGroups (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -1841,7 +1844,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/DevicePosture {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/fleet/DevicePosture$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/fleet/DevicePosture$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/fleet/DevicePosture$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/fleet/DevicePosture;
@@ -1849,6 +1852,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/fleet/DevicePosture$$seria
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/fleet/DevicePosture;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/fleet/DevicePosture$Companion {
@@ -2069,7 +2073,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion;
@@ -2077,6 +2081,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/fleet/config/ConfigVersion$Companion {
@@ -2156,7 +2161,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/config/db/ConfigDatabase
 }
 
 public abstract interface class com/sarastarquant/kioskops/sdk/fleet/config/db/ConfigVersionDao {
-	public abstract fun activateVersion (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun activateVersion (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun countVersions (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deactivateAll (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getActiveVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -2258,7 +2263,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatus {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatus$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatus$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatus$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatus;
@@ -2266,6 +2271,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatu
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatus;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/fleet/posture/BatteryStatus$Companion {
@@ -2314,7 +2320,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/posture/ConnectivityStat
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/ConnectivityStatus$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/ConnectivityStatus$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/fleet/posture/ConnectivityStatus$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/fleet/posture/ConnectivityStatus;
@@ -2322,6 +2328,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/Connectivity
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/fleet/posture/ConnectivityStatus;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/fleet/posture/ConnectivityStatus$Companion {
@@ -2355,7 +2362,7 @@ public final class com/sarastarquant/kioskops/sdk/fleet/posture/StorageStatus {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/StorageStatus$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/StorageStatus$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/fleet/posture/StorageStatus$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/fleet/posture/StorageStatus;
@@ -2363,6 +2370,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/fleet/posture/StorageStatu
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/fleet/posture/StorageStatus;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/fleet/posture/StorageStatus$Companion {
@@ -2520,7 +2528,7 @@ public final class com/sarastarquant/kioskops/sdk/geofence/GeofenceRegion {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/geofence/GeofenceRegion$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/geofence/GeofenceRegion$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/geofence/GeofenceRegion$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/geofence/GeofenceRegion;
@@ -2528,6 +2536,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/geofence/GeofenceRegion$$s
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/geofence/GeofenceRegion;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/geofence/GeofenceRegion$Companion {
@@ -2930,12 +2939,18 @@ public final class com/sarastarquant/kioskops/sdk/observability/logging/LogcatSi
 
 public abstract interface class com/sarastarquant/kioskops/sdk/observability/logging/Logger {
 	public abstract fun d (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun d$default (Lcom/sarastarquant/kioskops/sdk/observability/logging/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
 	public abstract fun e (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;)V
+	public static synthetic fun e$default (Lcom/sarastarquant/kioskops/sdk/observability/logging/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;ILjava/lang/Object;)V
 	public abstract fun i (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun i$default (Lcom/sarastarquant/kioskops/sdk/observability/logging/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
 	public abstract fun isEnabled (Lcom/sarastarquant/kioskops/sdk/observability/LogLevel;)Z
 	public abstract fun log (Lcom/sarastarquant/kioskops/sdk/observability/LogLevel;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;)V
+	public static synthetic fun log$default (Lcom/sarastarquant/kioskops/sdk/observability/logging/Logger;Lcom/sarastarquant/kioskops/sdk/observability/LogLevel;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;ILjava/lang/Object;)V
 	public abstract fun v (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun v$default (Lcom/sarastarquant/kioskops/sdk/observability/logging/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
 	public abstract fun w (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;)V
+	public static synthetic fun w$default (Lcom/sarastarquant/kioskops/sdk/observability/logging/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;ILjava/lang/Object;)V
 }
 
 public final class com/sarastarquant/kioskops/sdk/observability/logging/Logger$DefaultImpls {
@@ -2948,10 +2963,10 @@ public final class com/sarastarquant/kioskops/sdk/observability/logging/Logger$D
 }
 
 public abstract interface class com/sarastarquant/kioskops/sdk/observability/logging/LoggingSink {
-	public abstract fun accepts (Lcom/sarastarquant/kioskops/sdk/observability/LogLevel;)Z
-	public abstract fun close ()V
+	public fun accepts (Lcom/sarastarquant/kioskops/sdk/observability/LogLevel;)Z
+	public fun close ()V
 	public abstract fun emit (Lcom/sarastarquant/kioskops/sdk/observability/logging/LogEntry;)V
-	public abstract fun flush ()V
+	public fun flush ()V
 	public abstract fun getMinLevel ()Lcom/sarastarquant/kioskops/sdk/observability/LogLevel;
 }
 
@@ -3015,7 +3030,8 @@ public final class com/sarastarquant/kioskops/sdk/observability/metrics/BucketSn
 
 public abstract interface class com/sarastarquant/kioskops/sdk/observability/metrics/Counter {
 	public abstract fun add (JLjava/util/Map;)V
-	public abstract fun add (J[Lkotlin/Pair;)V
+	public fun add (J[Lkotlin/Pair;)V
+	public static synthetic fun add$default (Lcom/sarastarquant/kioskops/sdk/observability/metrics/Counter;JLjava/util/Map;ILjava/lang/Object;)V
 }
 
 public final class com/sarastarquant/kioskops/sdk/observability/metrics/Counter$DefaultImpls {
@@ -3041,8 +3057,10 @@ public final class com/sarastarquant/kioskops/sdk/observability/metrics/CounterD
 
 public abstract interface class com/sarastarquant/kioskops/sdk/observability/metrics/Gauge {
 	public abstract fun record (DLjava/util/Map;)V
-	public abstract fun record (D[Lkotlin/Pair;)V
-	public abstract fun record (JLjava/util/Map;)V
+	public fun record (D[Lkotlin/Pair;)V
+	public fun record (JLjava/util/Map;)V
+	public static synthetic fun record$default (Lcom/sarastarquant/kioskops/sdk/observability/metrics/Gauge;DLjava/util/Map;ILjava/lang/Object;)V
+	public static synthetic fun record$default (Lcom/sarastarquant/kioskops/sdk/observability/metrics/Gauge;JLjava/util/Map;ILjava/lang/Object;)V
 }
 
 public final class com/sarastarquant/kioskops/sdk/observability/metrics/Gauge$DefaultImpls {
@@ -3070,8 +3088,10 @@ public final class com/sarastarquant/kioskops/sdk/observability/metrics/GaugeDat
 
 public abstract interface class com/sarastarquant/kioskops/sdk/observability/metrics/Histogram {
 	public abstract fun record (DLjava/util/Map;)V
-	public abstract fun record (D[Lkotlin/Pair;)V
-	public abstract fun record (JLjava/util/Map;)V
+	public fun record (D[Lkotlin/Pair;)V
+	public fun record (JLjava/util/Map;)V
+	public static synthetic fun record$default (Lcom/sarastarquant/kioskops/sdk/observability/metrics/Histogram;DLjava/util/Map;ILjava/lang/Object;)V
+	public static synthetic fun record$default (Lcom/sarastarquant/kioskops/sdk/observability/metrics/Histogram;JLjava/util/Map;ILjava/lang/Object;)V
 }
 
 public final class com/sarastarquant/kioskops/sdk/observability/metrics/Histogram$DefaultImpls {
@@ -3273,7 +3293,9 @@ public final class com/sarastarquant/kioskops/sdk/observability/tracing/NoOpTrac
 public abstract interface class com/sarastarquant/kioskops/sdk/observability/tracing/Span : java/lang/AutoCloseable {
 	public abstract fun addEvent (Ljava/lang/String;Ljava/time/Instant;Ljava/util/Map;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
 	public abstract fun addEvent (Ljava/lang/String;Ljava/util/Map;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
-	public abstract fun close ()V
+	public static synthetic fun addEvent$default (Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;Ljava/lang/String;Ljava/time/Instant;Ljava/util/Map;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
+	public static synthetic fun addEvent$default (Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
+	public fun close ()V
 	public abstract fun end ()V
 	public abstract fun end (Ljava/time/Instant;)V
 	public abstract fun getContext ()Lcom/sarastarquant/kioskops/sdk/observability/tracing/SpanContext;
@@ -3284,6 +3306,7 @@ public abstract interface class com/sarastarquant/kioskops/sdk/observability/tra
 	public abstract fun setAttribute (Ljava/lang/String;Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
 	public abstract fun setAttribute (Ljava/lang/String;Z)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
 	public abstract fun setStatus (Lcom/sarastarquant/kioskops/sdk/observability/tracing/SpanStatus;Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
+	public static synthetic fun setStatus$default (Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;Lcom/sarastarquant/kioskops/sdk/observability/tracing/SpanStatus;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
 	public abstract fun updateName (Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Span;
 }
 
@@ -3413,6 +3436,7 @@ public abstract interface class com/sarastarquant/kioskops/sdk/observability/tra
 
 public abstract interface class com/sarastarquant/kioskops/sdk/observability/tracing/TracerProvider {
 	public abstract fun getTracer (Ljava/lang/String;Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Tracer;
+	public static synthetic fun getTracer$default (Lcom/sarastarquant/kioskops/sdk/observability/tracing/TracerProvider;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/observability/tracing/Tracer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/observability/tracing/TracerProvider$DefaultImpls {
@@ -3780,7 +3804,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary 
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary;
@@ -3788,6 +3812,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/queue/QuarantinedEventSumm
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary$Companion {
@@ -4012,7 +4037,7 @@ public final class com/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent;
@@ -4020,6 +4045,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent$$
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/telemetry/TelemetryEvent$Companion {
@@ -4033,6 +4059,7 @@ public final class com/sarastarquant/kioskops/sdk/telemetry/TelemetryRedactor {
 
 public abstract interface class com/sarastarquant/kioskops/sdk/telemetry/TelemetrySink {
 	public abstract fun emit (Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun emit$default (Lcom/sarastarquant/kioskops/sdk/telemetry/TelemetrySink;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
 }
 
 public final class com/sarastarquant/kioskops/sdk/telemetry/TelemetrySink$DefaultImpls {
@@ -4065,7 +4092,7 @@ public final class com/sarastarquant/kioskops/sdk/transport/BatchSendRequest {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/transport/BatchSendRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/transport/BatchSendRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;
@@ -4073,6 +4100,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/transport/BatchSendRequest
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/transport/BatchSendRequest$Companion {
@@ -4093,7 +4121,7 @@ public final class com/sarastarquant/kioskops/sdk/transport/BatchSendResponse {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/transport/BatchSendResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/transport/BatchSendResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/transport/BatchSendResponse$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/transport/BatchSendResponse;
@@ -4101,6 +4129,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/transport/BatchSendRespons
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/transport/BatchSendResponse;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/transport/BatchSendResponse$Companion {
@@ -4130,7 +4159,7 @@ public final class com/sarastarquant/kioskops/sdk/transport/EventAck {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/transport/EventAck$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/transport/EventAck$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/transport/EventAck$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/transport/EventAck;
@@ -4138,6 +4167,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/transport/EventAck$$serial
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/transport/EventAck;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/transport/EventAck$Companion {
@@ -4188,7 +4218,7 @@ public final class com/sarastarquant/kioskops/sdk/transport/TransportEvent {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/sarastarquant/kioskops/sdk/transport/TransportEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/sarastarquant/kioskops/sdk/transport/TransportEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/transport/TransportEvent$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/transport/TransportEvent;
@@ -4196,6 +4226,7 @@ public synthetic class com/sarastarquant/kioskops/sdk/transport/TransportEvent$$
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/transport/TransportEvent;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/sarastarquant/kioskops/sdk/transport/TransportEvent$Companion {
@@ -4440,9 +4471,9 @@ public final class com/sarastarquant/kioskops/sdk/validation/UnknownEventTypeAct
 }
 
 public abstract interface class com/sarastarquant/kioskops/sdk/validation/ValidationListener {
-	public abstract fun onSchemaNotFound (Ljava/lang/String;)V
-	public abstract fun onValidationFailed (Ljava/lang/String;Ljava/util/List;)V
-	public abstract fun onValidationPassed (Ljava/lang/String;)V
+	public fun onSchemaNotFound (Ljava/lang/String;)V
+	public fun onValidationFailed (Ljava/lang/String;Ljava/util/List;)V
+	public fun onValidationPassed (Ljava/lang/String;)V
 }
 
 public final class com/sarastarquant/kioskops/sdk/validation/ValidationListener$DefaultImpls {
