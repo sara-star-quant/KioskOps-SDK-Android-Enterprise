@@ -261,6 +261,59 @@ class SyncEngineTest {
   }
 
   @Test
+  fun `batch-level transient does not bump per-event attempts across many cycles`() = runTest {
+    // Regression for M1: a 30-minute outage processed as batches must not march every event
+    // to maxAttemptsPerEvent and silently quarantine the backlog.
+    server.dispatcher = object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse =
+        MockResponse.Builder().code(500).body("oops").build()
+    }
+
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val logs = RingLog(context)
+    val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+
+    val cfg = KioskOpsConfig(
+      baseUrl = server.url("/").toString(),
+      locationId = "TEST",
+      kioskEnabled = false,
+      syncPolicy = SyncPolicy(enabled = true, endpointPath = "events/batch", batchSize = 10, maxAttemptsPerEvent = 3),
+      securityPolicy = SecurityPolicy.maximalistDefaults().copy(encryptQueuePayloads = false),
+      retentionPolicy = RetentionPolicy.maximalistDefaults(),
+      telemetryPolicy = TelemetryPolicy.maximalistDefaults()
+    )
+
+    val queue = QueueRepository(context, logs, NoopCryptoProvider)
+    val audit = PersistentAuditTrail(context, retentionProvider = { cfg.retentionPolicy }, clock = Clock.SYSTEM)
+    val transport = OkHttpTransport(OkHttpClient.Builder().build(), json, logs, authProvider = null)
+
+    repeat(5) { i -> assertThat(queue.enqueue("T", "{\"i\":$i}", cfg).isAccepted).isTrue() }
+
+    val clock = TestClock(now = 1_000L)
+    val engine = SyncEngine(
+      context = context,
+      cfgProvider = { cfg },
+      queue = queue,
+      transport = transport,
+      logs = logs,
+      telemetry = object : TelemetrySink { override fun emit(event: String, fields: Map<String, String>) {} },
+      audit = audit,
+      clock = clock
+    )
+
+    // 10 transient cycles with maxAttemptsPerEvent=3 would absolutely quarantine everything
+    // under the old behavior. New behavior: attempts stay at 0, nothing is quarantined.
+    repeat(10) {
+      val r = engine.flushOnce()
+      assertThat(r).isInstanceOf(TransportResult.TransientFailure::class.java)
+      clock.now += 60_000L // step past any backoff
+    }
+
+    assertThat(queue.countActive()).isEqualTo(5)
+    assertThat(queue.quarantinedSummaries(limit = 50)).isEmpty()
+  }
+
+  @Test
   fun `maxAttemptsPerEvent moves event to quarantine even if retryable`() = runTest {
     server.dispatcher = object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
