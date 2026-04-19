@@ -661,15 +661,15 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
-[0.9.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.9.0
-[0.8.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.8.0
-[0.7.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.7.0
-[0.6.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.6.0
-[0.5.3]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.3
-[0.5.2]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.2
-[0.5.1]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.1
-[0.5.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.0
-[0.4.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.4.0
-[0.3.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.3.0
-[0.2.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.2.0
-[0.1.0]: https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/releases/tag/v0.1.0
+[0.9.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.9.0
+[0.8.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.8.0
+[0.7.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.7.0
+[0.6.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.6.0
+[0.5.3]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.3
+[0.5.2]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.2
+[0.5.1]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.1
+[0.5.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.5.0
+[0.4.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.4.0
+[0.3.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.3.0
+[0.2.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.2.0
+[0.1.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.1.0

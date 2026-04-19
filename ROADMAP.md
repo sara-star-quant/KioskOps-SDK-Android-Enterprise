@@ -423,6 +423,6 @@ Features under consideration for post-1.0 releases:
 
 Have a feature request or want to contribute?
 
-- Open an issue on [GitHub](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/issues)
+- Open an issue on [GitHub](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/issues)
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines
 - Enterprise customers: contact support for prioritization discussions
