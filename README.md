@@ -9,8 +9,11 @@
 [![API](https://img.shields.io/badge/API-33%2B-brightgreen.svg)](https://developer.android.com/about/versions/13)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-purple.svg)](https://kotlinlang.org/)
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/Docs-Dokka-brightgreen.svg)](https://sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise/)
 
 An **enterprise-grade Android SDK** for **offline-first operational events**, **local diagnostics**, and **fleet-friendly observability**. Designed for kiosk, retail, logistics, and field service deployments with **Samsung Knox / Android Enterprise** integration.
+
+API reference: [sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise](https://sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise/) (auto-published from `main` and release tags).
 
 > **Disclaimer:** This SDK provides security controls and references regulatory frameworks
 > (NIST 800-53, FedRAMP, GDPR, ISO 27001) as engineering aids only. It is not legal,
