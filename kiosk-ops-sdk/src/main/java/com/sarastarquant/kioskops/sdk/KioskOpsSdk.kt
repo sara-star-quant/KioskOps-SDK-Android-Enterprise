@@ -119,13 +119,31 @@ class KioskOpsSdk private constructor(
     delegate = AesGcmKeystoreCryptoProvider(alias = "kioskops_exports_aesgcm_v1")
   )
 
-  // v0.8.0 Database encryption (SQLCipher)
-  private val dbOpenHelperFactory: androidx.sqlite.db.SupportSQLiteOpenHelper.Factory? =
-    if (cfg().databaseEncryptionPolicy.enabled) {
-      com.sarastarquant.kioskops.sdk.crypto.DatabaseEncryptionProvider.createFactory(appContext)
-    } else {
-      null
-    }
+  // v0.8.0 Database encryption (SQLCipher) with v1.2.0 corruption handling.
+  // Wraps the delegate factory (SQLCipher when db encryption is on, framework default otherwise)
+  // so corruption surfaces to the host via KioskOpsErrorListener and lands in the audit trail
+  // before Room's default delete-and-recreate runs.
+  private val dbOpenHelperFactory: androidx.sqlite.db.SupportSQLiteOpenHelper.Factory =
+    com.sarastarquant.kioskops.sdk.queue.CorruptionHandlingOpenHelperFactory(
+      delegate = if (cfg().databaseEncryptionPolicy.enabled) {
+        com.sarastarquant.kioskops.sdk.crypto.DatabaseEncryptionProvider.createFactory(appContext)
+      } else {
+        androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory()
+      },
+      onCorruption = { db ->
+        val path = try { db.path } catch (_: Throwable) { null }
+        logs.e("SDK", "Database corruption detected at ${path ?: "unknown"}")
+        notifyError(
+          KioskOpsError.StorageError(
+            message = "Database corruption detected at ${path ?: "unknown"}; database will be recreated",
+          )
+        )
+        audit.record(
+          "database_corruption_detected",
+          mapOf("path" to (path ?: "unknown")),
+        )
+      },
+    )
 
   init {
     // Set audit database encryption before any getInstance() calls
@@ -1154,6 +1172,11 @@ class KioskOpsSdk private constructor(
   companion object {
     @JvmStatic val SDK_VERSION: String = BuildConfig.SDK_VERSION
 
+    // Rows older than this in SENDING on init are assumed crash-abandoned. Five minutes is
+    // well past OkHttp's default call timeout and typical worker budget, so genuinely in-flight
+    // requests in a concurrent process won't be reset mid-send.
+    private const val STALE_SENDING_WINDOW_MS = 5L * 60L * 1000L
+
     @Volatile private var INSTANCE: KioskOpsSdk? = null
 
     @JvmStatic
@@ -1184,6 +1207,12 @@ class KioskOpsSdk private constructor(
       created.logs.i("SDK", "Initialized")
       created.audit.record("sdk_initialized")
       created.telemetry.emit("sdk_initialized", mapOf("sdkVersion" to SDK_VERSION))
+      // Rescue SENDING rows stranded by a prior process crash. Gate on an age > STALE_SENDING_WINDOW_MS
+      // so any in-flight rows from a concurrent process (rare but possible) are left alone.
+      created.javaInteropScope.launch {
+        val staleBefore = created.clock.nowMs() - STALE_SENDING_WINDOW_MS
+        created.queue.reconcileStaleSending(staleBefore)
+      }
       created.applySchedulingFromConfig()
       com.sarastarquant.kioskops.sdk.lifecycle.SdkLifecycleObserver.register(
         sdkProvider = { INSTANCE },
