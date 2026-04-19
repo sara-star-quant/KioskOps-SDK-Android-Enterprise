@@ -1,11 +1,11 @@
 # KioskOps SDK for Android Enterprise
 
-[![Build](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml)
-[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/pzverkov/e10185573398e3034647f57ff8d61076/raw/kioskops-coverage.json)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml)
-[![CodeQL](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml)
-[![Fuzz](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml/badge.svg)](https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pzverkov/KioskOps-SDK-Android-Enterprise/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pzverkov/KioskOps-SDK-Android-Enterprise)
-[![JitPack](https://jitpack.io/v/pzverkov/KioskOps-SDK-Android-Enterprise.svg)](https://jitpack.io/#pzverkov/KioskOps-SDK-Android-Enterprise)
+[![Build](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml/badge.svg)](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/pzverkov/e10185573398e3034647f57ff8d61076/raw/kioskops-coverage.json)](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/build.yml)
+[![CodeQL](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml/badge.svg)](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml)
+[![Fuzz](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml/badge.svg)](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise)
+[![JitPack](https://jitpack.io/v/sara-star-quant/KioskOps-SDK-Android-Enterprise.svg)](https://jitpack.io/#sara-star-quant/KioskOps-SDK-Android-Enterprise)
 [![API](https://img.shields.io/badge/API-33%2B-brightgreen.svg)](https://developer.android.com/about/versions/13)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-purple.svg)](https://kotlinlang.org/)
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
@@ -45,7 +45,7 @@ dependencies {
 dependencyResolutionManagement {
     repositories {
         maven {
-            url = uri("https://maven.pkg.github.com/pzverkov/KioskOps-SDK-Android-Enterprise")
+            url = uri("https://maven.pkg.github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise")
             credentials {
                 username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
                 password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
@@ -72,7 +72,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.pzverkov:KioskOps-SDK-Android-Enterprise:v1.1.0")
+    implementation("com.github.sara-star-quant:KioskOps-SDK-Android-Enterprise:v1.1.0")
 }
 ```
 
