@@ -10,6 +10,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import android.database.sqlite.SQLiteConstraintException
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -288,5 +289,23 @@ class QueueDaoTest {
     assertThat(afterBatch.attempts).isEqualTo(1)
     assertThat(afterBatch.lastError).isEqualTo("network_5xx")
     assertThat(afterBatch.state).isEqualTo(QueueStates.FAILED)
+  }
+
+  @Test
+  fun `countNotSentFlow reports current depth`() = runTest {
+    // Room's invalidation tracker batches notifications on a background executor, which
+    // makes observing each individual write unreliable under the test dispatcher. A
+    // lighter-weight check: verify the flow reports the post-write depth after each
+    // modification via first(), which suspends until the next emission.
+    dao.insert(entity(id = "e1", idempotencyKey = "k1"))
+    dao.insert(entity(id = "e2", idempotencyKey = "k2"))
+
+    assertThat(dao.countNotSentFlow().first()).isEqualTo(2L)
+
+    dao.insert(entity(id = "e3", idempotencyKey = "k3"))
+    assertThat(dao.countNotSentFlow().first()).isEqualTo(3L)
+
+    dao.markSent("e1", now + 100)
+    assertThat(dao.countNotSentFlow().first()).isEqualTo(2L)
   }
 }

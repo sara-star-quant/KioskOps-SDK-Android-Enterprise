@@ -73,10 +73,12 @@ class FlowApisTest {
   }
 
   @Test
-  fun `queueDepthFlow emits multiple values`() = runTest {
+  fun `queueDepthFlow reflects enqueue via first()`() = runTest {
     val sdk = KioskOpsSdk.get()
-    val depths = sdk.queueDepthFlow(intervalMs = 50L).take(3).toList()
-    assertThat(depths).hasSize(3)
-    assertThat(depths).containsExactly(0L, 0L, 0L)
+    assertThat(sdk.queueDepthFlow().first()).isEqualTo(0L)
+
+    sdk.enqueue("evt", "{\"x\":1}")
+    // Flow is Room-reactive since 1.2.0: first() after the enqueue sees the new depth.
+    assertThat(sdk.queueDepthFlow().first()).isEqualTo(1L)
   }
 }

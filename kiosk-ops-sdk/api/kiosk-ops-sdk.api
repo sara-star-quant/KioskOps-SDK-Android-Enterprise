@@ -3826,6 +3826,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QuarantinedEventSummary$
 
 public abstract interface class com/sarastarquant/kioskops/sdk/queue/QueueDao {
 	public abstract fun countNotSent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun countNotSentFlow ()Lkotlinx/coroutines/flow/Flow;
 	public abstract fun deleteById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteFailedOlderThan (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -3849,6 +3850,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QueueDao_Impl : com/sara
 	public static final field Companion Lcom/sarastarquant/kioskops/sdk/queue/QueueDao_Impl$Companion;
 	public fun <init> (Landroidx/room/RoomDatabase;)V
 	public fun countNotSent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun countNotSentFlow ()Lkotlinx/coroutines/flow/Flow;
 	public fun deleteById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteFailedOlderThan (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -3941,6 +3943,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QueueRepository {
 	public synthetic fun <init> (Landroid/content/Context;Lcom/sarastarquant/kioskops/sdk/logging/RingLog;Lcom/sarastarquant/kioskops/sdk/crypto/CryptoProvider;Landroidx/sqlite/db/SupportSQLiteOpenHelper$Factory;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun applyRetention (Lcom/sarastarquant/kioskops/sdk/KioskOpsConfig;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun countActive (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun countActiveFlow ()Lkotlinx/coroutines/flow/Flow;
 	public final fun decodePayloadJson (Lcom/sarastarquant/kioskops/sdk/queue/QueueEventEntity;)Ljava/lang/String;
 	public final fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun deleteByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -240,6 +240,12 @@ class QueueRepository(
 
   suspend fun countActive(): Long = dao.countNotSent()
 
+  /**
+   * Reactive queue depth: emits on every DB change that affects the non-SENT count.
+   * @since 1.2.0
+   */
+  fun countActiveFlow(): kotlinx.coroutines.flow.Flow<Long> = dao.countNotSentFlow()
+
   suspend fun quarantinedSummaries(limit: Int = 50): List<QuarantinedEventSummary> =
     dao.loadQuarantinedSummaries(limit).map { it.toSummary() }
 
