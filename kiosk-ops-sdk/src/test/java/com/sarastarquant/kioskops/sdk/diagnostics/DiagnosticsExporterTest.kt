@@ -138,4 +138,76 @@ class DiagnosticsExporterTest {
     assertThat(content).contains("test-policy-hash")
     zip.close()
   }
+
+  @Test
+  fun `export cap skips oversized entries and writes a truncation marker`() = runTest {
+    // Stage a large telemetry file so the exporter is forced to choose whether to include it.
+    val telemetryDir = java.io.File(ctx.filesDir, "kioskops_telemetry").apply { mkdirs() }
+    java.io.File(telemetryDir, "bulk.log").writeBytes(ByteArray(2048) { 'a'.code.toByte() })
+
+    val cfg = KioskOpsConfig(
+      baseUrl = "https://example.invalid",
+      locationId = "test-loc",
+      kioskEnabled = true,
+      securityPolicy = SecurityPolicy.maximalistDefaults().copy(
+        encryptQueuePayloads = false,
+        encryptTelemetryAtRest = false,
+        encryptExportedLogs = false,
+      ),
+      retentionPolicy = RetentionPolicy.maximalistDefaults(),
+      telemetryPolicy = TelemetryPolicy.maximalistDefaults(),
+      // Tiny cap: manifest + health + quarantined barely fit; bulk.log cannot.
+      diagnosticsSchedulePolicy = DiagnosticsSchedulePolicy.disabledDefaults().copy(
+        maxExportBytes = 1024L,
+      ),
+    )
+
+    val logs = RingLog(ctx)
+    val logExporter = LogExporter(ctx, logs, NoopCryptoProvider)
+    val telemetry = EncryptedTelemetryStore(
+      context = ctx,
+      policyProvider = { cfg.telemetryPolicy },
+      retentionProvider = { cfg.retentionPolicy },
+      clock = clock,
+      crypto = NoopCryptoProvider,
+    )
+    val audit = AuditTrail(
+      context = ctx,
+      retentionProvider = { cfg.retentionPolicy },
+      clock = clock,
+      crypto = NoopCryptoProvider,
+    )
+    val posture = DevicePosture(
+      isDeviceOwner = false,
+      isLockTaskPermitted = false,
+      androidSdkInt = 33,
+      deviceModel = "TestDevice",
+      manufacturer = "Robolectric",
+      securityPatch = "2026-01-01",
+    )
+    val cappedExporter = DiagnosticsExporter(
+      context = ctx,
+      cfgProvider = { cfg },
+      logs = logs,
+      logExporter = logExporter,
+      telemetry = telemetry,
+      audit = audit,
+      clock = clock,
+      sdkVersion = "0.7.0-test",
+      queueDepthProvider = { 0L },
+      quarantinedSummaryProvider = { emptyList() },
+      postureProvider = { posture },
+      policyHashProvider = { "test-policy-hash" },
+    )
+
+    val file = cappedExporter.export()
+    val zip = ZipFile(file)
+    val entries = zip.entries().toList().map { it.name }
+
+    assertThat(entries).contains("manifest.json")
+    assertThat(entries).contains("truncation.txt")
+    val marker = zip.getInputStream(zip.getEntry("truncation.txt")).bufferedReader().readText()
+    assertThat(marker).contains("maxExportBytes=1024")
+    zip.close()
+  }
 }

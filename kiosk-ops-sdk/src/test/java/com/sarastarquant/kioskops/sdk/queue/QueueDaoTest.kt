@@ -243,6 +243,34 @@ class QueueDaoTest {
   }
 
   @Test
+  fun `repository caps lastError length on markFailed`() = runTest {
+    val ctx = ApplicationProvider.getApplicationContext<Context>()
+    val repo = com.sarastarquant.kioskops.sdk.queue.QueueRepository(
+      ctx,
+      com.sarastarquant.kioskops.sdk.logging.RingLog(ctx),
+      com.sarastarquant.kioskops.sdk.crypto.NoopCryptoProvider,
+    )
+    ctx.deleteDatabase("kiosk_ops_queue.db")
+    val cfg = com.sarastarquant.kioskops.sdk.KioskOpsConfig(
+      baseUrl = "https://example.invalid/",
+      locationId = "LOC-1",
+      kioskEnabled = false,
+      securityPolicy = com.sarastarquant.kioskops.sdk.compliance.SecurityPolicy.maximalistDefaults()
+        .copy(encryptQueuePayloads = false),
+    )
+    val res = repo.enqueue("T", "{\"x\":1}", cfg)
+    val id = (res as com.sarastarquant.kioskops.sdk.queue.EnqueueResult.Accepted).id
+
+    val huge = "x".repeat(5000)
+    repo.markFailed(id, huge, nextAttemptAtMs = 0L, permanentFailure = 0)
+
+    val stored = repo.nextBatch(nowMs = 1L, limit = 1).first()
+    assertThat(stored.lastError).isNotNull()
+    assertThat(stored.lastError!!.length).isAtMost(256)
+    assertThat(stored.lastError).endsWith("...[truncated]")
+  }
+
+  @Test
   fun `markBatchFailureNoAttemptBump preserves attempts counter`() = runTest {
     dao.insert(entity())
     // Bump attempts once via a real per-event failure so we can observe the counter later.

@@ -48,7 +48,11 @@ class DiagnosticsExporter(
     val policyHash = policyHashProvider()
     val quarantined = quarantinedSummaryProvider()
 
-    ZipOutputStream(BufferedOutputStream(zipFile.outputStream())).use { zos ->
+    val maxBytes = cfg.diagnosticsSchedulePolicy.maxExportBytes
+    val counting = CountingOutputStream(BufferedOutputStream(zipFile.outputStream()))
+    val skipped = mutableListOf<String>()
+
+    ZipOutputStream(counting).use { zos ->
       // Health snapshot
       val includeDeviceId = cfg.telemetryPolicy.includeDeviceId
       val snapshot = HealthSnapshot(
@@ -88,27 +92,86 @@ class DiagnosticsExporter(
         "bundleContainsEncryptedEntries" to cfg.securityPolicy.encryptDiagnosticsBundle.toString(),
       )
 
+      // Critical small entries are never truncated.
       writeEntry(zos, "manifest.json", json.encodeToString(manifest).toByteArray(Charsets.UTF_8))
       writeEntry(zos, "health_snapshot.json", json.encodeToString(snapshot).toByteArray(Charsets.UTF_8))
       writeEntry(zos, "queue/quarantined_summaries.json", json.encodeToString(quarantined).toByteArray(Charsets.UTF_8))
 
       // Logs (encrypted export if enabled)
       val logFile = logExporter.export()
-      addFile(zos, "logs/${logFile.name}", logFile)
-
-      // Telemetry
-      for (f in telemetry.listFiles()) {
-        addFile(zos, "telemetry/${f.name}", f)
+      if (!addFileCapped(zos, "logs/${logFile.name}", logFile, counting, maxBytes)) {
+        skipped.add("logs/${logFile.name}")
       }
 
-      // Audit
+      for (f in telemetry.listFiles()) {
+        if (!addFileCapped(zos, "telemetry/${f.name}", f, counting, maxBytes)) {
+          skipped.add("telemetry/${f.name}")
+        }
+      }
+
       for (f in audit.listFiles()) {
-        addFile(zos, "audit/${f.name}", f)
+        if (!addFileCapped(zos, "audit/${f.name}", f, counting, maxBytes)) {
+          skipped.add("audit/${f.name}")
+        }
+      }
+
+      if (skipped.isNotEmpty()) {
+        val marker = buildString {
+          append("Diagnostics export truncated to stay within maxExportBytes=$maxBytes.\n")
+          append("Omitted entries:\n")
+          for (path in skipped) append("  - ").append(path).append('\n')
+        }
+        writeEntry(zos, "truncation.txt", marker.toByteArray(Charsets.UTF_8))
       }
     }
 
+    if (skipped.isNotEmpty()) {
+      logs.w("Diag", "Export truncated: ${skipped.size} entries omitted to stay within ${maxBytes}B")
+    }
     logs.i("Diag", "Exported diagnostics: ${zipFile.name} (${zipFile.length()} bytes)")
     return zipFile
+  }
+
+  /**
+   * Add a file to the ZIP only if doing so would keep `counting.bytesWritten` within
+   * [maxBytes]. Returns `false` if the file was skipped. A cap of 0 disables the check.
+   */
+  private fun addFileCapped(
+    zos: ZipOutputStream,
+    entryName: String,
+    file: File,
+    counting: CountingOutputStream,
+    maxBytes: Long,
+  ): Boolean {
+    if (maxBytes > 0 && counting.bytesWritten + file.length() > maxBytes) {
+      return false
+    }
+    addFile(zos, entryName, file)
+    return true
+  }
+
+  /**
+   * Minimal byte-counting [java.io.OutputStream] wrapper. Tracks total bytes written to
+   * the underlying stream so the exporter can decide when to stop appending entries.
+   */
+  private class CountingOutputStream(
+    private val delegate: java.io.OutputStream,
+  ) : java.io.OutputStream() {
+    var bytesWritten: Long = 0L
+      private set
+
+    override fun write(b: Int) {
+      delegate.write(b)
+      bytesWritten++
+    }
+
+    override fun write(b: ByteArray, off: Int, len: Int) {
+      delegate.write(b, off, len)
+      bytesWritten += len
+    }
+
+    override fun flush() = delegate.flush()
+    override fun close() = delegate.close()
   }
 
   private fun writeEntry(zos: ZipOutputStream, name: String, bytes: ByteArray) {
