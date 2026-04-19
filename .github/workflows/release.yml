@@ -134,14 +134,14 @@ jobs:
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- **Maven Central**: \`com.sarastarquant.kioskops:kiosk-ops-sdk:${VERSION}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **GitHub Packages**: \`com.sarastarquant.kioskops:kiosk-ops-sdk:${VERSION}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **JitPack**: \`com.github.pzverkov:KioskOps-SDK-Android-Enterprise:${TAG}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **JitPack**: \`com.github.sara-star-quant:KioskOps-SDK-Android-Enterprise:${TAG}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Signature Verification" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           echo "cosign verify-blob kiosk-ops-sdk-release.aar \\" >> $GITHUB_STEP_SUMMARY
           echo "  --signature kiosk-ops-sdk-release.aar.sig \\" >> $GITHUB_STEP_SUMMARY
           echo "  --certificate kiosk-ops-sdk-release.aar.pem \\" >> $GITHUB_STEP_SUMMARY
-          echo "  --certificate-identity-regexp 'https://github.com/pzverkov/KioskOps-SDK-Android-Enterprise' \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --certificate-identity-regexp 'https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise' \\" >> $GITHUB_STEP_SUMMARY
           echo "  --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
         env:
