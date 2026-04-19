@@ -338,67 +338,148 @@ paths in cryptographic and transport code.
 
 ---
 
-## v1.2.0 Distribution and Platform Expansion
+## v1.2.0 Reliability and Security Hardening [RELEASED]
 
-Focus: Coordinate multi-module version management, expand the Dependabot/
-toolchain surface, and prepare for cross-platform consumers.
+Focus: close the v1.0 audit follow-ups, finish reliability, make the SDK
+diagnosable. Re-scoped from the original "Distribution and Platform
+Expansion" plan after substantial reliability work accumulated on `main`;
+distribution/platform items moved to v1.3 / v1.4.
 
-### Stability
-- [ ] Long-term support (LTS) branch (cherry-pick security fixes to v1.1.x)
-- [ ] AGP 9.x evaluation - brings Bouncy Castle 1.84+ and closes the
-  remaining build-classpath CVE exposure
+### Reliability
+- [x] `DatabaseCorruptionHandler` wired into the Room open-helper factory
+  for both queue and audit databases; host sees `StorageError` and audit
+  trail records `database_corruption_detected` before Room recreates the
+  DB (PR #92)
+- [x] Reset `SENDING` rows stranded across a process crash on `init()`
+  with a 5-minute age gate (PR #92)
+- [x] Stop bumping per-event `attempts` on batch-level transient and
+  permanent failures so a long outage does not quarantine the backlog
+  (PR #92)
+- [x] Configurable OkHttp connect/read/write/call timeouts on `SyncPolicy`
+  so a slow server cannot stall the sync worker indefinitely (PR #93)
+- [x] `shutdown()` teardown record/emit run under `NonCancellable`
+  before the scope is cancelled (PR #93)
+- [x] WorkManager `ExistingPeriodicWorkPolicy.KEEP` for heartbeat + sync
+  periodic work (PR #93)
+- [x] `configUpdateFlow` backed by `BufferOverflow.DROP_OLDEST` (PR #93)
+- [x] Room-reactive `queueDepthFlow` and `healthStatusFlow` (PR #100)
+- [x] Cap `lastError` at 256 chars and diagnostics export ZIP at
+  `maxExportBytes` (default 50 MiB) with `truncation.txt` marker
+  (PR #99)
+- [x] Warn on swallowed `KioskOpsErrorListener` exceptions (PR #102)
 
-### Distribution
-- [ ] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for coordinated
-  version management
-- [ ] Gradle Version Catalog snippet for consumers
-
-### Platform Support
-- [ ] Kotlin Multiplatform (KMP) with iOS target
-- [ ] React Native bridge package
-- [ ] Flutter plugin
+### Audit follow-ups from the v1.0 review
+- [x] `SecureKeyDerivation.deriveDeterministic` migrated to HKDF-SHA256
+  (RFC 5869); PBKDF2-over-ISO-8859-1 bridge removed (PR #95)
+- [x] `FileSink` size counter guarded by a dedicated monitor (PR #95)
+- [x] Certificate pinning moved to OkHttp's native `CertificatePinner`
+  enforced inside the TLS handshake; hook preserved via
+  `EventListener` (PR #97)
+- [x] High-security presets (`fedRampDefaults`, `cuiDefaults`,
+  `cjisDefaults`, `asdEssentialEightDefaults`) log ERROR on HTTPS
+  `baseUrl` without pins or CT (PR #98)
+- [x] `RemoteConfigPolicy.pilotDefaults` marked
+  `@RequiresOptIn(WARNING)` via nested `@PilotConfig` annotation
+  (PR #98)
+- [x] `InstallSecret` wrapped with Keystore AES-GCM and zeroed after
+  use (PR #96)
 
 ### Documentation
-- [ ] API reference documentation (Dokka) published to GitHub Pages
-- [ ] Video tutorials and integration walkthroughs
-- [ ] Sample apps for common use cases (retail, logistics, field service)
+- [x] `docs/TROUBLESHOOTING.md` operator runbook (PR #101)
+- [x] `docs/SECURE_DESIGN.md`, `docs/HARDENING.md`,
+  `docs/VULNERABILITY_RESPONSE.md` for CII Passing application
+  (PR #104)
+- [x] API reference (Dokka) published to GitHub Pages (PR #103)
+- [x] `INTEGRATION.md` installation section corrected (PR #92)
 
 ### Security and assurance
-- [ ] Pre-filled SIG (Standardized Information Gathering) questionnaire template
-- [ ] Third-party penetration test (annual, recognized firm)
-- [ ] OpenSSF CII Best Practices badge (passing)
-- [ ] Scheduled weekly fuzzing workflow on `main`
-- [ ] Full SCT signature verification in `CertificateTransparencyValidator` --
-  **deferred to v1.3.0.** Initial investigation evaluated
-  `com.appmattus:certificatetransparency` 2.8.20: its library code has reasonable
-  signals (CodeQL SAST passing, license present), but OpenSSF Scorecard shows weak
-  release-pipeline trust (Maintained 0 in last 90 days, Token-Permissions 0,
-  Signed-Releases -1, no SECURITY.md). Importing into a security-focused SDK's
-  transport layer is inappropriate without stronger supply-chain signals. Candidate
-  paths for v1.3:
-  1. Self-implement RFC 6962 SCT parsing + signature verification (ECDSA P-256 / RSA
-     PKCS#1 v1.5) against a bundled IANA log list; ~500-800 lines of Kotlin plus a
-     log-list refresh strategy per release. Crypto primitives already present in
-     `Hkdf.kt` (HMAC-SHA256) and via `java.security`.
-  2. Re-vet `com.appmattus:certificatetransparency` once it publishes signed releases
-     and earns a Scorecard >=6.0; treat as a provisional dep and pin by hash.
-  3. Evaluate Conscrypt (BoringSSL-backed) which includes CT verification natively
-     on Android 10+; may remove the need for a Kotlin-side implementation for
-     `TransportSecurityPolicy.certificateTransparencyEnabled`.
+- [x] OpenSSF CII Best Practices badge application (Passing tier) --
+  documented scaffolding in this release; actual application filed
+  post-tag
+- [x] Scheduled weekly fuzzing workflow on `main` (already present in
+  `.github/workflows/fuzz.yml`)
 
-### Audit follow-ups (from 1.0.0 review, medium-severity)
-- [ ] Replace `SecureKeyDerivation.deriveDeterministic` ISO-8859-1 bridge with
-  HKDF-based byte construction and explicit length prefixing
-- [ ] Lock `FileSink` size counter under a dedicated mutex to prevent negative
-  values under concurrent emit
-- [ ] Switch `CertificatePinningInterceptor` to OkHttp's native
-  `certificatePinner`, so pin validation runs during the TLS handshake
-  before the request body is exchanged
-- [ ] High-security presets (`fedRampDefaults`, `cuiDefaults`, `cjisDefaults`)
-  validate that `baseUrl` HTTPS endpoints have pins configured or CT
-  enabled; log `ERROR` if not
-- [ ] `RemoteConfigPolicy.pilotDefaults` marked `@RequiresOptIn` /
-  `@Deprecated(WARNING)` to prevent accidental production use
+---
+
+## v1.3.0 Distribution
+
+Focus: fleet-friendly packaging and the cleanups the code surface has
+earned after 1.2. Deferred from the original v1.2 scope.
+
+### Distribution
+- [ ] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for
+  coordinated version management
+- [ ] Gradle Version Catalog snippet for consumers
+- [ ] LTS branch policy (cherry-pick security fixes to v1.1.x / v1.2.x)
+  with backport automation
+
+### Platform
+- [ ] AGP 9.x evaluation -- brings Bouncy Castle 1.84+ and closes the
+  remaining build-classpath CVE exposure root cause
+
+### Security
+- [ ] Full SCT signature verification per RFC 6962. Three candidate
+  implementation paths evaluated in 1.2; pick one:
+  1. Self-implement RFC 6962 SCT parsing + signature verification
+     (ECDSA P-256 / RSA PKCS#1 v1.5) against a bundled IANA log list;
+     ~500-800 lines of Kotlin plus a log-list refresh strategy per
+     release. Crypto primitives already present in `Hkdf.kt`
+     (HMAC-SHA256) and via `java.security`.
+  2. Re-vet `com.appmattus:certificatetransparency` once it publishes
+     signed releases and earns a Scorecard >=6.0; treat as a
+     provisional dep and pin by hash.
+  3. Evaluate Conscrypt (BoringSSL-backed) which includes CT
+     verification natively on Android 10+; may remove the need for a
+     Kotlin-side implementation for
+     `TransportSecurityPolicy.certificateTransparencyEnabled`.
+- [ ] Publish Kover coverage reports per release tag (CII Silver
+  `test_coverage_documented` criterion)
+- [ ] Fix intermittently flaky
+  `KioskOpsSdkIntegrationTest.heartbeat reason is reflected in healthCheck`
+  by refactoring Robolectric test isolation
+
+### Code quality
+- [ ] `cfg()` snapshot per public entry point (consistency with
+  `enqueueDetailed`)
+- [ ] Preset builder de-duplication
+  (`fedRampDefaults`/`cuiDefaults`/`cjisDefaults`/`asdEssentialEightDefaults`/`gdprDefaults`
+  share a `base(...)`)
+- [ ] `KioskOpsConfig.toString()` multi-line redacted pretty-print
+- [ ] Detekt baseline-rot CI guard
+
+### Documentation
+- [ ] `FEATURES.md` flattened capability matrix (Feature | Default |
+  Since | Link)
+- [ ] `ARCHITECTURE.md` subsystem diagram refresh with enqueue pipeline +
+  fleet/observability/compliance blocks
+- [ ] Legal disclaimer consolidated to `docs/LEGAL.md` (currently
+  copy-pasted across five files)
+
+### Compliance ops
+- [ ] Pre-filled SIG (Standardized Information Gathering) questionnaire
+  template
+
+---
+
+## v1.4.0 Cross-platform foundation
+
+Focus: second runtime, first platform.
+
+### Platform
+- [ ] Kotlin Multiplatform common module carved out of core
+- [ ] iOS target (Darwin) with Swift-friendly interop
+- [ ] React Native bridge package
+
+### Internal refactors
+- [ ] `KioskOpsSdk` namespace split (`fleet.*`, `audit.*`, `health.*`
+  accessors with flat-method deprecated forwards)
+- [ ] Java blocking-wrapper helper collapsing the six
+  `*Blocking` methods to one `future { }` delegate
+- [ ] Retention moved to a dedicated `RetentionWorker` (decouples from
+  heartbeat)
+
+### Observability
+- [ ] Event delivery confirmation callbacks (post-ack)
 
 ---
 
@@ -413,6 +494,7 @@ Features under consideration for post-1.0 releases:
 - [ ] Webhook delivery for real-time event streaming
 - [ ] Optional lightweight mode without Room (SQLite-only queue for resource-constrained devices)
 - [ ] Module split: `kioskops-core`, `kioskops-compliance`, `kioskops-analytics`
+- [ ] Flutter plugin (evaluate demand before committing)
 
 ### Observability & Debugging
 - [ ] Persistent crash-safe log export (survives process death)
@@ -425,6 +507,9 @@ Features under consideration for post-1.0 releases:
 - [ ] FedRAMP-compatible deployment patterns
 - [ ] HIPAA BAA-ready configuration presets
 - [ ] DPA (Data Processing Agreement) template for GDPR
+- [ ] Third-party penetration test. Not currently scheduled; pending
+  engagement funding. Tracked here rather than on a release milestone
+  so the plan stays honest about what we can actually commit to.
 
 ### Integrations
 - [ ] Firebase Analytics bridge

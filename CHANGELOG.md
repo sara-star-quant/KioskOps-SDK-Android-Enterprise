@@ -5,6 +5,165 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-20
+
+Reliability and security hardening release. Closes the v1.0 audit follow-ups,
+adds the transport-layer integrity upgrade, tightens defaults for
+high-security presets, and completes the observability primitives integrators
+asked for. No breaking changes; one source-compat nuance on
+`DiagnosticsSchedulePolicy` positional constructors noted below.
+
+### Added
+
+- `QueueDao.reconcileStaleSending` and `KioskOpsSdk.init` call site that reset
+  queue rows stranded in `SENDING` for more than five minutes back to
+  `PENDING`. Events abandoned by a mid-sync crash no longer rot silently
+  until retention deletes them.
+- `QueueDao.markBatchFailureNoAttemptBump` and `QueueRepository`
+  equivalent. `SyncEngine` uses this path for batch-level transient and
+  permanent failures so a long outage no longer marches the entire backlog
+  to `maxAttemptsPerEvent` and quarantines it.
+- `CorruptionHandlingOpenHelperFactory` wraps the Room open-helper factory
+  (SQLCipher or framework default) so corruption surfaces via
+  `KioskOpsErrorListener.StorageError` and lands in the audit trail before
+  Room's default delete-and-recreate runs.
+- `SyncPolicy.connectTimeoutSeconds`, `readTimeoutSeconds`,
+  `writeTimeoutSeconds`, `callTimeoutSeconds` with fleet-safe defaults
+  (15/30/30/60). Previously the SDK-built `OkHttpClient` inherited OkHttp
+  defaults with no `callTimeout` at all, so a slow server could stall the
+  sync worker indefinitely.
+- `QueueDao.countNotSentFlow` and `QueueRepository.countActiveFlow`. These
+  back the new Room-reactive `KioskOpsSdk.queueDepthFlow()` and
+  `healthStatusFlow()` behavior.
+- `DiagnosticsSchedulePolicy.maxExportBytes` (default 50 MiB) caps the
+  diagnostics ZIP size. Oversized entries are omitted and a
+  `truncation.txt` marker is added to the ZIP.
+- `RemoteConfigPolicy.PilotConfig` nested annotation.
+  `RemoteConfigPolicy.pilotDefaults` is now `@RequiresOptIn(WARNING)` so
+  production call sites must acknowledge the lower-security posture.
+- `InstallSecret.zeroize(bytes)` helper for defense-in-depth zeroing of
+  caller-owned secrets after use.
+- New documentation in `docs/`:
+  - `TROUBLESHOOTING.md` operator runbook with nine symptom-diagnosis-fix
+    recipes.
+  - `SECURE_DESIGN.md` seven design principles the SDK is built to.
+  - `HARDENING.md` eleven-item production checklist with compliance
+    rationale per item.
+  - `VULNERABILITY_RESPONSE.md` SLA, severity bands, coordinated-disclosure
+    expectations.
+- GitHub Pages publishing of the Dokka API reference via
+  `.github/workflows/dokka-pages.yml`. The published site replays the same
+  Dokka HTML output used for the Maven Central javadoc JAR.
+
+### Changed
+
+- `SecureKeyDerivation.deriveDeterministic` now uses HKDF-SHA256 (RFC 5869)
+  instead of PBKDF2 over an `ISO-8859-1` char-array bridge. HKDF is the
+  correct primitive for reproducible derivation from high-entropy keying
+  material; the prior PBKDF2 path was lossy across JCE providers. Output
+  bytes differ; `deriveDeterministic` has no production callers yet, so
+  the change is behavior-safe.
+- `InstallSecret.getOrCreate` now wraps the per-install secret with an
+  Android Keystore AES-GCM key (parity with `DatabaseEncryptionProvider`).
+  Legacy unwrapped entries are migrated in place on first access. Callers
+  using the SDK's idempotency path are unaffected.
+- `FileSink.emit` is now guarded by a dedicated monitor. Prior
+  `AtomicInteger + ConcurrentLinkedDeque` racing drained the buffer to
+  empty on a single overflow event and could produce negative sizes under
+  concurrent emit.
+- `KioskOpsSdk.shutdown` flushes the final audit and telemetry record under
+  `NonCancellable` before cancelling `sdkJob`. Prior ordering cancelled
+  the scope first and the `sdk_shutdown` entry was silently dropped.
+- `applySchedulingFromConfig` now uses `ExistingPeriodicWorkPolicy.KEEP`
+  for both the heartbeat and event-sync periodic work. Prior `UPDATE`
+  reset WorkManager's exponential-backoff counter on every SDK init,
+  which caused a crash-loop app to retry immediately instead of backing
+  off.
+- `RemoteConfigManager._configUpdates` uses
+  `BufferOverflow.DROP_OLDEST`. Prior default-SUSPEND could back-pressure
+  the applier's critical path from a slow collector.
+- `CertificatePinningInterceptor` usage replaced with OkHttp's native
+  `okhttp3.CertificatePinner` installed on the `OkHttpClient.Builder`.
+  Pin validation now runs inside the TLS handshake, so a rogue server
+  cannot receive a request body before the SDK rejects the connection.
+  The interceptor class is retained as `@Deprecated(WARNING)` for source
+  compatibility; removal targeted for 1.4.0.
+- `KioskOpsSdk.queueDepthFlow()` and `healthStatusFlow(intervalMs)` are
+  Room-reactive since this release. `queueDepthFlow` emits on DB change,
+  not on timer; `healthStatusFlow` combines DB change with the ticker so
+  non-reactive fields still refresh on schedule. The `intervalMs` parameter
+  on `queueDepthFlow` is retained for binary compatibility but ignored.
+- `QueueRepository.markFailed` and `markBatchFailureNoAttemptBump` truncate
+  the stored `lastError` at 256 characters with a `...[truncated]` marker,
+  bounding DB growth and accidental PII from misbehaving server error
+  bodies.
+- `DiagnosticsExporter` streams into a byte-counting `OutputStream` and
+  respects `DiagnosticsSchedulePolicy.maxExportBytes`.
+- `KioskOpsSdk.notifyError` now logs `warn` on listener-side exceptions
+  instead of silently swallowing, so a broken host-app error listener is
+  observable in logcat and diagnostics.
+- High-security preset factories (`fedRampDefaults`, `cuiDefaults`,
+  `cjisDefaults`, `asdEssentialEightDefaults`) log `android.util.Log.e`
+  when called with an HTTPS `baseUrl` but without certificate pins or
+  Certificate Transparency configured.
+- Toolchain bump: Kotlin 2.1.0 to 2.3.20, KSP 2.1.0-1.0.29 to 2.3.6,
+  kotlinx-serialization-json 1.8.0 to 1.11.0, androidx.room 2.7.1 to
+  2.8.4, androidx.lifecycle 2.9.0 to 2.10.0, androidx.work 2.11.1 to
+  2.11.2, androidx.test runner/rules/ext-junit bumped to 1.7.0/1.7.0/1.3.0,
+  binary-compatibility-validator 0.16.3 to 0.18.1, kover 0.9.1 to 0.9.8.
+- Build-classpath CVE pins: bouncycastle bcprov/bcpkix/bcutil/bcpg to 1.84,
+  plexus-utils to 4.0.3. Addresses GHSA-c3fc-8qff-9hwx, GHSA-wg6q-6289-32hp,
+  the bcpg Uncontrolled Resource Consumption advisory, and
+  GHSA-6fmv-xxpf-w3cw. None of these libraries ship in the SDK AAR; they
+  are transitive build-time dependencies.
+- GitHub org rename across all user-facing URLs (badges, POM metadata,
+  CHANGELOG release-tag links, CONTRIBUTING, ROADMAP, release workflow
+  summary). Coordinates on Maven Central and PGP-signed artifacts are
+  unchanged.
+
+### Deprecated
+
+- `CertificatePinningInterceptor`. Use OkHttp's native
+  `okhttp3.CertificatePinner`; the SDK wires this automatically when
+  `TransportSecurityPolicy.certificatePins` is non-empty.
+
+### Security
+
+- Closes the v1.0 audit follow-up to replace `deriveDeterministic`'s
+  ISO-8859-1 bridge with HKDF.
+- Closes the v1.0 audit follow-up to lock `FileSink`'s size counter.
+- Closes the v1.0 audit follow-up to move certificate pinning into the
+  TLS handshake.
+- Closes the v1.0 audit follow-up to warn on high-security presets with an
+  HTTPS endpoint but no pins or CT.
+- Closes the v1.0 audit follow-up to gate `pilotDefaults` behind opt-in.
+- Partial completion of the v1.0 audit follow-up for full SCT verification:
+  the native `CertificatePinner` lands now (bigger material win); full
+  SCT verification is deferred to v1.3.0 with three candidate
+  implementation paths documented in `ROADMAP.md` (self-implement
+  RFC 6962, re-vet appmattus once its Scorecard improves, or use
+  Conscrypt native CT).
+
+### Source compatibility
+
+- `DiagnosticsSchedulePolicy` data class constructor gains `maxExportBytes`
+  as the tenth parameter. Callers using named arguments are unaffected.
+  Callers using the nine-arg positional constructor must add the new
+  parameter or migrate to named arguments.
+
+### Binary compatibility
+
+- All other additions are purely additive; existing binary-compiled
+  consumers continue to resolve. `queueDepthFlow(Long)` retains its
+  signature so the `$default` synthetic is unchanged.
+
+### Known issues
+
+- `KioskOpsSdkIntegrationTest.heartbeat reason is reflected in healthCheck`
+  is intermittently flaky on CI; passes consistently locally. Tracked for
+  v1.3.0 to refactor the Robolectric test isolation. Does not affect SDK
+  behavior.
+
 ## [1.1.0] - 2026-04-18
 
 Security hardening release. Fixes several audit-surfaced confidentiality and
@@ -661,6 +820,9 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[1.2.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v1.2.0
+[1.1.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v1.1.0
+[1.0.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v1.0.0
 [0.9.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.9.0
 [0.8.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.8.0
 [0.7.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v0.7.0
