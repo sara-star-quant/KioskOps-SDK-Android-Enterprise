@@ -21,6 +21,14 @@ Please upgrade to the latest release.
 
 We take security vulnerabilities seriously. If you discover a security issue, please report it responsibly.
 
+See [docs/VULNERABILITY_RESPONSE.md](../docs/VULNERABILITY_RESPONSE.md) for the full SLA,
+severity bands, coordinated-disclosure expectations, and what ships with a security
+release. The short version is below.
+
+See [docs/VULNERABILITY_RESPONSE.md](../docs/VULNERABILITY_RESPONSE.md) for the full SLA,
+severity bands, coordinated-disclosure expectations, and what ships with a security
+release. The short version is below.
+
 ### How to Report
 
 **Please do NOT report security vulnerabilities through public GitHub issues.**
