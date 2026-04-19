@@ -12,7 +12,7 @@ buildscript {
       "org.bouncycastle:bcpkix-jdk18on:1.84",
       "org.bouncycastle:bcutil-jdk18on:1.84",
       "org.bouncycastle:bcpg-jdk18on:1.84",
-      "org.codehaus.plexus:plexus-utils:3.6.1",
+      "org.codehaus.plexus:plexus-utils:4.0.3",
     )
   }
 }
