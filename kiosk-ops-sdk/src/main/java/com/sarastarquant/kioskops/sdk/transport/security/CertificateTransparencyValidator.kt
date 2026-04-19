@@ -11,22 +11,27 @@ import java.io.IOException
 import java.security.cert.X509Certificate
 
 /**
- * OkHttp interceptor for Certificate Transparency (CT) validation.
+ * SCT-presence-only check for Certificate Transparency.
  *
- * Certificate Transparency is a framework for monitoring and auditing
- * the issuance of digital certificates. CT logs provide public,
- * append-only records of all certificates issued by participating CAs.
+ * Deprecated in 1.2.0: this validator only verifies that a Signed Certificate Timestamp
+ * (SCT) extension is present on the leaf certificate; it does not verify the SCT signature
+ * against IANA-approved CT logs, check inclusion proofs, or compare SCT timestamps to the
+ * certificate's validity window. The SDK now delegates to
+ * `com.appmattus.certificatetransparency` via a network interceptor when
+ * [TransportSecurityPolicy.certificateTransparencyEnabled] is on, which performs full SCT
+ * verification against the IANA log list.
  *
- * When enabled, this validator checks that server certificates have
- * been logged to Certificate Transparency logs, providing protection
- * against misissued or rogue certificates.
- *
- * Note: CT validation requires network access to CT log servers and
- * may add latency to the first connection to each host.
+ * Retained for source compatibility; scheduled for removal in 1.4.0.
  *
  * @property enabled Whether CT validation is active.
  * @property onValidationFailure Callback invoked when CT validation fails.
  */
+@Deprecated(
+  message = "SCT presence-only check. Use appmattus certificateTransparencyInterceptor " +
+    "on OkHttpClient.Builder for full verification; the SDK wires this automatically when " +
+    "TransportSecurityPolicy.certificateTransparencyEnabled is true.",
+  level = DeprecationLevel.WARNING,
+)
 class CertificateTransparencyValidator(
   private val enabled: Boolean = true,
   private val onValidationFailure: ((String, String) -> Unit)? = null,
