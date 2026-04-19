@@ -1,0 +1,61 @@
+name: Publish Dokka to GitHub Pages
+
+# Rebuilds the Dokka HTML site on every push to main and on release tags, then publishes
+# it to GitHub Pages for https://sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise/.
+#
+# Kept separate from build.yml so the main build never blocks on Pages deployment and so
+# a Pages rollback is a single-branch revert.
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*.*.*" ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v5.0.0
+
+      - name: Generate Dokka HTML
+        run: ./gradlew :kiosk-ops-sdk:dokkaGeneratePublicationHtml --no-daemon
+
+      - name: Prepare site root
+        run: |
+          mkdir -p "$SITE_DIR"
+          cp -r kiosk-ops-sdk/build/dokka/html/. "$SITE_DIR/"
+        env:
+          SITE_DIR: ${{ runner.temp }}/site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v4.0.0
+        with:
+          path: ${{ runner.temp }}/site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
