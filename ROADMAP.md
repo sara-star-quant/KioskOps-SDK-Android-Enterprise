@@ -368,8 +368,23 @@ toolchain surface, and prepare for cross-platform consumers.
 - [ ] Third-party penetration test (annual, recognized firm)
 - [ ] OpenSSF CII Best Practices badge (passing)
 - [ ] Scheduled weekly fuzzing workflow on `main`
-- [ ] Full SCT signature verification in `CertificateTransparencyValidator`
-  (integrate `com.appmattus:certificatetransparency` or equivalent)
+- [ ] Full SCT signature verification in `CertificateTransparencyValidator` --
+  **deferred to v1.3.0.** Initial investigation evaluated
+  `com.appmattus:certificatetransparency` 2.8.20: its library code has reasonable
+  signals (CodeQL SAST passing, license present), but OpenSSF Scorecard shows weak
+  release-pipeline trust (Maintained 0 in last 90 days, Token-Permissions 0,
+  Signed-Releases -1, no SECURITY.md). Importing into a security-focused SDK's
+  transport layer is inappropriate without stronger supply-chain signals. Candidate
+  paths for v1.3:
+  1. Self-implement RFC 6962 SCT parsing + signature verification (ECDSA P-256 / RSA
+     PKCS#1 v1.5) against a bundled IANA log list; ~500-800 lines of Kotlin plus a
+     log-list refresh strategy per release. Crypto primitives already present in
+     `Hkdf.kt` (HMAC-SHA256) and via `java.security`.
+  2. Re-vet `com.appmattus:certificatetransparency` once it publishes signed releases
+     and earns a Scorecard >=6.0; treat as a provisional dep and pin by hash.
+  3. Evaluate Conscrypt (BoringSSL-backed) which includes CT verification natively
+     on Android 10+; may remove the need for a Kotlin-side implementation for
+     `TransportSecurityPolicy.certificateTransparencyEnabled`.
 
 ### Audit follow-ups (from 1.0.0 review, medium-severity)
 - [ ] Replace `SecureKeyDerivation.deriveDeterministic` ISO-8859-1 bridge with
