@@ -21,7 +21,7 @@ class MetricRegistryExtendedTest {
     registry = MetricRegistry()
   }
 
-  // -- Counter tests --
+  // Counter tests --
 
   @Test
   fun `counter add and getValue returns correct total`() {
@@ -71,7 +71,7 @@ class MetricRegistryExtendedTest {
     assertThat(counter.getValues()).isEmpty()
   }
 
-  // -- Gauge tests --
+  // Gauge tests --
 
   @Test
   fun `gauge record and getValue returns latest value`() {
@@ -120,7 +120,7 @@ class MetricRegistryExtendedTest {
     assertThat(gauge.getValues()[emptyMap()]).isEqualTo(-15.5)
   }
 
-  // -- Histogram tests --
+  // Histogram tests --
 
   @Test
   fun `histogram record and statistics are correct`() {
@@ -213,7 +213,7 @@ class MetricRegistryExtendedTest {
     assertThat(values[mapOf("region" to "eu")]!!.sum).isEqualTo(20.0)
   }
 
-  // -- BucketSnapshot --
+  // BucketSnapshot --
 
   @Test
   fun `BucketSnapshot average with multiple values`() {
@@ -241,7 +241,7 @@ class MetricRegistryExtendedTest {
     assertThat(snapshot.average).isEqualTo(0.0)
   }
 
-  // -- collectMetrics (getAll) --
+  // collectMetrics (getAll) --
 
   @Test
   fun `collectMetrics returns all registered metrics`() {
@@ -265,7 +265,7 @@ class MetricRegistryExtendedTest {
     assertThat(snapshot.histograms).isEmpty()
   }
 
-  // -- reset clears all metrics --
+  // reset clears all metrics --
 
   @Test
   fun `reset clears values across all metric types`() {
@@ -284,7 +284,7 @@ class MetricRegistryExtendedTest {
     assertThat(histogram.getValues()).isEmpty()
   }
 
-  // -- Concurrent counter increments --
+  // Concurrent counter increments --
 
   @Test
   fun `concurrent counter increments produce correct total`() {
@@ -341,7 +341,7 @@ class MetricRegistryExtendedTest {
     assertThat(values).isNotEmpty()
   }
 
-  // -- Metric name uniqueness --
+  // Metric name uniqueness --
 
   @Test
   fun `getOrCreateCounter returns same instance for same name`() {
@@ -376,7 +376,7 @@ class MetricRegistryExtendedTest {
     assertThat(gauge.getValues()[emptyMap()]).isEqualTo(99.0)
   }
 
-  // -- Counter and gauge name/description/unit properties --
+  // Counter and gauge name/description/unit properties --
 
   @Test
   fun `counter preserves name description and unit`() {

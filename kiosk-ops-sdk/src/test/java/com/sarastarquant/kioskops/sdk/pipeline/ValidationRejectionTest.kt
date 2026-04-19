@@ -98,7 +98,7 @@ class ValidationRejectionTest : PipelineTestBase() {
     """.trimIndent()
     sdk.schemaRegistry.register("payment.processed", schema)
 
-    // Missing required "amount" field -- permissive mode does not reject
+    // Missing required "amount" field: permissive mode does not reject
     val result = sdk.enqueueDetailed("payment.processed", """{"note": "no amount"}""")
 
     assertThat(result).isInstanceOf(EnqueueResult.Accepted::class.java)
@@ -161,7 +161,7 @@ class ValidationRejectionTest : PipelineTestBase() {
   }
 
   // ==========================================================================
-  // Edge cases -- validation-related
+  // Edge cases: validation-related
   // ==========================================================================
 
   @Test
