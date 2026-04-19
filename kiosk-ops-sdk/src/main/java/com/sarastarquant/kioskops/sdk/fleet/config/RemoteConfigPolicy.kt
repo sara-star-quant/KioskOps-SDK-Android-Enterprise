@@ -32,6 +32,25 @@ data class RemoteConfigPolicy(
   val maxRetainedVersions: Int = 5,
   val configApplyCooldownMs: Long = 60_000L,
 ) {
+  /**
+   * Opt-in marker for configuration profiles that are explicitly not production-ready.
+   * Currently gates [RemoteConfigPolicy.pilotDefaults], which disables signature
+   * verification and lowers minimum-version enforcement. Call sites must add
+   * `@OptIn(PilotConfig::class)` or propagate `@PilotConfig` to acknowledge they are
+   * choosing a lower-security posture. See KDoc on [pilotDefaults] for details.
+   *
+   * @since 1.2.0
+   */
+  @RequiresOptIn(
+    message = "This configuration disables signature verification and lowers version " +
+      "enforcement; it is intended for staging, pilots, and integration testing. Do not " +
+      "use in production. Acknowledge with @OptIn(PilotConfig::class).",
+    level = RequiresOptIn.Level.WARNING,
+  )
+  @Retention(AnnotationRetention.BINARY)
+  @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
+  annotation class PilotConfig
+
   companion object {
     /**
      * Disabled defaults - remote config is opt-in.
@@ -53,7 +72,16 @@ data class RemoteConfigPolicy(
 
     /**
      * Pilot defaults for testing without signature verification.
+     *
+     * **NOT FOR PRODUCTION.** Disables `requireSignedConfig` and accepts any
+     * `minimumConfigVersion`, which means a malicious managed-config push can install a
+     * policy that relaxes PII handling, disables encryption, or redirects baseUrl. The
+     * returned policy is still safer than disabling remote config entirely (A/B testing
+     * + version monotonicity still apply) but is inappropriate for any deployment that
+     * handles real user data. Gated by [PilotConfig] since 1.2.0; callers must add
+     * `@OptIn(RemoteConfigPolicy.PilotConfig::class)` to acknowledge.
      */
+    @PilotConfig
     fun pilotDefaults() = RemoteConfigPolicy(
       enabled = true,
       minimumConfigVersion = 0L,
