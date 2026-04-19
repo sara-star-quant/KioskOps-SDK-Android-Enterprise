@@ -4451,6 +4451,7 @@ public final class com/sarastarquant/kioskops/sdk/util/InstallSecret {
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/util/InstallSecret;
 	public final fun getOrCreate (Landroid/content/Context;I)[B
 	public static synthetic fun getOrCreate$default (Lcom/sarastarquant/kioskops/sdk/util/InstallSecret;Landroid/content/Context;IILjava/lang/Object;)[B
+	public final fun zeroize ([B)V
 }
 
 public abstract interface class com/sarastarquant/kioskops/sdk/validation/EventValidator {
