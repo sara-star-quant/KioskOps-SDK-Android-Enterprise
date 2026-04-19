@@ -55,10 +55,10 @@ class DataRightsAuthorizerTest {
     requireAuthorization = requireAuthorization,
   )
 
-  // -- 1. Authorizer allows export: operation proceeds, returns Success or NoData --
+  // 1. Authorizer allows export: operation proceeds, returns Success or NoData --
 
   @Test
-  fun `authorizer allows export -- operation proceeds and returns NoData for unknown user`() =
+  fun `authorizer allows export - operation proceeds and returns NoData for unknown user`() =
     runBlocking {
       val manager = buildManager()
       manager.setAuthorizer(DataRightsAuthorizer { _, _ -> true })
@@ -67,10 +67,10 @@ class DataRightsAuthorizerTest {
       assertThat(result).isInstanceOf(DataExportResult.NoData::class.java)
     }
 
-  // -- 2. Authorizer denies export: returns Unauthorized --
+  // 2. Authorizer denies export: returns Unauthorized --
 
   @Test
-  fun `authorizer denies export -- returns Unauthorized with EXPORT operation`() = runBlocking {
+  fun `authorizer denies export - returns Unauthorized with EXPORT operation`() = runBlocking {
     val manager = buildManager()
     manager.setAuthorizer(DataRightsAuthorizer { _, _ -> false })
 
@@ -80,10 +80,10 @@ class DataRightsAuthorizerTest {
     assertThat(unauthorized.operation).isEqualTo(DataRightsOperation.EXPORT)
   }
 
-  // -- 3. Authorizer allows delete: operation proceeds --
+  // 3. Authorizer allows delete: operation proceeds --
 
   @Test
-  fun `authorizer allows delete -- operation proceeds and returns Success`() = runBlocking {
+  fun `authorizer allows delete - operation proceeds and returns Success`() = runBlocking {
     val manager = buildManager()
     manager.setAuthorizer(DataRightsAuthorizer { _, _ -> true })
 
@@ -91,10 +91,10 @@ class DataRightsAuthorizerTest {
     assertThat(result).isInstanceOf(DataDeletionResult.Success::class.java)
   }
 
-  // -- 4. Authorizer denies delete: returns Unauthorized --
+  // 4. Authorizer denies delete: returns Unauthorized --
 
   @Test
-  fun `authorizer denies delete -- returns Unauthorized with DELETE operation`() = runBlocking {
+  fun `authorizer denies delete - returns Unauthorized with DELETE operation`() = runBlocking {
     val manager = buildManager()
     manager.setAuthorizer(DataRightsAuthorizer { _, _ -> false })
 
@@ -104,10 +104,10 @@ class DataRightsAuthorizerTest {
     assertThat(unauthorized.operation).isEqualTo(DataRightsOperation.DELETE)
   }
 
-  // -- 5. Authorizer allows wipe: operation proceeds --
+  // 5. Authorizer allows wipe: operation proceeds --
 
   @Test
-  fun `authorizer allows wipe -- operation proceeds and returns Success`() = runBlocking {
+  fun `authorizer allows wipe - operation proceeds and returns Success`() = runBlocking {
     val manager = buildManager()
     manager.setAuthorizer(DataRightsAuthorizer { _, _ -> true })
 
@@ -115,10 +115,10 @@ class DataRightsAuthorizerTest {
     assertThat(result).isInstanceOf(DataDeletionResult.Success::class.java)
   }
 
-  // -- 6. Authorizer denies wipe: returns Unauthorized --
+  // 6. Authorizer denies wipe: returns Unauthorized --
 
   @Test
-  fun `authorizer denies wipe -- returns Unauthorized with WIPE operation`() = runBlocking {
+  fun `authorizer denies wipe - returns Unauthorized with WIPE operation`() = runBlocking {
     val manager = buildManager()
     manager.setAuthorizer(DataRightsAuthorizer { _, _ -> false })
 
@@ -128,10 +128,10 @@ class DataRightsAuthorizerTest {
     assertThat(unauthorized.operation).isEqualTo(DataRightsOperation.WIPE)
   }
 
-  // -- 7. No authorizer + requireAuthorization=false: operations proceed (backward compatible) --
+  // 7. No authorizer + requireAuthorization=false: operations proceed (backward compatible) --
 
   @Test
-  fun `no authorizer with requireAuthorization false -- export proceeds`() = runBlocking {
+  fun `no authorizer with requireAuthorization false - export proceeds`() = runBlocking {
     val manager = buildManager(requireAuthorization = false)
 
     val result = manager.exportUserData("user-compat")
@@ -139,7 +139,7 @@ class DataRightsAuthorizerTest {
   }
 
   @Test
-  fun `no authorizer with requireAuthorization false -- delete proceeds`() = runBlocking {
+  fun `no authorizer with requireAuthorization false - delete proceeds`() = runBlocking {
     val manager = buildManager(requireAuthorization = false)
 
     val result = manager.deleteUserData("user-compat")
@@ -147,17 +147,17 @@ class DataRightsAuthorizerTest {
   }
 
   @Test
-  fun `no authorizer with requireAuthorization false -- wipe proceeds`() = runBlocking {
+  fun `no authorizer with requireAuthorization false - wipe proceeds`() = runBlocking {
     val manager = buildManager(requireAuthorization = false)
 
     val result = manager.wipeAllSdkData()
     assertThat(result).isInstanceOf(DataDeletionResult.Success::class.java)
   }
 
-  // -- 8. No authorizer + requireAuthorization=true: operations return Unauthorized --
+  // 8. No authorizer + requireAuthorization=true: operations return Unauthorized --
 
   @Test
-  fun `no authorizer with requireAuthorization true -- export returns Unauthorized`() =
+  fun `no authorizer with requireAuthorization true - export returns Unauthorized`() =
     runBlocking {
       val manager = buildManager(requireAuthorization = true)
 
@@ -166,7 +166,7 @@ class DataRightsAuthorizerTest {
     }
 
   @Test
-  fun `no authorizer with requireAuthorization true -- delete returns Unauthorized`() =
+  fun `no authorizer with requireAuthorization true - delete returns Unauthorized`() =
     runBlocking {
       val manager = buildManager(requireAuthorization = true)
 
@@ -175,7 +175,7 @@ class DataRightsAuthorizerTest {
     }
 
   @Test
-  fun `no authorizer with requireAuthorization true -- wipe returns Unauthorized`() =
+  fun `no authorizer with requireAuthorization true - wipe returns Unauthorized`() =
     runBlocking {
       val manager = buildManager(requireAuthorization = true)
 
@@ -183,10 +183,10 @@ class DataRightsAuthorizerTest {
       assertThat(result).isInstanceOf(DataDeletionResult.Unauthorized::class.java)
     }
 
-  // -- 9. setAuthorizer(null) removes authorization: operations proceed if not required --
+  // 9. setAuthorizer(null) removes authorization: operations proceed if not required --
 
   @Test
-  fun `setAuthorizer null removes authorizer -- operations proceed when not required`() =
+  fun `setAuthorizer null removes authorizer - operations proceed when not required`() =
     runBlocking {
       val manager = buildManager(requireAuthorization = false)
       manager.setAuthorizer(DataRightsAuthorizer { _, _ -> false })
@@ -203,7 +203,7 @@ class DataRightsAuthorizerTest {
       assertThat(result).isInstanceOf(DataDeletionResult.Success::class.java)
     }
 
-  // -- 10. Authorizer receives correct operation type for each method --
+  // 10. Authorizer receives correct operation type for each method --
 
   @Test
   fun `authorizer receives EXPORT operation for exportUserData`() = runBlocking {
@@ -244,7 +244,7 @@ class DataRightsAuthorizerTest {
     assertThat(capturedOperation).isEqualTo(DataRightsOperation.WIPE)
   }
 
-  // -- 11. Authorizer receives correct userId for export and delete --
+  // 11. Authorizer receives correct userId for export and delete --
 
   @Test
   fun `authorizer receives correct userId for exportUserData`() = runBlocking {
@@ -272,7 +272,7 @@ class DataRightsAuthorizerTest {
     assertThat(capturedUserId).isEqualTo("target-user-delete")
   }
 
-  // -- 12. Authorizer receives empty userId for wipe --
+  // 12. Authorizer receives empty userId for wipe --
 
   @Test
   fun `authorizer receives empty userId for wipeAllSdkData`() = runBlocking {
@@ -287,7 +287,7 @@ class DataRightsAuthorizerTest {
     assertThat(capturedUserId).isEqualTo("")
   }
 
-  // -- 13. Unauthorized denial returns correct result (audit verified via return value) --
+  // 13. Unauthorized denial returns correct result (audit verified via return value) --
 
   @Test
   fun `authorizer denial for delete returns Unauthorized with DELETE operation`() = runBlocking {
@@ -299,7 +299,7 @@ class DataRightsAuthorizerTest {
     assertThat((result as DataDeletionResult.Unauthorized).operation).isEqualTo(DataRightsOperation.DELETE)
   }
 
-  // -- 14. No-authorizer block returns correct result --
+  // 14. No-authorizer block returns correct result --
 
   @Test
   fun `no authorizer with requireAuthorization returns Unauthorized for export`() =
@@ -310,7 +310,7 @@ class DataRightsAuthorizerTest {
       assertThat(result).isInstanceOf(DataExportResult.Unauthorized::class.java)
     }
 
-  // -- 15. cuiDefaults has requireDataRightsAuthorization=true --
+  // 15. cuiDefaults has requireDataRightsAuthorization=true --
 
   @Test
   fun `cuiDefaults sets requireDataRightsAuthorization to true`() {
@@ -321,7 +321,7 @@ class DataRightsAuthorizerTest {
     assertThat(config.requireDataRightsAuthorization).isTrue()
   }
 
-  // -- 16. cjisDefaults has requireDataRightsAuthorization=true --
+  // 16. cjisDefaults has requireDataRightsAuthorization=true --
 
   @Test
   fun `cjisDefaults sets requireDataRightsAuthorization to true`() {
@@ -332,7 +332,7 @@ class DataRightsAuthorizerTest {
     assertThat(config.requireDataRightsAuthorization).isTrue()
   }
 
-  // -- 17. gdprDefaults has requireDataRightsAuthorization=false --
+  // 17. gdprDefaults has requireDataRightsAuthorization=false --
 
   @Test
   fun `gdprDefaults sets requireDataRightsAuthorization to false`() {
@@ -343,7 +343,7 @@ class DataRightsAuthorizerTest {
     assertThat(config.requireDataRightsAuthorization).isFalse()
   }
 
-  // -- 18. fedRampDefaults has requireDataRightsAuthorization=false --
+  // 18. fedRampDefaults has requireDataRightsAuthorization=false --
 
   @Test
   fun `fedRampDefaults sets requireDataRightsAuthorization to false`() {
@@ -354,7 +354,7 @@ class DataRightsAuthorizerTest {
     assertThat(config.requireDataRightsAuthorization).isFalse()
   }
 
-  // -- 19. Default config has requireDataRightsAuthorization=false --
+  // 19. Default config has requireDataRightsAuthorization=false --
 
   @Test
   fun `default KioskOpsConfig has requireDataRightsAuthorization false`() {
@@ -366,7 +366,7 @@ class DataRightsAuthorizerTest {
     assertThat(config.requireDataRightsAuthorization).isFalse()
   }
 
-  // -- 20. Authorizer can be changed dynamically between operations --
+  // 20. Authorizer can be changed dynamically between operations --
 
   @Test
   fun `authorizer can be changed dynamically between operations`() = runBlocking {
@@ -383,7 +383,7 @@ class DataRightsAuthorizerTest {
     assertThat(allowed).isInstanceOf(DataDeletionResult.Success::class.java)
   }
 
-  // -- Additional coverage: selective authorizer allows some operations but not others --
+  // Additional coverage: selective authorizer allows some operations but not others --
 
   @Test
   fun `authorizer can selectively allow export but deny delete`() = runBlocking {
@@ -422,7 +422,7 @@ class DataRightsAuthorizerTest {
     val allowed = manager.deleteUserData("user-null-req")
     assertThat(allowed).isInstanceOf(DataDeletionResult.Success::class.java)
 
-    // Remove authorizer -- should block since requireAuthorization=true
+    // Remove authorizer: should block since requireAuthorization=true
     manager.setAuthorizer(null)
     val blocked = manager.deleteUserData("user-null-req")
     assertThat(blocked).isInstanceOf(DataDeletionResult.Unauthorized::class.java)

@@ -91,7 +91,7 @@ class FederalPipelineTest : PipelineTestBase() {
     """.trimIndent()
     sdk.schemaRegistry.register("audit.action", schema)
 
-    // Missing required "action" field -- validation should reject before PII scan
+    // Missing required "action" field: validation should reject before PII scan
     val result = sdk.enqueueDetailed("audit.action", """{"notes": "incomplete"}""")
 
     assertThat(result).isInstanceOf(EnqueueResult.Rejected.ValidationFailed::class.java)

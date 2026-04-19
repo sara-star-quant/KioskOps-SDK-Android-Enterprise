@@ -67,7 +67,7 @@ class KeystoreCryptoInstrumentedTest {
     val plaintext = "sensitive-payload".toByteArray(Charsets.UTF_8)
     val encrypted = provider.encrypt(plaintext)
 
-    // The blob contains a version byte, IV length, IV, and ciphertext -- never the raw input.
+    // The blob contains a version byte, IV length, IV, and ciphertext: never the raw input.
     assertThat(encrypted).isNotEqualTo(plaintext)
     assertThat(encrypted.size).isGreaterThan(plaintext.size)
   }

@@ -14,7 +14,7 @@ import org.robolectric.RobolectricTestRunner
 class CertificatePinningPolicyTest {
 
   // ---------------------------------------------------------------------------
-  // fromPolicy() -- companion factory
+  // fromPolicy(): companion factory
   // ---------------------------------------------------------------------------
 
   @Test
@@ -63,7 +63,7 @@ class CertificatePinningPolicyTest {
   }
 
   // ---------------------------------------------------------------------------
-  // buildPinner() -- sha256 prefix normalization (tested indirectly)
+  // buildPinner(): sha256 prefix normalization (tested indirectly)
   // ---------------------------------------------------------------------------
 
   @Test
@@ -126,7 +126,7 @@ class CertificatePinningPolicyTest {
   }
 
   // ---------------------------------------------------------------------------
-  // fromPolicy -- edge cases
+  // fromPolicy: edge cases
   // ---------------------------------------------------------------------------
 
   @Test

@@ -155,7 +155,7 @@ class CtValidationTest {
   }
 
   // ---------------------------------------------------------------
-  // intercept() -- disabled path
+  // intercept(): disabled path
   // ---------------------------------------------------------------
 
   @Test
@@ -180,7 +180,7 @@ class CtValidationTest {
   }
 
   // ---------------------------------------------------------------
-  // intercept() -- enabled, no handshake
+  // intercept(): enabled, no handshake
   // ---------------------------------------------------------------
 
   @Test
@@ -194,7 +194,7 @@ class CtValidationTest {
   }
 
   // ---------------------------------------------------------------
-  // intercept() -- enabled, handshake with empty certificate list
+  // intercept(): enabled, handshake with empty certificate list
   // ---------------------------------------------------------------
 
   @Test
@@ -208,7 +208,7 @@ class CtValidationTest {
   }
 
   // ---------------------------------------------------------------
-  // hasEmbeddedScts() -- OID 1.3.6.1.4.1.11129.2.4.2
+  // hasEmbeddedScts(): OID 1.3.6.1.4.1.11129.2.4.2
   // ---------------------------------------------------------------
 
   @Test
@@ -389,7 +389,7 @@ class CtValidationTest {
   }
 
   // ---------------------------------------------------------------
-  // Multi-certificate chain -- leaf is validated
+  // Multi-certificate chain: leaf is validated
   // ---------------------------------------------------------------
 
   @Test
@@ -423,7 +423,7 @@ class CtValidationTest {
 
   @Test
   fun `certificate with SCT from unknown CA passes validation`() {
-    // Has SCT but issuer is not a known CA -- should still pass
+    // Has SCT but issuer is not a known CA: should still pass
     val cert = stubCert("CN=Unknown Private CA, O=Private Org", hasSct = true)
     val validator = CertificateTransparencyValidator(enabled = true)
     val chain = buildFakeChain(certificates = listOf(cert))

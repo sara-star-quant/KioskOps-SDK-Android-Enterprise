@@ -61,7 +61,7 @@ class ConditionalCryptoProviderTest {
   }
 
   // -------------------------------------------------------------------------
-  // Encrypt -- delegate called when enabled; passthrough when disabled
+  // Encrypt: delegate called when enabled; passthrough when disabled
   // -------------------------------------------------------------------------
 
   @Test
@@ -96,7 +96,7 @@ class ConditionalCryptoProviderTest {
   }
 
   // -------------------------------------------------------------------------
-  // Decrypt -- delegate called when enabled; passthrough when disabled
+  // Decrypt: delegate called when enabled; passthrough when disabled
   // -------------------------------------------------------------------------
 
   @Test
