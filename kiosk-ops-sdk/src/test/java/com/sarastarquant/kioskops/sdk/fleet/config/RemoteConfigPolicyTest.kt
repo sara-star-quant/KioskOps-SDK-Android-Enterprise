@@ -15,6 +15,7 @@ import org.robolectric.RobolectricTestRunner
  *
  * Security (BSI APP.4.4.A5): Validates policy defaults ensure safe configuration.
  */
+@OptIn(RemoteConfigPolicy.PilotConfig::class)
 @RunWith(RobolectricTestRunner::class)
 class RemoteConfigPolicyTest {
 
