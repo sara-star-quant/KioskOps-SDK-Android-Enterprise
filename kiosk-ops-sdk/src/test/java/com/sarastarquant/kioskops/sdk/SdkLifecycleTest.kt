@@ -42,6 +42,7 @@ class SdkLifecycleTest {
       ctx, Configuration.Builder().setMinimumLoggingLevel(android.util.Log.DEBUG).build()
     )
     KioskOpsSdk.resetForTesting()
+    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
   }
 
   @After
