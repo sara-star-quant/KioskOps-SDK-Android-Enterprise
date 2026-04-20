@@ -12,6 +12,13 @@ on:
     tags: [ "v*.*.*" ]
   workflow_dispatch: {}
 
+# GitHub Pages allows only one active deployment per environment. A push-to-main plus
+# a tag push arriving seconds apart would otherwise race and the second deploy fails.
+# Cancel the older in-flight deploy when a newer one queues.
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

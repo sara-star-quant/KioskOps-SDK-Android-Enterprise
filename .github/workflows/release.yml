@@ -64,7 +64,11 @@ jobs:
         run: |
           cd kiosk-ops-sdk/build/outputs/aar
           for file in *.aar; do
-            cosign sign-blob --yes "$file" \
+            # --new-bundle-format=false keeps the legacy .sig / .pem outputs referenced
+            # by the verify-blob snippet in the release summary. cosign v3.x defaults to
+            # the bundle format; leaving --output-signature/--output-certificate effective
+            # requires the explicit opt-out.
+            cosign sign-blob --yes --new-bundle-format=false "$file" \
               --output-signature "${file}.sig" \
               --output-certificate "${file}.pem"
           done
