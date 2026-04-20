@@ -59,16 +59,17 @@ jobs:
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+        with:
+          # Pinned to cosign 2.x to keep --output-signature / --output-certificate
+          # effective. cosign 3.x defaults to the bundle format and rejects the legacy
+          # flag set; migrating to --bundle is tracked for v1.3.
+          cosign-release: v2.5.3
 
       - name: Sign release artifacts with Sigstore
         run: |
           cd kiosk-ops-sdk/build/outputs/aar
           for file in *.aar; do
-            # --new-bundle-format=false keeps the legacy .sig / .pem outputs referenced
-            # by the verify-blob snippet in the release summary. cosign v3.x defaults to
-            # the bundle format; leaving --output-signature/--output-certificate effective
-            # requires the explicit opt-out.
-            cosign sign-blob --yes --new-bundle-format=false "$file" \
+            cosign sign-blob --yes "$file" \
               --output-signature "${file}.sig" \
               --output-certificate "${file}.pem"
           done
