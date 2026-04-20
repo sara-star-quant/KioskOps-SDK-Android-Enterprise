@@ -447,6 +447,18 @@ earned after 1.2. Deferred from the original v1.2 scope.
 - [ ] `KioskOpsConfig.toString()` multi-line redacted pretty-print
 - [ ] Detekt baseline-rot CI guard
 
+### Release verification infrastructure
+- [ ] Backward-compatibility fixture: pinned copy of sample-app at the
+  previous minor, buildable against the current AAR. Makes
+  `docs/RELEASE_VERIFICATION.md` IP5 mechanical.
+- [ ] Mock-server harness (MockWebServer wrapper with certificate rotation
+  and body-delay). Makes IP2 and IP4 scripted.
+- [ ] Performance benchmarks via androidx.benchmark for `heartbeat`,
+  `enqueue`, and the sync batch-send hot path. Catches silent regressions.
+- [ ] Extend `scripts/pre-release-verify.sh` to drive Robolectric-based
+  subsets of IP3 (database corruption) and IP4 (process-kill mid-sync) so
+  the drills run at CI time instead of only pre-tag.
+
 ### Documentation
 - [ ] `FEATURES.md` flattened capability matrix (Feature | Default |
   Since | Link)
