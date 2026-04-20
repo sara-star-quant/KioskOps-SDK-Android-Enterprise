@@ -448,6 +448,10 @@ earned after 1.2. Deferred from the original v1.2 scope.
 - [ ] Detekt baseline-rot CI guard
 
 ### Release verification infrastructure
+- [ ] Migrate `release.yml` cosign invocation from the legacy
+  `--output-signature` / `--output-certificate` to the `--bundle` form.
+  Pinned to cosign 2.5.3 as of 1.2.0; cosign 2.x will eventually EOL.
+  Update the `verify-blob` snippet in the release summary to match.
 - [ ] Backward-compatibility fixture: pinned copy of sample-app at the
   previous minor, buildable against the current AAR. Makes
   `docs/RELEASE_VERIFICATION.md` IP5 mechanical.
