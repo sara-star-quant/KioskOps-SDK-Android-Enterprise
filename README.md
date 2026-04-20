@@ -5,6 +5,7 @@
 [![CodeQL](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml/badge.svg)](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/codeql.yml)
 [![Fuzz](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml/badge.svg)](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/actions/workflows/fuzz.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise)
+[![Maven Central](https://img.shields.io/maven-central/v/com.sarastarquant.kioskops/kiosk-ops-sdk.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/com.sarastarquant.kioskops/kiosk-ops-sdk)
 [![JitPack](https://jitpack.io/v/sara-star-quant/KioskOps-SDK-Android-Enterprise.svg)](https://jitpack.io/#sara-star-quant/KioskOps-SDK-Android-Enterprise)
 [![API](https://img.shields.io/badge/API-33%2B-brightgreen.svg)](https://developer.android.com/about/versions/13)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-purple.svg)](https://kotlinlang.org/)
