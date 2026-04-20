@@ -157,13 +157,6 @@ asked for. No breaking changes; one source-compat nuance on
   consumers continue to resolve. `queueDepthFlow(Long)` retains its
   signature so the `$default` synthetic is unchanged.
 
-### Known issues
-
-- `KioskOpsSdkIntegrationTest.heartbeat reason is reflected in healthCheck`
-  is intermittently flaky on CI; passes consistently locally. Tracked for
-  v1.3.0 to refactor the Robolectric test isolation. Does not affect SDK
-  behavior.
-
 ## [1.1.0] - 2026-04-18
 
 Security hardening release. Fixes several audit-surfaced confidentiality and
