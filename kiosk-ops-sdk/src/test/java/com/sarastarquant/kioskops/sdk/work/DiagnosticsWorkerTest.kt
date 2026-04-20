@@ -52,6 +52,7 @@ class DiagnosticsWorkerTest {
   @After
   fun tearDown() {
     KioskOpsSdk.resetForTesting()
+    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
   }
 
   private fun initSdk(diagnosticsPolicy: DiagnosticsSchedulePolicy = DiagnosticsSchedulePolicy.disabledDefaults()) {
