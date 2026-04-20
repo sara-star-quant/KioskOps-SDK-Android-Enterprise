@@ -27,7 +27,7 @@ bcv = "0.18.1"
 dokka = "2.2.0"
 detekt = "1.23.7"
 kover = "0.9.8"
-cyclonedx = "3.2.3"
+cyclonedx = "3.2.4"
 mavenPublish = "0.30.0"
 
 [libraries]
