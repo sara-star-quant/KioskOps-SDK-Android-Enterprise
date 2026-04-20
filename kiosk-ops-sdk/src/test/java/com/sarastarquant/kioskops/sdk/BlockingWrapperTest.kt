@@ -53,6 +53,7 @@ class BlockingWrapperTest {
   @After
   fun tearDown() {
     KioskOpsSdk.resetForTesting()
+    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
   }
 
   @Test
