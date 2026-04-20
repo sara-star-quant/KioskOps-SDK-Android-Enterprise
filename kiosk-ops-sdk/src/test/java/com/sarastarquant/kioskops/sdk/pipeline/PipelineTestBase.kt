@@ -37,6 +37,7 @@ abstract class PipelineTestBase {
   @Before
   open fun setUp() {
     KioskOpsSdk.resetForTesting()
+    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
     ctx = ApplicationProvider.getApplicationContext()
     ctx.deleteDatabase("kiosk_ops_queue.db")
     ctx.deleteDatabase("kioskops_audit.db")

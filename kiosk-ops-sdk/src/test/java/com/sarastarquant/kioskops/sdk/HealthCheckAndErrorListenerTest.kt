@@ -34,6 +34,7 @@ class HealthCheckAndErrorListenerTest {
   @After
   fun tearDown() {
     KioskOpsSdk.resetForTesting()
+    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
   }
 
   private fun initSdk(): KioskOpsSdk {
