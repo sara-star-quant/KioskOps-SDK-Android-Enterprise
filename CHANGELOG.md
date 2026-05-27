@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-05-28
+
+Build toolchain upgrade. No SDK API changes.
+
+### Changed
+- Android Gradle Plugin 8.10.1 -> 9.1.1
+- Gradle 8.11.1 -> 9.3.1
+- JDK toolchain 17 -> 21
+- Migrated to AGP 9's built-in Kotlin; removed `kotlin-android` plugin
+- Bouncy Castle force-resolution extended to all subproject configurations (1.84)
+
+### Removed
+- binary-compatibility-validator (discontinued, incompatible with AGP 9 built-in Kotlin); `.api` file retained
+
+### Fixed
+- Flaky `heartbeat reason is reflected in healthCheck` test caused by leaked lifecycle observer
+
+### Dependencies
+- detekt 1.23.7 -> 1.23.8
+- cyclonedx 3.2.3 -> 3.2.4
+- foojay-resolver-convention 0.9.0 -> 1.0.0
+- codeql-action 4.35.2 -> 4.35.3
+- gradle/actions 4.4.1 -> 6.1.0
+- actions/setup-java 4.7.1 -> 5.2.0
+- actions/deploy-pages 4.0.5 -> 5.0.0
+- actions/upload-pages-artifact 3.0.1 -> 5.0.0
+
 ## [1.2.0] - 2026-04-20
 
 Reliability and security hardening release. Closes the v1.0 audit follow-ups,
@@ -813,6 +840,7 @@ Initial release of KioskOps SDK for Android Enterprise.
 - Java 17+
 - Kotlin 2.1+
 
+[1.2.1]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v1.2.1
 [1.2.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v1.2.0
 [1.1.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v1.1.0
 [1.0.0]: https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases/tag/v1.0.0
