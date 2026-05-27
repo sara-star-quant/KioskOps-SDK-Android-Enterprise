@@ -1,6 +1,5 @@
 plugins {
   alias(libs.plugins.android.library)
-  alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
   alias(libs.plugins.dokka)
@@ -11,7 +10,7 @@ plugins {
 }
 
 kotlin {
-  jvmToolchain(17)
+  jvmToolchain(21)
 }
 
 android {
