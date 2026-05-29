@@ -10,6 +10,12 @@ import com.sarastarquant.kioskops.sdk.sync.SyncPolicy
 import com.sarastarquant.kioskops.sdk.transport.AuthProvider
 
 class SampleApp : Application() {
+  // App-wide error listener, held so other components (e.g. BatchEnqueueActivity)
+  // can chain to it without reaching into SDK internals.
+  val errorLogListener = KioskOpsErrorListener { error ->
+    Log.w("KioskOps", "SDK error: ${error.message}", error.cause)
+  }
+
   override fun onCreate() {
     super.onCreate()
 
@@ -38,9 +44,7 @@ class SampleApp : Application() {
 
     // v0.7.0: Error listener for non-fatal SDK operational errors.
     // Fires on sync failures, crypto errors, storage errors; not on expected rejections.
-    sdk.setErrorListener(KioskOpsErrorListener { error ->
-      Log.w("KioskOps", "SDK error: ${error.message}", error.cause)
-    })
+    sdk.setErrorListener(errorLogListener)
 
     // v1.0.0: Data rights authorization callback.
     // cuiDefaults requires authorization before export/delete/wipe operations.
