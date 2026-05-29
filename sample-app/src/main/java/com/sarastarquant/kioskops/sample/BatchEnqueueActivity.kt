@@ -28,7 +28,10 @@ import kotlinx.coroutines.launch
  */
 class BatchEnqueueActivity : Activity() {
   private val scope = MainScope()
-  private val errors = mutableListOf<String>()
+  // CopyOnWriteArrayList: the error listener may fire on a background thread while
+  // the main thread reads the list to render results.
+  private val errors = java.util.concurrent.CopyOnWriteArrayList<String>()
+  private val sdk = KioskOpsSdk.get()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -40,17 +43,12 @@ class BatchEnqueueActivity : Activity() {
     val queueDepthText = findViewById<TextView>(R.id.queueDepthText)
     val errorText = findViewById<TextView>(R.id.errorText)
 
-    val sdk = KioskOpsSdk.get()
-
-    // Capture errors during the batch run.
-    val previousListener = sdk.javaClass.getDeclaredField("errorListener").let { field ->
-      field.isAccessible = true
-      field.get(sdk) as? KioskOpsErrorListener
-    }
-
+    // Capture errors during the batch run, chaining to the app-wide listener so
+    // SampleApp's logging stays active for the activity's lifetime.
+    val appListener = (application as SampleApp).errorLogListener
     sdk.setErrorListener(KioskOpsErrorListener { error ->
       errors.add(error.message)
-      previousListener?.onError(error)
+      appListener.onError(error)
     })
 
     btnStartBatch.setOnClickListener {
@@ -105,6 +103,8 @@ class BatchEnqueueActivity : Activity() {
 
   override fun onDestroy() {
     super.onDestroy()
+    // Drop the activity-capturing listener so the SDK does not retain this Activity.
+    sdk.setErrorListener((application as SampleApp).errorLogListener)
     scope.cancel()
   }
 }
