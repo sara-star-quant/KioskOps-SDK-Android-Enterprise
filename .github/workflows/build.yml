@@ -45,6 +45,16 @@ jobs:
             lintDebug \
             :kiosk-ops-sdk:assembleRelease
 
+      - name: Detekt baseline rot check
+        run: |
+          cp config/detekt/baseline.xml /tmp/baseline.committed.xml
+          ./gradlew :kiosk-ops-sdk:detektBaseline
+          if ! diff -u /tmp/baseline.committed.xml config/detekt/baseline.xml; then
+            echo "::error::Detekt baseline has stale entries (suppressions no longer triggered). Run './gradlew :kiosk-ops-sdk:detektBaseline' and commit the result."
+            cp /tmp/baseline.committed.xml config/detekt/baseline.xml
+            exit 1
+          fi
+
       - name: Generate docs and SBOM
         run: |
           ./gradlew \
