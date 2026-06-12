@@ -4,7 +4,7 @@ ksp = "2.3.6"
 kotlin = "2.3.21"
 serializationJson = "1.11.0"
 jazzer = "0.22.1"
-junit5 = "6.0.3"
+junit5 = "6.1.0"
 
 coreKtx = "1.18.0"
 startup = "1.2.0"
