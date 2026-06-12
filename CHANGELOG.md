@@ -5,16 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.2] - 2026-06-12
+
+Build toolchain upgrade and dependency security hygiene. No SDK API changes.
 
 ### Security
 
-- Pin `io.netty` to 4.1.135.Final across all subproject configurations. netty
+- Pinned `io.netty` to 4.1.135.Final across all subproject configurations. netty
   is a transitive of `grpc-netty` in the Android Unified Test Platform (test
   execution only); it is absent from `releaseRuntimeClasspath` and never ships
-  in the AAR. The pin closes GHSA-3qp7-7mw8-wx86 and GHSA-x4gw-5cx5-pgmh
-  (netty-handler, high) and GHSA-5x3r-wrvg-rp6q and GHSA-c2gf-v879-257j
-  (netty-codec-http2, medium).
+  in the AAR. Closes GHSA-3qp7-7mw8-wx86 and GHSA-x4gw-5cx5-pgmh (netty-handler,
+  high) and GHSA-5x3r-wrvg-rp6q and GHSA-c2gf-v879-257j (netty-codec-http2, medium).
+
+### Changed
+
+- Android Gradle Plugin 9.1.1 -> 9.2.1
+- Gradle 9.3.1 -> 9.5.1
+- Migrated `publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)` to the no-arg
+  `publishToMavenCentral()`; Central Portal is the default and the `SonatypeHost`
+  overload was removed in vanniktech maven-publish 0.36.0. Same publish target.
+- Sample app error-listener wiring no longer uses reflection.
+
+### Dependencies
+
+- kotlin 2.3.20 -> 2.3.21
+- kotlinx-coroutines 1.10.2 -> 1.11.0
+- junit5 6.0.3 -> 6.1.0
+- vanniktech maven-publish 0.30.0 -> 0.36.0
+- actions/checkout 6.0.2 -> 6.0.3
+- actions/dependency-review-action 4.9.0 -> 5.0.0
+- codeql-action 4.35.3 -> 4.36.2
+- sigstore/cosign-installer 4.1.1 -> 4.1.2
 
 ## [1.2.1] - 2026-05-28
 
