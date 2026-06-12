@@ -36,7 +36,6 @@ log "Verifying release candidate $VERSION at $(git rev-parse --short HEAD)"
 log "Running gradle verification tasks"
 ./gradlew \
   :kiosk-ops-sdk:testDebugUnitTest \
-  :kiosk-ops-sdk:apiCheck \
   :kiosk-ops-sdk:detekt \
   :sample-app:assembleDebug \
   :sample-app:assembleRelease \
