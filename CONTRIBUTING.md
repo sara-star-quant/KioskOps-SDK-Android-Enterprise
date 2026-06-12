@@ -27,8 +27,7 @@ cd KioskOps-SDK-Android-Enterprise
 | Run fuzz tests | `./gradlew :kiosk-ops-sdk:fuzzTest` |
 | Run lint | `./gradlew lintDebug` |
 | Run Detekt (static analysis) | `./gradlew :kiosk-ops-sdk:detekt` |
-| Check API compatibility | `./gradlew apiCheck` |
-| Update API dump | `./gradlew apiDump` |
+| Regenerate Detekt baseline | `./gradlew :kiosk-ops-sdk:detektBaseline` |
 | Generate API docs | `./gradlew :kiosk-ops-sdk:dokkaGeneratePublicationHtml` |
 | Generate coverage report | `./gradlew :kiosk-ops-sdk:koverHtmlReportDebug` |
 | Run all checks | `./gradlew check` |
@@ -83,11 +82,12 @@ Report: `kiosk-ops-sdk/build/reports/lint-results-debug.html`
 
 ### PR Requirements
 
-- All CI checks must pass (tests, lint, Detekt, apiCheck, Dokka)
-- `./gradlew apiCheck` must pass (no unintended public API changes)
-- If public API changes are intentional, run `./gradlew apiDump` and commit the updated `.api` file
+- All CI checks must pass (tests, lint, Detekt, Dokka)
 - Unit test coverage for new code
 - No new lint or Detekt warnings
+- If a refactor removes a suppressed finding, regenerate the Detekt baseline
+  (`./gradlew :kiosk-ops-sdk:detektBaseline`) and commit it; the baseline-rot CI check
+  fails on stale entries
 - Update documentation if needed
 
 ## Reporting Issues

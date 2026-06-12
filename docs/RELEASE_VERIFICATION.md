@@ -119,7 +119,18 @@ regressions from the previous release.
 
 **Cosign signature verification.**
 
-After the release workflow publishes on `v*.*.*`:
+After the release workflow publishes on `v*.*.*` (v1.3.0 and later ship a single
+`.bundle` per artifact; requires cosign 3.x):
+
+```
+cosign verify-blob \
+  --bundle kiosk-ops-sdk-release.aar.bundle \
+  --certificate-identity-regexp 'https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  kiosk-ops-sdk-release.aar
+```
+
+For v1.2.x and earlier (separate `.sig` + `.pem`, cosign 2.x):
 
 ```
 cosign verify-blob \
