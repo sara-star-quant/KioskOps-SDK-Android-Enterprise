@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- Pin `io.netty` to 4.1.135.Final across all subproject configurations. netty
+  is a transitive of `grpc-netty` in the Android Unified Test Platform (test
+  execution only); it is absent from `releaseRuntimeClasspath` and never ships
+  in the AAR. The pin closes GHSA-3qp7-7mw8-wx86 and GHSA-x4gw-5cx5-pgmh
+  (netty-handler, high) and GHSA-5x3r-wrvg-rp6q and GHSA-c2gf-v879-257j
+  (netty-codec-http2, medium).
+
 ## [1.2.1] - 2026-05-28
 
 Build toolchain upgrade. No SDK API changes.
