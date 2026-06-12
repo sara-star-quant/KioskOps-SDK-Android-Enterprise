@@ -158,7 +158,7 @@ val javadocJar by tasks.registering(Jar::class) {
 
 // Maven Central publishing via Vanniktech plugin (handles Central Portal bundle upload)
 mavenPublishing {
-  publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+  publishToMavenCentral()
   signAllPublications()
 
   coordinates(
