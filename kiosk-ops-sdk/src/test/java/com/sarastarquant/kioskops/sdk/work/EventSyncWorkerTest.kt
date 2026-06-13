@@ -51,7 +51,6 @@ class EventSyncWorkerTest {
   @After
   fun tearDown() {
     KioskOpsSdk.resetForTesting()
-    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
   }
 
   private fun initSdk(syncEnabled: Boolean = false) {

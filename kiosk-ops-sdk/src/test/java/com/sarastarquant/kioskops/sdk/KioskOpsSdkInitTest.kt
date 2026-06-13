@@ -44,7 +44,6 @@ class KioskOpsSdkInitTest {
   @After
   fun tearDown() {
     KioskOpsSdk.resetForTesting()
-    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
   }
 
   @Test

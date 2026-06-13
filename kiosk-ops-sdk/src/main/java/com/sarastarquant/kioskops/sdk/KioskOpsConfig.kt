@@ -82,24 +82,32 @@ data class KioskOpsConfig @JvmOverloads constructor(
    * is still present in [equals] / [hashCode] for reactive-config diffing.
    * @since 1.1.0
    */
-  override fun toString(): String = "KioskOpsConfig(" +
-    "baseUrl=$baseUrl, locationId=$locationId, kioskEnabled=$kioskEnabled, " +
-    "syncIntervalMinutes=$syncIntervalMinutes, " +
-    "adminExitPin=${if (adminExitPin == null) "null" else "***"}, " +
-    "securityPolicy=$securityPolicy, retentionPolicy=$retentionPolicy, " +
-    "telemetryPolicy=$telemetryPolicy, queueLimits=$queueLimits, " +
-    "idempotencyConfig=$idempotencyConfig, syncPolicy=$syncPolicy, " +
-    "transportSecurityPolicy=$transportSecurityPolicy, " +
-    "remoteConfigPolicy=$remoteConfigPolicy, " +
-    "diagnosticsSchedulePolicy=$diagnosticsSchedulePolicy, " +
-    "observabilityPolicy=$observabilityPolicy, geofencePolicy=$geofencePolicy, " +
-    "policyProfiles=$policyProfiles, validationPolicy=$validationPolicy, " +
-    "piiPolicy=$piiPolicy, fieldEncryptionPolicy=$fieldEncryptionPolicy, " +
-    "dataClassificationPolicy=$dataClassificationPolicy, " +
-    "anomalyPolicy=$anomalyPolicy, " +
-    "databaseEncryptionPolicy=$databaseEncryptionPolicy, " +
-    "requireDataRightsAuthorization=$requireDataRightsAuthorization" +
-    ")"
+  override fun toString(): String = listOf(
+    "baseUrl=$baseUrl",
+    "locationId=$locationId",
+    "kioskEnabled=$kioskEnabled",
+    "syncIntervalMinutes=$syncIntervalMinutes",
+    "adminExitPin=${if (adminExitPin == null) "null" else "***"}",
+    "securityPolicy=$securityPolicy",
+    "retentionPolicy=$retentionPolicy",
+    "telemetryPolicy=$telemetryPolicy",
+    "queueLimits=$queueLimits",
+    "idempotencyConfig=$idempotencyConfig",
+    "syncPolicy=$syncPolicy",
+    "transportSecurityPolicy=$transportSecurityPolicy",
+    "remoteConfigPolicy=$remoteConfigPolicy",
+    "diagnosticsSchedulePolicy=$diagnosticsSchedulePolicy",
+    "observabilityPolicy=$observabilityPolicy",
+    "geofencePolicy=$geofencePolicy",
+    "policyProfiles=$policyProfiles",
+    "validationPolicy=$validationPolicy",
+    "piiPolicy=$piiPolicy",
+    "fieldEncryptionPolicy=$fieldEncryptionPolicy",
+    "dataClassificationPolicy=$dataClassificationPolicy",
+    "anomalyPolicy=$anomalyPolicy",
+    "databaseEncryptionPolicy=$databaseEncryptionPolicy",
+    "requireDataRightsAuthorization=$requireDataRightsAuthorization",
+  ).joinToString(separator = "\n  ", prefix = "KioskOpsConfig(\n  ", postfix = "\n)")
 
   companion object {
     /**
@@ -149,22 +157,38 @@ data class KioskOpsConfig @JvmOverloads constructor(
      */
     fun fedRampDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
       warnIfHttpsWithoutTransportSecurity("fedRampDefaults", baseUrl)
-      return KioskOpsConfig(
-        baseUrl = baseUrl,
-        locationId = locationId,
-        kioskEnabled = true,
-        securityPolicy = SecurityPolicy.highSecurityDefaults(),
-        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-          retainAuditDays = 365,
-          minimumAuditRetentionDays = 365,
-        ),
-        validationPolicy = ValidationPolicy.strictDefaults(),
-        piiPolicy = PiiPolicy.rejectDefaults(),
-        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
-        dataClassificationPolicy = DataClassificationPolicy.enabledDefaults(),
-        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
-      )
+      return highSecurityBase(baseUrl, locationId)
     }
+
+    /**
+     * Shared high-security preset shape: strict validation, field encryption, anomaly
+     * detection, signed audit, and 365-day audit retention. Presets pass their deltas
+     * (PII action, classification, database encryption, data-rights authorization).
+     */
+    private fun highSecurityBase(
+      baseUrl: String,
+      locationId: String,
+      piiPolicy: PiiPolicy = PiiPolicy.rejectDefaults(),
+      dataClassificationPolicy: DataClassificationPolicy = DataClassificationPolicy.enabledDefaults(),
+      databaseEncryptionPolicy: DatabaseEncryptionPolicy = DatabaseEncryptionPolicy.disabledDefaults(),
+      requireDataRightsAuthorization: Boolean = false,
+    ): KioskOpsConfig = KioskOpsConfig(
+      baseUrl = baseUrl,
+      locationId = locationId,
+      kioskEnabled = true,
+      securityPolicy = SecurityPolicy.highSecurityDefaults(),
+      retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
+        retainAuditDays = 365,
+        minimumAuditRetentionDays = 365,
+      ),
+      validationPolicy = ValidationPolicy.strictDefaults(),
+      piiPolicy = piiPolicy,
+      fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
+      dataClassificationPolicy = dataClassificationPolicy,
+      anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
+      databaseEncryptionPolicy = databaseEncryptionPolicy,
+      requireDataRightsAuthorization = requireDataRightsAuthorization,
+    )
 
     /**
      * GDPR-compliant defaults.
@@ -199,22 +223,12 @@ data class KioskOpsConfig @JvmOverloads constructor(
      */
     fun cuiDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
       warnIfHttpsWithoutTransportSecurity("cuiDefaults", baseUrl)
-      return KioskOpsConfig(
-        baseUrl = baseUrl,
-        locationId = locationId,
-        kioskEnabled = true,
-        securityPolicy = SecurityPolicy.highSecurityDefaults(),
-        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-          retainAuditDays = 365,
-          minimumAuditRetentionDays = 365,
-        ),
-        validationPolicy = ValidationPolicy.strictDefaults(),
-        piiPolicy = PiiPolicy.rejectDefaults(),
-        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
+      return highSecurityBase(
+        baseUrl,
+        locationId,
         dataClassificationPolicy = DataClassificationPolicy.enabledDefaults().copy(
           defaultClassification = DataClassification.CONFIDENTIAL,
         ),
-        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
         databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
         requireDataRightsAuthorization = true,
       )
@@ -234,22 +248,12 @@ data class KioskOpsConfig @JvmOverloads constructor(
      */
     fun cjisDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
       warnIfHttpsWithoutTransportSecurity("cjisDefaults", baseUrl)
-      return KioskOpsConfig(
-        baseUrl = baseUrl,
-        locationId = locationId,
-        kioskEnabled = true,
-        securityPolicy = SecurityPolicy.highSecurityDefaults(),
-        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-          retainAuditDays = 365,
-          minimumAuditRetentionDays = 365,
-        ),
-        validationPolicy = ValidationPolicy.strictDefaults(),
-        piiPolicy = PiiPolicy.rejectDefaults(),
-        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
+      return highSecurityBase(
+        baseUrl,
+        locationId,
         dataClassificationPolicy = DataClassificationPolicy.enabledDefaults().copy(
           defaultClassification = DataClassification.CONFIDENTIAL,
         ),
-        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
         databaseEncryptionPolicy = DatabaseEncryptionPolicy.enabledDefaults(),
         requireDataRightsAuthorization = true,
       )
@@ -266,21 +270,7 @@ data class KioskOpsConfig @JvmOverloads constructor(
      */
     fun asdEssentialEightDefaults(baseUrl: String, locationId: String): KioskOpsConfig {
       warnIfHttpsWithoutTransportSecurity("asdEssentialEightDefaults", baseUrl)
-      return KioskOpsConfig(
-        baseUrl = baseUrl,
-        locationId = locationId,
-        kioskEnabled = true,
-        securityPolicy = SecurityPolicy.highSecurityDefaults(),
-        retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
-          retainAuditDays = 365,
-          minimumAuditRetentionDays = 365,
-        ),
-        validationPolicy = ValidationPolicy.strictDefaults(),
-        piiPolicy = PiiPolicy.redactDefaults(),
-        fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),
-        dataClassificationPolicy = DataClassificationPolicy.enabledDefaults(),
-        anomalyPolicy = AnomalyPolicy.highSecurityDefaults(),
-      )
+      return highSecurityBase(baseUrl, locationId, piiPolicy = PiiPolicy.redactDefaults())
     }
   }
 }
