@@ -1,12 +1,8 @@
 # ASD Essential Eight: KioskOps SDK Control Mapping
 
-> **Disclaimer:** This document is an engineering reference only. It does not
-> constitute a compliance certification, legal advice, or security assessment.
-> The SDK has not been independently audited or assessed against the Australian
-> Signals Directorate Essential Eight Maturity Model. You must conduct your own
-> assessment with qualified professionals. The Essential Eight covers
-> organizational-level strategies; an SDK can only contribute to a subset of
-> each strategy.
+> **Disclaimer:** Engineering reference only, not a compliance certification or legal
+> advice; see [LEGAL.md](../LEGAL.md). The Essential Eight covers organizational-level
+> strategies; an SDK can only contribute to a subset of each strategy.
 
 ## Scope
 

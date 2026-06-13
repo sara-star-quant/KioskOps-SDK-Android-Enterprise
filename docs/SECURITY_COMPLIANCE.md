@@ -1,13 +1,7 @@
 # Security and Compliance
 
-> **Disclaimer:** This document references regulatory frameworks (NIST 800-53,
-> FedRAMP, GDPR, ISO 27001, BSI, HIPAA) as engineering context only. Nothing in
-> this document or the SDK constitutes legal, compliance, or security advice. The
-> SDK has not been independently audited or certified against any standard. The
-> authors and contributors accept no responsibility for regulatory outcomes,
-> security incidents, or compliance failures. You must conduct your own legal and
-> security assessments before deploying in regulated environments. Consult
-> qualified legal and security professionals for your specific situation.
+> **Disclaimer:** This document references regulatory frameworks as engineering context
+> only; it is not legal, compliance, or security advice. See [LEGAL.md](LEGAL.md).
 
 This SDK is designed for **enterprise environments** where you usually care about:
 - **data minimization** (collect/store the least possible)

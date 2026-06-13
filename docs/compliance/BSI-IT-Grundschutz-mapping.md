@@ -1,11 +1,8 @@
 # BSI IT-Grundschutz: KioskOps SDK Control Mapping
 
-> **Disclaimer:** This document is an engineering reference only. It does not
-> constitute a compliance certification, legal advice, or security assessment.
-> The SDK has not been independently audited or certified against BSI
-> IT-Grundschutz. You must conduct your own assessment with qualified
-> professionals. IT-Grundschutz requirements are organizational-level; an SDK
-> addresses only a subset of technical controls.
+> **Disclaimer:** Engineering reference only, not a compliance certification or legal
+> advice; see [LEGAL.md](../LEGAL.md). IT-Grundschutz requirements are organizational-level;
+> an SDK addresses only a subset of technical controls.
 
 ## Scope
 
