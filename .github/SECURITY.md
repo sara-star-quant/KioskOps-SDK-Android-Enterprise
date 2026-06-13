@@ -1,11 +1,7 @@
 # Security Policy
 
-> **Important:** This document describes the security features and vulnerability
-> reporting process for KioskOps SDK. It is not security advice, and the authors
-> make no guarantees about the fitness of this software for any particular
-> security requirement. You are responsible for your own security assessments,
-> penetration testing, and compliance validation. The authors accept no liability
-> for security incidents arising from the use of this software.
+> **Important:** This document describes the vulnerability reporting process for KioskOps
+> SDK. It is not security advice; see [docs/LEGAL.md](../docs/LEGAL.md).
 
 ## Supported Versions
 

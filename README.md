@@ -16,13 +16,8 @@ An **enterprise-grade Android SDK** for **offline-first operational events**, **
 
 API reference: [sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise](https://sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise/) (auto-published from `main` and release tags).
 
-> **Disclaimer:** This SDK provides security controls and references regulatory frameworks
-> (NIST 800-53, FedRAMP, GDPR, ISO 27001) as engineering aids only. It is not legal,
-> compliance, or security advice. The authors assume no responsibility for regulatory
-> outcomes. You are solely responsible for evaluating whether this software meets your
-> organization's legal, security, and compliance requirements. Consult qualified
-> professionals before deploying in regulated environments. See [LICENSE](LICENSE) for
-> warranty and liability terms.
+> **Disclaimer:** Security controls and regulatory-framework references are engineering
+> aids only, not legal, compliance, or security advice. See [docs/LEGAL.md](docs/LEGAL.md).
 
 ## Installation
 
