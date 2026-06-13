@@ -1292,12 +1292,10 @@ class KioskOpsSdk private constructor(
         created.queue.reconcileStaleSending(staleBefore)
       }
       created.applySchedulingFromConfig()
-      if (!skipLifecycleObserverRegistrationForTesting) {
-        com.sarastarquant.kioskops.sdk.lifecycle.SdkLifecycleObserver.register(
-          sdkProvider = { INSTANCE },
-          scope = created.javaInteropScope,
-        )
-      }
+      com.sarastarquant.kioskops.sdk.lifecycle.SdkLifecycleObserver.register(
+        sdkProvider = { INSTANCE },
+        scope = created.javaInteropScope,
+      )
       return created
     }
 
@@ -1309,17 +1307,12 @@ class KioskOpsSdk private constructor(
 
     @androidx.annotation.VisibleForTesting
     internal fun resetForTesting() {
+      // Drop the lifecycle observer before clearing INSTANCE. Robolectric shares one
+      // ProcessLifecycleOwner across test classes, so a leaked observer would fire
+      // heartbeat("app_backgrounded") on a later instance and race lastHeartbeatReason.
+      com.sarastarquant.kioskops.sdk.lifecycle.SdkLifecycleObserver.unregister()
       INSTANCE?.sdkJob?.cancel()
       INSTANCE = null
     }
-
-    // Robolectric shares a ProcessLifecycleOwner singleton across test classes. Each
-    // init() call registers a new observer; observers from prior test classes persist
-    // and fire heartbeat("app_backgrounded") on the current INSTANCE when Robolectric
-    // synthesizes onStop events. That races with tests that read lastHeartbeatReason.
-    // Production code never sets this; tests that exercise init() via Robolectric do.
-    @androidx.annotation.VisibleForTesting
-    @Volatile
-    internal var skipLifecycleObserverRegistrationForTesting: Boolean = false
   }
 }
