@@ -1,12 +1,8 @@
 # CJIS Security Policy v5.9: KioskOps SDK Control Mapping
 
-> **Disclaimer:** This document is an engineering reference only. It does not
-> constitute a compliance certification, legal advice, or security assessment.
-> The SDK has not been independently audited or certified against the CJIS
-> Security Policy. You must conduct your own assessment with qualified
-> professionals before deploying in law enforcement or criminal justice
-> environments. Many CJIS requirements are organizational, procedural, or
-> infrastructure-level and cannot be addressed by an SDK alone.
+> **Disclaimer:** Engineering reference only, not a compliance certification or legal
+> advice; see [LEGAL.md](../LEGAL.md). Many CJIS requirements are organizational,
+> procedural, or infrastructure-level and cannot be addressed by an SDK alone.
 
 ## Scope
 
