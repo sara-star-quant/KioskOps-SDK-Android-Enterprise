@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-06-13
+
+Distribution release: coordinated packaging, supported maintenance branches, and
+code-surface cleanups. No breaking API changes.
+
+### Added
+
+- `kioskops-bom` Maven BOM (`java-platform`) so consumers can pin the KioskOps version
+  once via `platform(...)`; published to Maven Central and GitHub Packages alongside the
+  SDK. BOM and Gradle version-catalog usage documented in `docs/INTEGRATION.md`.
+- Long-term-support maintenance branches `release/v1.2.x` and `release/v1.1.x`, plus a
+  label-triggered backport workflow (`.github/workflows/backport.yml`). Policy in
+  `CONTRIBUTING.md`.
+- Kover line-coverage report attached to each GitHub Release, with coverage noted in the
+  release notes (CII Silver `test_coverage_documented`).
+- Detekt baseline-rot CI guard that fails when the committed baseline contains suppressions
+  no longer triggered.
+- `docs/LEGAL.md`: single canonical legal disclaimer; the nine files that previously carried
+  duplicated boilerplate now link to it.
+
+### Changed
+
+- Release signing migrated to cosign 3.x Sigstore bundles (`--bundle`); release assets ship
+  one `.bundle` per artifact instead of `.sig` + `.pem`. `docs/RELEASE_VERIFICATION.md`
+  documents the new and legacy verification commands.
+- `KioskOpsConfig.toString()` is now a multi-line redacted pretty-print (`adminExitPin`
+  still redacted; `equals`/`hashCode` unchanged).
+- High-security presets (`fedRampDefaults`/`cuiDefaults`/`cjisDefaults`/
+  `asdEssentialEightDefaults`) share a private factory; resolved configurations are
+  unchanged.
+
+### Fixed
+
+- `SdkLifecycleObserver` now deregisters on `register`/teardown, removing the leaked
+  `ProcessLifecycleOwner` observer that intermittently fired `heartbeat("app_backgrounded")`
+  across Robolectric test classes. Replaced the `skipLifecycleObserverRegistrationForTesting`
+  workaround with proper isolation.
+
+### Removed
+
+- Dead `apiCheck` step from `scripts/pre-release-verify.sh` and the orphan
+  binary-compatibility-validator catalog entries (BCV was dropped in 1.2.1).
+
 ## [1.2.2] - 2026-06-12
 
 Build toolchain upgrade and dependency security hygiene. No SDK API changes.
