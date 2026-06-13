@@ -1,11 +1,8 @@
 # NIST SP 800-171 Rev 2: KioskOps SDK Control Mapping
 
-> **Disclaimer:** This document is an engineering reference only. It does not
-> constitute a compliance certification, legal advice, or security assessment.
-> The SDK has not been independently audited or certified against NIST SP
-> 800-171. You must conduct your own assessment with qualified professionals
-> before claiming compliance. Many 800-171 controls require organizational
-> policy, infrastructure, and host-application measures beyond SDK scope.
+> **Disclaimer:** Engineering reference only, not a compliance certification or legal
+> advice; see [LEGAL.md](../LEGAL.md). Many 800-171 controls require organizational policy,
+> infrastructure, and host-application measures beyond SDK scope.
 
 ## Scope
 

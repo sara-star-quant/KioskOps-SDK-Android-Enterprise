@@ -1,10 +1,8 @@
 # Data Flow Reference: KioskOps SDK
 
-> **Disclaimer:** This document is an engineering reference describing the
-> SDK's data storage and transmission behavior. It does not constitute a
-> compliance certification, legal advice, or security assessment. You must
-> verify these statements against the SDK source code and conduct your own
-> assessment for your specific deployment context.
+> **Disclaimer:** Engineering reference describing the SDK's data storage and transmission
+> behavior; not a compliance certification or legal advice (see [LEGAL.md](../LEGAL.md)).
+> Verify these statements against the SDK source for your specific deployment context.
 
 ## Overview
 
