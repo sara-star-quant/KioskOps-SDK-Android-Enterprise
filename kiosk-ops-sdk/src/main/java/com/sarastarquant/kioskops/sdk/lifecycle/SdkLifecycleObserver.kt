@@ -46,18 +46,35 @@ internal class SdkLifecycleObserver(
   companion object {
     private const val TAG = "KioskOpsLifecycle"
 
-    /**
-     * Register the observer with [ProcessLifecycleOwner].
-     * Safe to call from any thread; registration is posted to the main thread.
-     */
+    // The single observer currently attached to the shared ProcessLifecycleOwner.
+    // Retained so it can be removed on re-register or teardown; Robolectric shares one
+    // ProcessLifecycleOwner across test classes, so a leaked observer would fire
+    // heartbeat("app_backgrounded") on a later SDK instance.
+    private var registered: SdkLifecycleObserver? = null
+
+    /** Register the observer with [ProcessLifecycleOwner], replacing any prior one. */
     fun register(sdkProvider: () -> KioskOpsSdk?, scope: CoroutineScope) {
       @Suppress("TooGenericExceptionCaught")
       try {
+        unregister()
         val observer = SdkLifecycleObserver(sdkProvider, scope)
-        val lifecycle = ProcessLifecycleOwner.get().lifecycle
-        lifecycle.addObserver(observer)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+        registered = observer
       } catch (e: Exception) {
         Log.w(TAG, "ProcessLifecycleOwner not available; lifecycle observer disabled", e)
+      }
+    }
+
+    /** Remove the registered observer, if any. */
+    fun unregister() {
+      val observer = registered ?: return
+      @Suppress("TooGenericExceptionCaught")
+      try {
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
+      } catch (e: Exception) {
+        Log.w(TAG, "Failed to remove lifecycle observer", e)
+      } finally {
+        registered = null
       }
     }
   }
