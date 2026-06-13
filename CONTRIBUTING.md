@@ -90,6 +90,28 @@ Report: `kiosk-ops-sdk/build/reports/lint-results-debug.html`
   fails on stale entries
 - Update documentation if needed
 
+## Long-term support and backports
+
+`main` carries the current release line. Security fixes are backported to the active
+maintenance branches:
+
+| Branch | Covers | Status |
+| ------ | ------ | ------ |
+| `main` | next release | current |
+| `release/v1.2.x` | 1.2.x patches | supported |
+| `release/v1.1.x` | 1.1.x patches | supported (security only) |
+
+Maintenance branches receive security fixes only; no new features. To backport a merged
+PR, add a label of the form `backport release/v1.2.x` to it; the
+[backport workflow](.github/workflows/backport.yml) cherry-picks the commits and opens a
+PR against that branch. If the cherry-pick conflicts, do it manually:
+
+```
+git checkout release/v1.2.x
+git cherry-pick <commit>
+# resolve, then open a PR against release/v1.2.x
+```
+
 ## Reporting Issues
 
 Use [GitHub Issues](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/issues) for:
