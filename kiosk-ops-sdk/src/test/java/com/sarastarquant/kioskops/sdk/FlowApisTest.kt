@@ -45,7 +45,6 @@ class FlowApisTest {
       ctx, Configuration.Builder().setMinimumLoggingLevel(android.util.Log.DEBUG).build()
     )
     KioskOpsSdk.resetForTesting()
-    KioskOpsSdk.skipLifecycleObserverRegistrationForTesting = true
     KioskOpsSdk.init(
       context = ctx,
       configProvider = { testConfig },
