@@ -401,85 +401,48 @@ distribution/platform items moved to v1.3 / v1.4.
 
 ---
 
-## v1.3.0 Distribution
+## v1.3.0 Distribution [RELEASED]
 
 Focus: fleet-friendly packaging and the cleanups the code surface has
-earned after 1.2. Deferred from the original v1.2 scope.
+earned after 1.2.
 
 ### Distribution
-- [ ] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for
+- [x] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for
   coordinated version management
-- [ ] Gradle Version Catalog snippet for consumers
-- [ ] LTS branch policy (cherry-pick security fixes to v1.1.x / v1.2.x)
-  with backport automation
+- [x] Gradle Version Catalog snippet for consumers (`docs/INTEGRATION.md`)
+- [x] LTS branch policy (`release/v1.2.x`, `release/v1.1.x`) with a
+  label-triggered backport workflow
 
 ### Platform
-- [ ] AGP 9.x evaluation. Brings Bouncy Castle 1.84+ and closes the
-  remaining build-classpath CVE exposure root cause
+- [x] AGP 9.x evaluation (AGP 9.2.1 shipped in v1.2.2; closes the
+  build-classpath CVE exposure root cause)
 
-### Security
-- [ ] Full SCT signature verification per RFC 6962. Three candidate
-  implementation paths evaluated in 1.2; pick one:
-  1. Self-implement RFC 6962 SCT parsing + signature verification
-     (ECDSA P-256 / RSA PKCS#1 v1.5) against a bundled IANA log list;
-     ~500-800 lines of Kotlin plus a log-list refresh strategy per
-     release. Crypto primitives already present in `Hkdf.kt`
-     (HMAC-SHA256) and via `java.security`.
-  2. Re-vet `com.appmattus:certificatetransparency` once it publishes
-     signed releases and earns a Scorecard >=6.0; treat as a
-     provisional dep and pin by hash.
-  3. Evaluate Conscrypt (BoringSSL-backed) which includes CT
-     verification natively on Android 10+; may remove the need for a
-     Kotlin-side implementation for
-     `TransportSecurityPolicy.certificateTransparencyEnabled`.
-- [ ] Publish Kover coverage reports per release tag (CII Silver
-  `test_coverage_documented` criterion)
-- [ ] Fix intermittently flaky
-  `KioskOpsSdkIntegrationTest.heartbeat reason is reflected in healthCheck`
-  by refactoring Robolectric test isolation
-
-### Code quality
-- [ ] `cfg()` snapshot per public entry point (consistency with
-  `enqueueDetailed`)
-- [ ] Preset builder de-duplication
-  (`fedRampDefaults`/`cuiDefaults`/`cjisDefaults`/`asdEssentialEightDefaults`/`gdprDefaults`
-  share a `base(...)`)
-- [ ] `KioskOpsConfig.toString()` multi-line redacted pretty-print
-- [ ] Detekt baseline-rot CI guard
-
-### Release verification infrastructure
-- [ ] Migrate `release.yml` cosign invocation from the legacy
-  `--output-signature` / `--output-certificate` to the `--bundle` form.
-  Pinned to cosign 2.5.3 as of 1.2.0; cosign 2.x will eventually EOL.
-  Update the `verify-blob` snippet in the release summary to match.
-- [ ] Backward-compatibility fixture: pinned copy of sample-app at the
-  previous minor, buildable against the current AAR. Makes
-  `docs/RELEASE_VERIFICATION.md` IP5 mechanical.
-- [ ] Mock-server harness (MockWebServer wrapper with certificate rotation
-  and body-delay). Makes IP2 and IP4 scripted.
-- [ ] Performance benchmarks via androidx.benchmark for `heartbeat`,
-  `enqueue`, and the sync batch-send hot path. Catches silent regressions.
-- [ ] Extend `scripts/pre-release-verify.sh` to drive Robolectric-based
-  subsets of IP3 (database corruption) and IP4 (process-kill mid-sync) so
-  the drills run at CI time instead of only pre-tag.
+### Security and quality
+- [x] Publish Kover coverage reports per release tag (CII Silver
+  `test_coverage_documented`)
+- [x] Fix the intermittently flaky `KioskOpsSdkIntegrationTest` heartbeat
+  test via proper Robolectric lifecycle-observer isolation
+- [x] Preset builder de-duplication (shared private factory; `gdprDefaults`
+  keeps its distinct permissive shape)
+- [x] `KioskOpsConfig.toString()` multi-line redacted pretty-print
+- [x] Detekt baseline-rot CI guard
+- [x] Migrate `release.yml` cosign signing to the Sigstore `--bundle` form
+  (cosign 3.x)
 
 ### Documentation
-- [ ] `FEATURES.md` flattened capability matrix (Feature | Default |
-  Since | Link)
-- [ ] `ARCHITECTURE.md` subsystem diagram refresh with enqueue pipeline +
-  fleet/observability/compliance blocks
-- [ ] Legal disclaimer consolidated to `docs/LEGAL.md` (currently
-  copy-pasted across five files)
+- [x] `FEATURES.md` capability matrix (already structured by version)
+- [x] Legal disclaimer consolidated to `docs/LEGAL.md`
 
-### Compliance ops
-- [ ] Pre-filled SIG (Standardized Information Gathering) questionnaire
-  template
+The `cfg()` snapshot item was dropped after inspection: the public entry
+points either do not read config or already snapshot once, so there was no
+torn-read to fix.
 
 ---
 
 ## v1.4.0 Cross-platform foundation
 
-Focus: second runtime, first platform.
+Focus: second runtime, first platform; plus the verification, security, and
+documentation items carried over from v1.3.
 
 ### Platform
 - [ ] Kotlin Multiplatform common module carved out of core
@@ -496,6 +459,36 @@ Focus: second runtime, first platform.
 
 ### Observability
 - [ ] Event delivery confirmation callbacks (post-ack)
+
+### Security (carried from v1.3)
+- [ ] Full SCT signature verification per RFC 6962. The current
+  SCT-presence check remains until then. Three candidate paths:
+  1. Self-implement RFC 6962 SCT parsing + signature verification
+     (ECDSA P-256 / RSA PKCS#1 v1.5) against a bundled IANA log list.
+  2. Re-vet `com.appmattus:certificatetransparency` once it publishes
+     signed releases and earns a Scorecard >=6.0; pin by hash.
+  3. Evaluate Conscrypt (BoringSSL-backed) native CT verification on
+     Android 10+.
+- [ ] Re-establish API-compatibility enforcement. BCV was dropped in 1.2.1
+  as AGP-9-incompatible, so the SDK has had no enforced public-API guard
+  since 1.2.0 despite the v1.0 API-freeze commitment. Evaluate an
+  AGP-9-compatible validator or Metalava.
+
+### Release verification infrastructure (carried from v1.3)
+- [ ] Backward-compatibility fixture: pinned sample-app at the previous
+  minor, buildable against the current AAR.
+- [ ] Mock-server harness (MockWebServer wrapper with certificate rotation
+  and body-delay).
+- [ ] Performance benchmarks via androidx.benchmark for `heartbeat`,
+  `enqueue`, and the sync batch-send hot path.
+- [ ] Extend `scripts/pre-release-verify.sh` with Robolectric IP3
+  (database corruption) and IP4 (process-kill mid-sync) drills.
+
+### Documentation and compliance (carried from v1.3)
+- [ ] `ARCHITECTURE.md` subsystem diagram refresh with enqueue pipeline +
+  fleet/observability/compliance blocks
+- [ ] Pre-filled SIG (Standardized Information Gathering) questionnaire
+  template
 
 ---
 
