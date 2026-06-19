@@ -100,9 +100,7 @@ jobs:
 
       - name: Publish to Maven Central
         run: |
-          ./gradlew :kiosk-ops-sdk:publishAndReleaseToMavenCentral :kioskops-bom:publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="$VERSION" || {
-            echo "::warning::Maven Central publish failed. Continuing."
-          }
+          ./gradlew :kiosk-ops-sdk:publishAndReleaseToMavenCentral :kioskops-bom:publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="$VERSION"
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
