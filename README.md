@@ -148,6 +148,7 @@ See [Features](docs/FEATURES.md) for the complete list.
 | [Server API Contract](docs/openapi.yaml) | OpenAPI spec for batch ingest |
 | [Changelog](CHANGELOG.md) | Version history |
 | [Roadmap](ROADMAP.md) | Planned features |
+| [Go-To-Market](kioskops-gtm.md) | Positioning, target buyer, pricing model, and rollout plan |
 | [Contributing](CONTRIBUTING.md) | Development setup and guidelines |
 
 ## License
