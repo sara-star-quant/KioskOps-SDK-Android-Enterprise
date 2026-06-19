@@ -8,7 +8,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.sarastarquant.kioskops/kiosk-ops-sdk.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/com.sarastarquant.kioskops/kiosk-ops-sdk)
 [![JitPack](https://jitpack.io/v/sara-star-quant/KioskOps-SDK-Android-Enterprise.svg)](https://jitpack.io/#sara-star-quant/KioskOps-SDK-Android-Enterprise)
 [![API](https://img.shields.io/badge/API-33%2B-brightgreen.svg)](https://developer.android.com/about/versions/13)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-purple.svg)](https://kotlinlang.org/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-purple.svg)](https://kotlinlang.org/)
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/Docs-Dokka-brightgreen.svg)](https://sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise/)
 

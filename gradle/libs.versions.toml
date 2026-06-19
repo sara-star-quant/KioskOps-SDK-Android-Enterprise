@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-ksp = "2.3.6"
+ksp = "2.3.9"
 kotlin = "2.3.21"
 serializationJson = "1.11.0"
 jazzer = "0.22.1"
