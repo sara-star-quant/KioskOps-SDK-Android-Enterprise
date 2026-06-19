@@ -4,6 +4,8 @@ This document outlines planned features and improvements for KioskOps SDK, organ
 
 > **Note**: This roadmap reflects current planning and may change based on community feedback and enterprise customer needs.
 
+For commercial context behind these priorities (target buyer, positioning, pricing), see the [Go-To-Market plan](kioskops-gtm.md).
+
 ---
 
 ## v0.2.0 - Security Hardening [RELEASED]
