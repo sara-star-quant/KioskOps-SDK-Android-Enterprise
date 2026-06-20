@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-06-20
+
+Release-pipeline fixes only. No API or runtime changes; artifacts are identical in behavior to 1.3.0.
+
+### Fixed
+
+- Maven Central multi-module publish. The vanniktech publish plugin loaded its `MavenCentralBuildService`
+  under two classloaders when applied only in the `kiosk-ops-sdk` and `kioskops-bom` subprojects, so
+  `publishAndReleaseToMavenCentral` failed and the release skipped Central. The plugin now loads once at the
+  root with `apply false`.
+- JitPack builds. `signAllPublications()` ran unconditionally, so JitPack (which has no signing key) failed
+  every build with "no configured signatory". Signing is now gated on `signingInMemoryKey`, so Maven Central
+  still ships signed artifacts while JitPack and local `publishToMavenLocal` builds succeed unsigned.
+- Release workflow no longer swallows a Maven Central publish failure as a warning, and the GitHub Release
+  step is idempotent so a release can be re-run safely.
+
 ## [1.3.0] - 2026-06-13
 
 Distribution release: coordinated packaging, supported maintenance branches, and
