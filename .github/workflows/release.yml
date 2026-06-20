@@ -135,13 +135,19 @@ jobs:
 
       - name: Create GitHub Release
         run: |
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --notes-file release_notes.md \
-            --latest \
-            kiosk-ops-sdk/build/outputs/aar/*.aar \
-            kiosk-ops-sdk/build/outputs/aar/*.bundle \
+          assets=(
+            kiosk-ops-sdk/build/outputs/aar/*.aar
+            kiosk-ops-sdk/build/outputs/aar/*.bundle
             kiosk-ops-sdk-coverage.zip
+          )
+          # Re-running a release (e.g. to retry a failed Maven Central publish) must not
+          # fail just because the release already exists. Create it, or refresh assets.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TAG" --notes-file release_notes.md --latest
+            gh release upload "$TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file release_notes.md --latest "${assets[@]}"
+          fi
         env:
           TAG: ${{ steps.version.outputs.TAG }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
