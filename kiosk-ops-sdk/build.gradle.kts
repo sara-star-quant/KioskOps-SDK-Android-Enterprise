@@ -159,7 +159,12 @@ val javadocJar by tasks.registering(Jar::class) {
 // Maven Central publishing via Vanniktech plugin (handles Central Portal bundle upload)
 mavenPublishing {
   publishToMavenCentral()
-  signAllPublications()
+  // Sign only when a key is available. Maven Central requires signatures and the
+  // release workflow provides signingInMemoryKey. JitPack and local publishToMavenLocal
+  // builds have no key, so signAllPublications() there fails with "no configured signatory".
+  if (project.hasProperty("signingInMemoryKey")) {
+    signAllPublications()
+  }
 
   coordinates(
     groupId = "com.sarastarquant.kioskops",
