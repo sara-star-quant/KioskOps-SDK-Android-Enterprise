@@ -127,6 +127,19 @@ val accepted = KioskOpsSdk.get().enqueueBlocking("button_press", """{"screen": "
 
 See [Features](docs/FEATURES.md) for the complete list.
 
+## Performance
+
+Microbenchmarks of the per-event hot paths (emulator `sdk_gphone64_arm64`, API 34;
+directional, not production hardware):
+
+| Operation | Median | Throughput |
+|-----------|--------|------------|
+| Anomaly scoring (per event) | 4.8 us | ~207k events/s |
+| Field encryption, 3 fields (AES-256-GCM) | 46.1 us | ~22k ops/s |
+| Field decryption, 3 fields | 39.2 us | ~25k ops/s |
+
+See [Benchmarks](docs/benchmarks.md) for methodology and how to reproduce.
+
 ## Requirements
 
 | Requirement | Version |
@@ -143,6 +156,7 @@ See [Features](docs/FEATURES.md) for the complete list.
 | [Integration Guide](docs/INTEGRATION.md) | Step-by-step setup |
 | [Architecture](docs/ARCHITECTURE.md) | System design, modules, and scope |
 | [Features](docs/FEATURES.md) | Full feature list and limitations |
+| [Benchmarks](docs/benchmarks.md) | Microbenchmark results and reproduction |
 | [Security and Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model, transport security, key management, audit integrity |
 | [Compliance Mappings](docs/compliance/) | NIST 800-171, CJIS, ASD, BSI, Australian Privacy Act |
 | [Server API Contract](docs/openapi.yaml) | OpenAPI spec for batch ingest |
