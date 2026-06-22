@@ -5,7 +5,9 @@ import org.junit.Test
 
 class RetentionEnforcerTest {
 
-  @Test fun `maximalist defaults include 365 day minimum audit retention`() {
+  @Test
+  @ComplianceControl(framework = "NIST SP 800-171", control = "3.3.1")
+  fun `maximalist defaults include 365 day minimum audit retention`() {
     val policy = RetentionPolicy.maximalistDefaults()
     assertThat(policy.minimumAuditRetentionDays).isEqualTo(365)
   }

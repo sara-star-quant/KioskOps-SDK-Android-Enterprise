@@ -6,6 +6,7 @@
 package com.sarastarquant.kioskops.sdk.crypto
 
 import com.google.common.truth.Truth.assertThat
+import com.sarastarquant.kioskops.sdk.compliance.ComplianceControl
 import org.junit.Test
 
 /**
@@ -19,6 +20,7 @@ import org.junit.Test
  * SHA-256 vectors: the widely cited PBKDF2-HMAC-SHA256 vectors for
  * password="password", salt="salt".
  */
+@ComplianceControl(framework = "NIST SP 800-171", control = "3.13.11")
 class Pbkdf2KatTest {
 
   @Test
