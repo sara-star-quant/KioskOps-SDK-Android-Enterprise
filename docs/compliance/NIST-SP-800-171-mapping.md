@@ -4,6 +4,10 @@
 > advice; see [LEGAL.md](../LEGAL.md). Many 800-171 controls require organizational policy,
 > infrastructure, and host-application measures beyond SDK scope.
 
+> **Conformance evidence:** Controls the SDK enforces technically are backed by
+> executable tests. See [traceability.md](traceability.md) for the control-to-test
+> matrix, generated from `@ComplianceControl` annotations and verified in CI.
+
 ## Scope
 
 NIST SP 800-171 protects Controlled Unclassified Information (CUI) in

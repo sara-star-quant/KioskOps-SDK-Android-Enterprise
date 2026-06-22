@@ -6,6 +6,7 @@
 package com.sarastarquant.kioskops.sdk
 
 import com.google.common.truth.Truth.assertThat
+import com.sarastarquant.kioskops.sdk.compliance.ComplianceControl
 import com.sarastarquant.kioskops.sdk.compliance.SecurityPolicy
 import com.sarastarquant.kioskops.sdk.pii.DataClassification
 import com.sarastarquant.kioskops.sdk.pii.PiiAction
@@ -107,6 +108,8 @@ class KioskOpsConfigTest {
   }
 
   @Test
+  @ComplianceControl(framework = "NIST SP 800-171", control = "3.3.1")
+  @ComplianceControl(framework = "NIST SP 800-171", control = "3.13.11")
   fun `cuiDefaults enforces NIST SP 800-171 controls`() {
     val config = KioskOpsConfig.cuiDefaults("https://api.example.com/", "CUI-001")
 

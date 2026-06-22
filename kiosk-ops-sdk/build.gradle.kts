@@ -49,6 +49,10 @@ android {
         // Jazzer's JUnit extension conflicts with Robolectric's sandbox classloader.
         // Run fuzz tests separately: ./gradlew :kiosk-ops-sdk:fuzzTest
         test.filter.excludeTestsMatching("com.sarastarquant.kioskops.sdk.fuzz.*")
+        // Locate compliance docs for the traceability check; pass -Pcompliance.update
+        // to regenerate docs/compliance/traceability.md instead of verifying it.
+        test.systemProperty("compliance.docsDir", "${rootProject.projectDir}/docs/compliance")
+        test.systemProperty("compliance.update", project.hasProperty("compliance.update").toString())
       }
     }
   }
@@ -125,6 +129,7 @@ dependencies {
 
   testImplementation(libs.junit4)
   testImplementation(libs.truth)
+  testImplementation(libs.classgraph)
   testImplementation(libs.robolectric)
   testImplementation(libs.androidx.test.core)
   testImplementation(libs.okhttp.mockwebserver)

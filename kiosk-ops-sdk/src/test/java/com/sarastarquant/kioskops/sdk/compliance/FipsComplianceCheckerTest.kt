@@ -14,6 +14,7 @@ import org.robolectric.RobolectricTestRunner
 class FipsComplianceCheckerTest {
 
   @Test
+  @ComplianceControl(framework = "NIST SP 800-171", control = "3.13.11")
   fun `check returns result with provider info`() {
     val status = FipsComplianceChecker.check()
     // On standard JVM/Robolectric, FIPS mode is not active

@@ -6,6 +6,7 @@
 package com.sarastarquant.kioskops.sdk.crypto
 
 import com.google.common.truth.Truth.assertThat
+import com.sarastarquant.kioskops.sdk.compliance.ComplianceControl
 import javax.crypto.AEADBadTagException
 import javax.crypto.spec.SecretKeySpec
 import org.junit.Test
@@ -21,6 +22,7 @@ import org.junit.Test
  * not merely that the JDK ships a working AES. The Keystore-backed key path
  * itself requires hardware and is exercised by instrumented tests.
  */
+@ComplianceControl(framework = "NIST SP 800-171", control = "3.13.11")
 class AesGcmKatTest {
 
   // GCM spec Test Case 13: 256-bit zero key, zero IV, empty plaintext.
