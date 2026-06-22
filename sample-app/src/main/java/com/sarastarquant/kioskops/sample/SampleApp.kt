@@ -2,6 +2,7 @@ package com.sarastarquant.kioskops.sample
 
 import android.app.Application
 import android.util.Log
+import androidx.work.Configuration
 import com.sarastarquant.kioskops.sdk.KioskOpsConfig
 import com.sarastarquant.kioskops.sdk.KioskOpsErrorListener
 import com.sarastarquant.kioskops.sdk.KioskOpsSdk
@@ -9,12 +10,18 @@ import com.sarastarquant.kioskops.sdk.fleet.DiagnosticsUploader
 import com.sarastarquant.kioskops.sdk.sync.SyncPolicy
 import com.sarastarquant.kioskops.sdk.transport.AuthProvider
 
-class SampleApp : Application() {
+class SampleApp : Application(), Configuration.Provider {
   // App-wide error listener, held so other components (e.g. BatchEnqueueActivity)
   // can chain to it without reaching into SDK internals.
   val errorLogListener = KioskOpsErrorListener { error ->
     Log.w("KioskOps", "SDK error: ${error.message}", error.cause)
   }
+
+  // The SDK schedules background work (sync, diagnostics) via WorkManager. Its
+  // manifest does not register WorkManager's default initializer, so the host
+  // app must provide a configuration for WorkManager's on-demand initialization.
+  override val workManagerConfiguration: Configuration
+    get() = Configuration.Builder().build()
 
   override fun onCreate() {
     super.onCreate()

@@ -54,6 +54,9 @@ jobs:
       - name: Build release AAR
         run: ./gradlew :kiosk-ops-sdk:assembleRelease -PVERSION_NAME=${{ steps.version.outputs.VERSION }}
 
+      - name: Build sample demo APK
+        run: ./gradlew :sample-app:assembleDebug -PVERSION_NAME=${{ steps.version.outputs.VERSION }}
+
       - name: Run tests
         run: ./gradlew :kiosk-ops-sdk:testDebugUnitTest
 
@@ -87,6 +90,16 @@ jobs:
           for file in *.aar; do
             cosign sign-blob --yes "$file" --bundle "${file}.bundle"
           done
+
+      - name: Prepare and sign sample demo APK
+        run: |
+          SRC="sample-app/build/outputs/apk/debug/sample-app-debug.apk"
+          APK="kioskops-sample-demo-${VERSION}.apk"
+          cp "$SRC" "$APK"
+          sha256sum "$APK" > "${APK}.sha256"
+          cosign sign-blob --yes "$APK" --bundle "${APK}.bundle"
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
 
       - name: Attest build provenance (SLSA)
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
@@ -139,6 +152,9 @@ jobs:
             kiosk-ops-sdk/build/outputs/aar/*.aar
             kiosk-ops-sdk/build/outputs/aar/*.bundle
             kiosk-ops-sdk-coverage.zip
+            kioskops-sample-demo-*.apk
+            kioskops-sample-demo-*.apk.sha256
+            kioskops-sample-demo-*.apk.bundle
           )
           # Re-running a release (e.g. to retry a failed Maven Central publish) must not
           # fail just because the release already exists. Create it, or refresh assets.

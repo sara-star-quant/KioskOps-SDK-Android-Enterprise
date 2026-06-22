@@ -34,4 +34,8 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.okhttp)
+  // cuiDefaults() enables database encryption, which the SDK backs with SQLCipher.
+  implementation(libs.sqlcipher.android)
+  // The SDK schedules background work via WorkManager; the host provides its config.
+  implementation(libs.androidx.work)
 }

@@ -81,6 +81,8 @@ dependencies {
 
 ## Quick Start
 
+> Want to see it first? A runnable demo APK ships with each [release](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/releases); see [Sample app](docs/sample-app.md) for screenshots and a walkthrough.
+
 ### 1. Initialize SDK
 
 ```kotlin
@@ -157,6 +159,7 @@ See [Benchmarks](docs/benchmarks.md) for methodology and how to reproduce.
 | [Architecture](docs/ARCHITECTURE.md) | System design, modules, and scope |
 | [Features](docs/FEATURES.md) | Full feature list and limitations |
 | [Benchmarks](docs/benchmarks.md) | Microbenchmark results and reproduction |
+| [Sample app](docs/sample-app.md) | Runnable demo, screenshots, and integration notes |
 | [Security and Compliance](docs/SECURITY_COMPLIANCE.md) | Threat model, transport security, key management, audit integrity |
 | [Compliance Mappings](docs/compliance/) | NIST 800-171, CJIS, ASD, BSI, Australian Privacy Act |
 | [Server API Contract](docs/openapi.yaml) | OpenAPI spec for batch ingest |
