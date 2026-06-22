@@ -107,6 +107,9 @@ object DatabaseEncryptionProvider {
   private fun createSqlCipherFactory(passphrase: ByteArray): SupportSQLiteOpenHelper.Factory {
     return try {
       val clazz = Class.forName("net.zetetic.database.sqlcipher.SupportOpenHelperFactory")
+      // sqlcipher-android does not auto-load its native library; the first DB open
+      // throws UnsatisfiedLinkError without this. Safe to call repeatedly.
+      System.loadLibrary("sqlcipher")
       val constructor = clazz.getConstructor(ByteArray::class.java)
       constructor.newInstance(passphrase) as SupportSQLiteOpenHelper.Factory
     } catch (e: ClassNotFoundException) {

@@ -1,10 +1,23 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
   <uses-permission android:name="android.permission.INTERNET" />
 
   <application
     android:name=".SampleApp"
     android:allowBackup="false"
     android:fullBackupContent="false">
+
+    <!-- SampleApp provides WorkManager config via Configuration.Provider (on-demand
+         initialization), so the default initializer must be removed. -->
+    <provider
+      android:name="androidx.startup.InitializationProvider"
+      android:authorities="${applicationId}.androidx-startup"
+      android:exported="false"
+      tools:node="merge">
+      <meta-data
+        android:name="androidx.work.WorkManagerInitializer"
+        tools:node="remove" />
+    </provider>
 
     <activity
       android:name=".MainActivity"
