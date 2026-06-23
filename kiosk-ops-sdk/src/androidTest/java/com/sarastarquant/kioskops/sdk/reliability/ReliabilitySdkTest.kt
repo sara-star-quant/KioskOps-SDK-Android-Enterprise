@@ -13,6 +13,7 @@ import com.google.common.truth.Truth.assertThat
 import com.sarastarquant.kioskops.sdk.KioskOpsConfig
 import com.sarastarquant.kioskops.sdk.KioskOpsSdk
 import com.sarastarquant.kioskops.sdk.audit.ChainVerificationResult
+import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.queue.EnqueueResult
 import java.security.KeyStore
 import kotlinx.coroutines.runBlocking
@@ -50,6 +51,11 @@ abstract class ReliabilitySdkTest {
 
   protected fun cleanSlate() {
     KioskOpsSdk.resetForTesting()
+    // The instrumented suite shares one process, so the Room singletons survive
+    // between tests (unlike Robolectric, which sandboxes per class). Close the
+    // audit database before deleting its file, or a later test inherits a stale
+    // persisted chain head and verifyAuditIntegrity reports Broken.
+    AuditDatabase.closeInstance()
     for (db in DATABASES) ctx.deleteDatabase(db)
     ctx.getSharedPreferences(DB_ENCRYPTION_PREFS, Context.MODE_PRIVATE).edit().clear().commit()
     ctx.filesDir.listFiles()?.forEach { if (it.name.startsWith("kioskops")) it.deleteRecursively() }
