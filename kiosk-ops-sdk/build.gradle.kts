@@ -146,6 +146,8 @@ dependencies {
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(libs.androidx.work.testing)
+  // Exercises the real SQLCipher-backed database path (cuiDefaults/cjisDefaults) on-device.
+  androidTestImplementation(libs.sqlcipher.android)
 
   // Fuzzing (JUnit 5)
   testImplementation(libs.junit5.api)
