@@ -148,6 +148,8 @@ dependencies {
   androidTestImplementation(libs.androidx.work.testing)
   // Exercises the real SQLCipher-backed database path (cuiDefaults/cjisDefaults) on-device.
   androidTestImplementation(libs.sqlcipher.android)
+  // Drives the sync pipeline against a local server on-device.
+  androidTestImplementation(libs.okhttp.mockwebserver)
 
   // Fuzzing (JUnit 5)
   testImplementation(libs.junit5.api)

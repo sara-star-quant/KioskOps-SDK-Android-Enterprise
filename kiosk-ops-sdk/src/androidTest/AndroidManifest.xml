@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Instrumented tests drive the sync pipeline against a local MockWebServer
+       over plaintext HTTP on the loopback interface. Test-APK only. -->
+  <application android:usesCleartextTraffic="true" />
+</manifest>
