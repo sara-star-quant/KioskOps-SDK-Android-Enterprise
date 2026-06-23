@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Database encryption crashed on the first database open with `UnsatisfiedLinkError`. `cuiDefaults()`
+  (and any config that enables `encryptDatabase`) loaded the SQLCipher factory by reflection but never
+  called `System.loadLibrary("sqlcipher")`. The SDK now loads the native library before use. Consumers
+  using database encryption must depend on `net.zetetic:sqlcipher-android`; see `docs/sample-app.md`.
+
 ## [1.3.1] - 2026-06-20
 
 Release-pipeline fixes only. No API or runtime changes; artifacts are identical in behavior to 1.3.0.
