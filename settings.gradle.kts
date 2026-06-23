@@ -19,4 +19,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "KioskOpsSdk"
-include(":kiosk-ops-sdk", ":sample-app", ":kioskops-bom", ":benchmark")
+include(":kiosk-ops-sdk", ":sample-app", ":benchmark")

@@ -37,10 +37,6 @@ dependencies {
 }
 ```
 
-Optionally pin the version once via the BOM (`kioskops-bom`); see
-[Integration](docs/INTEGRATION.md#optional-bom-for-coordinated-versions) for the BOM and
-Gradle version-catalog snippets.
-
 ### Option B: GitHub Packages
 
 ```kotlin

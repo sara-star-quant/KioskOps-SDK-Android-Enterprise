@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- The `kioskops-bom` Maven BOM. It constrained a single artifact, so it added publish complexity and
+  consumer ceremony with no version-alignment value. Depend on `kiosk-ops-sdk` directly. A BOM can
+  return additively if the SDK ever splits into multiple co-versioned artifacts.
+
 ### Fixed
 
 - Database encryption crashed on the first database open with `UnsatisfiedLinkError`. `cuiDefaults()`

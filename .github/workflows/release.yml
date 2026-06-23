@@ -113,7 +113,7 @@ jobs:
 
       - name: Publish to Maven Central
         run: |
-          ./gradlew :kiosk-ops-sdk:publishAndReleaseToMavenCentral :kioskops-bom:publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="$VERSION"
+          ./gradlew :kiosk-ops-sdk:publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="$VERSION"
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -123,7 +123,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          ./gradlew :kiosk-ops-sdk:publishMavenPublicationToGitHubPackagesRepository :kioskops-bom:publishMavenPublicationToGitHubPackagesRepository --no-configuration-cache -PVERSION_NAME="$VERSION" || {
+          ./gradlew :kiosk-ops-sdk:publishMavenPublicationToGitHubPackagesRepository --no-configuration-cache -PVERSION_NAME="$VERSION" || {
             echo "::warning::GitHub Packages publish failed (version may already exist). Continuing."
           }
         env:

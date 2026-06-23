@@ -410,7 +410,8 @@ earned after 1.2.
 
 ### Distribution
 - [x] BOM artifact (`com.sarastarquant.kioskops:kioskops-bom`) for
-  coordinated version management
+  coordinated version management (removed post-1.3.0; it constrained a single
+  artifact, so it carried no version-alignment value; see CHANGELOG)
 - [x] Gradle Version Catalog snippet for consumers (`docs/INTEGRATION.md`)
 - [x] LTS branch policy (`release/v1.2.x`, `release/v1.1.x`) with a
   label-triggered backport workflow
