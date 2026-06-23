@@ -19,9 +19,8 @@ plugins {
   alias(libs.plugins.android.library) apply false
   alias(libs.plugins.kotlin.serialization) apply false
   alias(libs.plugins.ksp) apply false
-  // Load the publish plugin once at the root so kiosk-ops-sdk and kioskops-bom
-  // share a single MavenCentralBuildService classloader. Applying it only in the
-  // sibling subprojects loads the service twice and fails publishAndReleaseToMavenCentral.
+  // Load the publish plugin at the root (applied in kiosk-ops-sdk) so the
+  // MavenCentralBuildService loads under a single classloader.
   alias(libs.plugins.maven.publish) apply false
 }
 

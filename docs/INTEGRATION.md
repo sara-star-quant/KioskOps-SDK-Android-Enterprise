@@ -23,18 +23,6 @@ See the [README Installation](../README.md#installation) section for the current
 release version, GitHub Packages coordinates, and the JitPack fallback. In-repo
 consumers (sample-app) continue to use `implementation(project(":kiosk-ops-sdk"))`.
 
-### Optional: BOM for coordinated versions
-
-A Bill of Materials (`com.sarastarquant.kioskops:kioskops-bom`) lets you pin the
-KioskOps version once and omit it on the artifact:
-
-```kotlin
-dependencies {
-  implementation(platform("com.sarastarquant.kioskops:kioskops-bom:<latest>"))
-  implementation("com.sarastarquant.kioskops:kiosk-ops-sdk")
-}
-```
-
 ### Optional: Gradle version catalog
 
 To keep the coordinate in `gradle/libs.versions.toml`:
@@ -44,13 +32,11 @@ To keep the coordinate in `gradle/libs.versions.toml`:
 kioskops = "<latest>"
 
 [libraries]
-kioskops-bom = { module = "com.sarastarquant.kioskops:kioskops-bom", version.ref = "kioskops" }
-kioskops-sdk = { module = "com.sarastarquant.kioskops:kiosk-ops-sdk" }
+kioskops-sdk = { module = "com.sarastarquant.kioskops:kiosk-ops-sdk", version.ref = "kioskops" }
 ```
 
 ```kotlin
 dependencies {
-  implementation(platform(libs.kioskops.bom))
   implementation(libs.kioskops.sdk)
 }
 ```
