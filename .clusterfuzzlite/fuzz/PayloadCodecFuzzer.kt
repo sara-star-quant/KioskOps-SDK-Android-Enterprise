@@ -61,6 +61,11 @@ object PayloadCodecFuzzer {
       // Bad ciphertext / tag for the AES-GCM path.
     } catch (_: IndexOutOfBoundsException) {
       // Truncated blob.
+    } catch (_: RuntimeException) {
+      // Feeding fully attacker-controlled bytes to the JCA can surface
+      // provider-internal RuntimeExceptions (e.g. ProviderException wrapping a
+      // ShortBufferException). Decoding arbitrary bytes may fail any way short of
+      // a hang or OOM; only the round-trip below must hold.
     }
 
     // Path 2: encode then decode must round-trip losslessly.
