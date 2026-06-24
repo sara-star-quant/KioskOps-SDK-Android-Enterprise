@@ -7,11 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Removed
-
-- The `kioskops-bom` Maven BOM. It constrained a single artifact, so it added publish complexity and
-  consumer ceremony with no version-alignment value. Depend on `kiosk-ops-sdk` directly. A BOM can
-  return additively if the SDK ever splits into multiple co-versioned artifacts.
+## [1.4.0] - 2026-06-24
 
 ### Fixed
 
@@ -19,6 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (and any config that enables `encryptDatabase`) loaded the SQLCipher factory by reflection but never
   called `System.loadLibrary("sqlcipher")`. The SDK now loads the native library before use. Consumers
   using database encryption must depend on `net.zetetic:sqlcipher-android`; see `docs/sample-app.md`.
+
+### Added
+
+- On-device reliability suite that boots the SDK under every compliance preset and runs the queue,
+  encrypted-database, sync, and data-rights flows on an emulator. It gates pull requests and caught the
+  encryption crash above.
+- ClusterFuzzLite continuous fuzzing for the payload codec, on pull requests and a weekly batch.
+
+### Removed
+
+- The `kioskops-bom` Maven BOM. It constrained a single artifact, so it added publish complexity and
+  consumer ceremony with no version-alignment value. Depend on `kiosk-ops-sdk` directly. A BOM can
+  return additively if the SDK ever splits into multiple co-versioned artifacts.
 
 ## [1.3.1] - 2026-06-20
 
