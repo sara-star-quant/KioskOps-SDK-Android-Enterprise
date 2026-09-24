@@ -5,10 +5,10 @@
 buildscript {
   configurations.classpath {
     resolutionStrategy.force(
-      "org.bouncycastle:bcprov-jdk18on:1.84",
-      "org.bouncycastle:bcpkix-jdk18on:1.84",
-      "org.bouncycastle:bcutil-jdk18on:1.84",
-      "org.bouncycastle:bcpg-jdk18on:1.84",
+      "org.bouncycastle:bcprov-jdk18on:1.85",
+      "org.bouncycastle:bcpkix-jdk18on:1.85",
+      "org.bouncycastle:bcutil-jdk18on:1.85",
+      "org.bouncycastle:bcpg-jdk18on:1.85",
       "org.codehaus.plexus:plexus-utils:4.0.3",
     )
   }
@@ -27,10 +27,10 @@ plugins {
 subprojects {
   configurations.configureEach {
     resolutionStrategy.force(
-      "org.bouncycastle:bcprov-jdk18on:1.84",
-      "org.bouncycastle:bcpkix-jdk18on:1.84",
-      "org.bouncycastle:bcutil-jdk18on:1.84",
-      "org.bouncycastle:bcpg-jdk18on:1.84",
+      "org.bouncycastle:bcprov-jdk18on:1.85",
+      "org.bouncycastle:bcpkix-jdk18on:1.85",
+      "org.bouncycastle:bcutil-jdk18on:1.85",
+      "org.bouncycastle:bcpg-jdk18on:1.85",
     )
     // netty arrives only via grpc-netty in the Android Unified Test Platform
     // configurations (test-only; absent from releaseRuntimeClasspath, never in the AAR).
