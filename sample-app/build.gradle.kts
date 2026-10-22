@@ -8,7 +8,7 @@ kotlin {
 
 android {
   namespace = "com.sarastarquant.kioskops.sample"
-  compileSdk = 36
+  compileSdk = 37
 
   defaultConfig {
     applicationId = "com.sarastarquant.kioskops.sample"
