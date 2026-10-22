@@ -27,6 +27,12 @@ plugins {
 
 kotlin {
   jvmToolchain(21)
+  // Keep the published metadata and stdlib API at the documented Kotlin floor (README
+  // Requirements) so consumers on older compilers can still read the artifact.
+  compilerOptions {
+    languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1)
+    apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1)
+  }
 }
 
 android {
