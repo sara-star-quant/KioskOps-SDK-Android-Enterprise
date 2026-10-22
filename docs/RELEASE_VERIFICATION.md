@@ -120,7 +120,9 @@ regressions from the previous release.
 **Cosign signature verification.**
 
 After the release workflow publishes on `v*.*.*` (v1.3.0 and later ship a single
-`.bundle` per artifact; requires cosign 3.x):
+`.bundle` per artifact; requires cosign 3.x). From v1.4.1 each bundle is also
+attached as `.sigstore.json` (identical content), and the SLSA provenance as
+`kiosk-ops-sdk.intoto.jsonl`:
 
 ```
 cosign verify-blob \
