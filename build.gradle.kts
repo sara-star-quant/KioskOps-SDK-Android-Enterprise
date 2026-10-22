@@ -5,10 +5,10 @@
 buildscript {
   configurations.classpath {
     resolutionStrategy.force(
-      "org.bouncycastle:bcprov-jdk18on:1.84",
-      "org.bouncycastle:bcpkix-jdk18on:1.84",
-      "org.bouncycastle:bcutil-jdk18on:1.84",
-      "org.bouncycastle:bcpg-jdk18on:1.84",
+      "org.bouncycastle:bcprov-jdk18on:1.86",
+      "org.bouncycastle:bcpkix-jdk18on:1.86",
+      "org.bouncycastle:bcutil-jdk18on:1.86",
+      "org.bouncycastle:bcpg-jdk18on:1.86",
       "org.codehaus.plexus:plexus-utils:4.0.3",
     )
   }
@@ -27,33 +27,40 @@ plugins {
 subprojects {
   configurations.configureEach {
     resolutionStrategy.force(
-      "org.bouncycastle:bcprov-jdk18on:1.84",
-      "org.bouncycastle:bcpkix-jdk18on:1.84",
-      "org.bouncycastle:bcutil-jdk18on:1.84",
-      "org.bouncycastle:bcpg-jdk18on:1.84",
+      "org.bouncycastle:bcprov-jdk18on:1.86",
+      "org.bouncycastle:bcpkix-jdk18on:1.86",
+      "org.bouncycastle:bcutil-jdk18on:1.86",
+      "org.bouncycastle:bcpg-jdk18on:1.86",
     )
     // netty arrives only via grpc-netty in the Android Unified Test Platform
     // configurations (test-only; absent from releaseRuntimeClasspath, never in the AAR).
     // Pin the whole io.netty family so the modules stay version-aligned.
     resolutionStrategy.eachDependency {
       if (requested.group == "io.netty") {
-        useVersion("4.1.135.Final")
+        useVersion("4.1.139.Final")
       }
       // jackson arrives only via the Dokka generator runtime (doc build); absent
       // from releaseRuntimeClasspath, never in the AAR. Pin the whole jackson
       // stack (not just databind) so the modules stay aligned, which jackson
-      // requires. 2.18.8 is the latest 2.18.x and clears GHSA-hgj6-7826-r7m5,
-      // GHSA-rmj7-2vxq-3g9f, and GHSA-j3rv-43j4-c7qm. GHSA-5jmj-h7xm-6q6v (the old
+      // requires. 2.18.12 is the latest 2.18.x and clears the open jackson-core and
+      // jackson-databind advisories. GHSA-5jmj-h7xm-6q6v (the old
       // polymorphic-deserialization advisory) has no published fix and does not
       // apply here: Dokka does not enable default typing on untrusted input.
       if (requested.group.startsWith("com.fasterxml.jackson")) {
-        useVersion("2.18.8")
+        useVersion("2.18.12")
       }
       // wire-runtime arrives only via androidx.benchmark tooling (test/benchmark
       // module; never in the AAR). Pin the whole group so wire-runtime and its
-      // -jvm variant stay aligned. 6.3.0 fixes GHSA-7xpr-hc2w-34m9.
+      // -jvm variant stay aligned. 6.4.7 is the latest 6.x and clears the open wire-runtime advisories.
       if (requested.group == "com.squareup.wire") {
-        useVersion("6.3.0")
+        useVersion("6.4.7")
+      }
+      // freemarker and jsoup arrive only via the Dokka generator runtime (doc build).
+      if (requested.group == "org.freemarker") {
+        useVersion("2.3.35")
+      }
+      if (requested.group == "org.jsoup") {
+        useVersion("1.23.2")
       }
     }
   }

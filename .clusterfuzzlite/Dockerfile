@@ -1,4 +1,4 @@
-FROM gcr.io/oss-fuzz-base/base-builder-jvm
+FROM gcr.io/oss-fuzz-base/base-builder-jvm@sha256:bd13a763de1a0fb22099442094e7e0049657a8c47f01e9d7af8bb849e0ad4699
 
 # Standalone Kotlin compiler. The SDK is an Android (com.android.library) module,
 # so its Gradle build needs the Android SDK, which base-builder-jvm does not ship.
