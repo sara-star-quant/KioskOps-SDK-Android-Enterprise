@@ -89,6 +89,8 @@ jobs:
           cd kiosk-ops-sdk/build/outputs/aar
           for file in *.aar; do
             cosign sign-blob --yes "$file" --bundle "${file}.bundle"
+            # Same bundle under the name OpenSSF Scorecard recognizes as a signature.
+            cp "${file}.bundle" "${file}.sigstore.json"
           done
 
       - name: Prepare and sign sample demo APK
@@ -98,13 +100,20 @@ jobs:
           cp "$SRC" "$APK"
           sha256sum "$APK" > "${APK}.sha256"
           cosign sign-blob --yes "$APK" --bundle "${APK}.bundle"
+          cp "${APK}.bundle" "${APK}.sigstore.json"
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
 
       - name: Attest build provenance (SLSA)
+        id: attest
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-path: kiosk-ops-sdk/build/outputs/aar/*.aar
+
+      - name: Export provenance as a release asset
+        run: cp "$BUNDLE_PATH" kiosk-ops-sdk.intoto.jsonl
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
 
       - name: Generate docs for Javadoc JAR
         run: ./gradlew :kiosk-ops-sdk:dokkaGeneratePublicationHtml -PVERSION_NAME="$VERSION" --no-configuration-cache
@@ -151,10 +160,13 @@ jobs:
           assets=(
             kiosk-ops-sdk/build/outputs/aar/*.aar
             kiosk-ops-sdk/build/outputs/aar/*.bundle
+            kiosk-ops-sdk/build/outputs/aar/*.sigstore.json
+            kiosk-ops-sdk.intoto.jsonl
             kiosk-ops-sdk-coverage.zip
             kioskops-sample-demo-*.apk
             kioskops-sample-demo-*.apk.sha256
             kioskops-sample-demo-*.apk.bundle
+            kioskops-sample-demo-*.apk.sigstore.json
           )
           # Re-running a release (e.g. to retry a failed Maven Central publish) must not
           # fail just because the release already exists. Create it, or refresh assets.
