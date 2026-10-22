@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-10-22
+
+No SDK API or runtime behavior changes. Dependency fixes are in build and test tooling; the AAR now targets Java 17 and a Kotlin 2.3 language floor (see Changed).
+
+### Security
+
+- Raise build-tooling dependency pins: bouncycastle 1.86, netty 4.1.139.Final, jackson 2.18.12 (doc build) and 2.21.8 (gradle plugins), wire 6.4.7, freemarker 2.3.35, jsoup 1.23.2.
+- Update Kotlin to 2.4.21.
+- Pin the ClusterFuzzLite base image by digest.
+
+### Changed
+
+- The AAR now emits Java 17 bytecode instead of Java 21, matching the documented Java 17+ requirement.
+- Kotlin language and API version are pinned to 2.3, so consumers need Kotlin 2.3 or newer. The README requirement now says so.
+- Compile against Android API 37 (required by androidx core-ktx 1.19.0). minSdk is unchanged.
+- Update androidx room 2.8.5, androidx benchmark 1.5.0, gradle 9.6.1, junit 6.1.1, and CI actions.
+
+### Fixed
+
+- CodeQL analyze and init now run the same action version.
+- OpenSSF Scorecard workflow pulls its image from ghcr.io after gcr.io began refusing pulls.
+- `periodicWorkIsEnqueuedByTag` no longer fails when the worker is already running at assertion time.
+
 ## [1.4.0] - 2026-06-24
 
 ### Fixed
