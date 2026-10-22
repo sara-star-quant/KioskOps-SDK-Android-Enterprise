@@ -1,3 +1,19 @@
+// Build-tooling plugins (dokka, kover, cyclonedx) bring jackson and freemarker onto this
+// module's plugin classpath. Never in the AAR; pinned to patched versions. jackson-annotations
+// is published as major.minor only (2.21), without patch releases.
+buildscript {
+  configurations.classpath {
+    resolutionStrategy.eachDependency {
+      if (requested.group.startsWith("com.fasterxml.jackson")) {
+        useVersion(if (requested.name == "jackson-annotations") "2.21" else "2.21.8")
+      }
+      if (requested.group == "org.freemarker") {
+        useVersion("2.3.35")
+      }
+    }
+  }
+}
+
 plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.serialization)
