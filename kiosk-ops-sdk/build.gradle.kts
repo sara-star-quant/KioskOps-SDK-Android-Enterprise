@@ -15,7 +15,7 @@ kotlin {
 
 android {
   namespace = "com.sarastarquant.kioskops.sdk"
-  compileSdk = 36
+  compileSdk = 37
 
   defaultConfig {
     minSdk = 33
