@@ -30,6 +30,8 @@ kotlin {
   // Keep the published metadata and stdlib API at the documented Kotlin floor (README
   // Requirements) so consumers on older compilers can still read the artifact.
   compilerOptions {
+    // Build on JDK 21 but emit Java 17 bytecode (README Requirements: Java 17+).
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3)
     apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3)
   }
@@ -38,6 +40,11 @@ kotlin {
 android {
   namespace = "com.sarastarquant.kioskops.sdk"
   compileSdk = 37
+
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
 
   defaultConfig {
     minSdk = 33
