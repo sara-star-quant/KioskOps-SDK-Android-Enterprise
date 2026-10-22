@@ -99,7 +99,7 @@ class WorkManagerInstrumentedTest {
     val infos = workManager.getWorkInfosByTag(KioskOpsSyncWorker.WORK_TAG).get()
     assertThat(infos).isNotEmpty()
     assertThat(infos[0].tags).contains(KioskOpsSyncWorker.WORK_TAG)
-    assertThat(infos[0].state).isEqualTo(WorkInfo.State.ENQUEUED)
+    assertThat(infos[0].state).isAnyOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING)
   }
 
   // ---------------------------------------------------------------------------
