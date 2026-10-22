@@ -144,7 +144,7 @@ See [Benchmarks](docs/benchmarks.md) for methodology and how to reproduce.
 |-------------|---------|
 | Android API | 33+ (Android 13) |
 | Java | 17+ |
-| Kotlin | 2.1+ |
+| Kotlin | 2.3+ |
 | Gradle | 8.11+ |
 
 ## Documentation
