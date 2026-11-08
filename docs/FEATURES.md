@@ -75,6 +75,7 @@
 |---------|---------|-------------|
 | Health check | Available | Structured SDK health snapshot (queue, sync, auth, encryption) |
 | Error listener | Off | Non-fatal error callbacks via `setErrorListener()` |
+| Delivery listener | Off | Per-event outcome (delivered, retry scheduled, quarantined) after the server acks a batch, via `setDeliveryListener()` (v1.5.0) |
 | Java interop | Available | Blocking wrappers returning `CompletableFuture`; `@JvmStatic`, `@JvmOverloads` |
 | Debug log toggle | Off | ADB broadcast to change log level at runtime (debug builds only) |
 | FIPS 140 detection | Available | Runtime check for FIPS-mode Conscrypt/BoringSSL provider |

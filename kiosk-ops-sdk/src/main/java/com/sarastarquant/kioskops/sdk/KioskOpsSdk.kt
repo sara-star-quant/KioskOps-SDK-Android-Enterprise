@@ -52,6 +52,7 @@ import com.sarastarquant.kioskops.sdk.util.Hashing
 import com.sarastarquant.kioskops.sdk.work.DiagnosticsSchedulerWorker
 import com.sarastarquant.kioskops.sdk.work.KioskOpsSyncWorker
 import com.sarastarquant.kioskops.sdk.work.KioskOpsEventSyncWorker
+import com.sarastarquant.kioskops.sdk.sync.KioskOpsDeliveryListener
 import com.sarastarquant.kioskops.sdk.sync.SyncEngine
 import com.sarastarquant.kioskops.sdk.sync.SyncOnceResult
 import com.sarastarquant.kioskops.sdk.transport.AuthProvider
@@ -227,6 +228,19 @@ class KioskOpsSdk private constructor(
     }
   }
 
+  @Volatile private var deliveryListener: KioskOpsDeliveryListener? = null
+
+  /**
+   * Set a listener for per-event delivery outcomes (accepted, retry scheduled, quarantined),
+   * fired after the server acknowledges a sync batch. Pass `null` to remove it. The listener may
+   * be called from background threads.
+   *
+   * @since 1.5.0
+   */
+  fun setDeliveryListener(listener: KioskOpsDeliveryListener?) {
+    deliveryListener = listener
+  }
+
   private val json = Json {
     ignoreUnknownKeys = true
     explicitNulls = false
@@ -302,6 +316,7 @@ class KioskOpsSdk private constructor(
       telemetry = telemetry,
       audit = persistentAudit,
       clock = clock,
+      onDelivery = { deliveryListener?.onDelivery(it) },
     )
   }
 

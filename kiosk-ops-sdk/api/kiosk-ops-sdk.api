@@ -288,6 +288,7 @@ public final class com/sarastarquant/kioskops/sdk/KioskOpsSdk {
 	public final fun rollbackConfig (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun setAnomalyDetector (Lcom/sarastarquant/kioskops/sdk/anomaly/AnomalyDetector;)V
 	public final fun setDataRightsAuthorizer (Lcom/sarastarquant/kioskops/sdk/compliance/DataRightsAuthorizer;)V
+	public final fun setDeliveryListener (Lcom/sarastarquant/kioskops/sdk/sync/KioskOpsDeliveryListener;)V
 	public final fun setDiagnosticsUploader (Lcom/sarastarquant/kioskops/sdk/fleet/DiagnosticsUploader;)V
 	public final fun setErrorListener (Lcom/sarastarquant/kioskops/sdk/KioskOpsErrorListener;)V
 	public final fun setPiiDetector (Lcom/sarastarquant/kioskops/sdk/pii/PiiDetector;)V
@@ -3974,8 +3975,45 @@ public final class com/sarastarquant/kioskops/sdk/sync/Backoff {
 	public final fun nextDelayMs (I)J
 }
 
+public final class com/sarastarquant/kioskops/sdk/sync/DeliveryStatus : java/lang/Enum {
+	public static final field DELIVERED Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;
+	public static final field QUARANTINED Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;
+	public static final field RETRY_SCHEDULED Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;
+	public static fun values ()[Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;
+}
+
+public final class com/sarastarquant/kioskops/sdk/sync/EventDelivery {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;Ljava/lang/String;Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/sync/EventDelivery;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/sync/EventDelivery;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/sync/EventDelivery;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getEventId ()Ljava/lang/String;
+	public final fun getIdempotencyKey ()Ljava/lang/String;
+	public final fun getServerEventId ()Ljava/lang/String;
+	public final fun getStatus ()Lcom/sarastarquant/kioskops/sdk/sync/DeliveryStatus;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/sarastarquant/kioskops/sdk/sync/KioskOpsDeliveryListener {
+	public abstract fun onDelivery (Lcom/sarastarquant/kioskops/sdk/sync/EventDelivery;)V
+}
+
 public final class com/sarastarquant/kioskops/sdk/sync/SyncEngine {
 	public fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/sarastarquant/kioskops/sdk/queue/QueueRepository;Lcom/sarastarquant/kioskops/sdk/transport/Transport;Lcom/sarastarquant/kioskops/sdk/logging/RingLog;Lcom/sarastarquant/kioskops/sdk/telemetry/TelemetrySink;Lcom/sarastarquant/kioskops/sdk/audit/PersistentAuditTrail;Lcom/sarastarquant/kioskops/sdk/util/Clock;)V
+	public fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/sarastarquant/kioskops/sdk/queue/QueueRepository;Lcom/sarastarquant/kioskops/sdk/transport/Transport;Lcom/sarastarquant/kioskops/sdk/logging/RingLog;Lcom/sarastarquant/kioskops/sdk/telemetry/TelemetrySink;Lcom/sarastarquant/kioskops/sdk/audit/PersistentAuditTrail;Lcom/sarastarquant/kioskops/sdk/util/Clock;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/sarastarquant/kioskops/sdk/queue/QueueRepository;Lcom/sarastarquant/kioskops/sdk/transport/Transport;Lcom/sarastarquant/kioskops/sdk/logging/RingLog;Lcom/sarastarquant/kioskops/sdk/telemetry/TelemetrySink;Lcom/sarastarquant/kioskops/sdk/audit/PersistentAuditTrail;Lcom/sarastarquant/kioskops/sdk/util/Clock;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun flushOnce (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

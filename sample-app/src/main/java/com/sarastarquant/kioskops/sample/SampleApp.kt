@@ -53,6 +53,12 @@ class SampleApp : Application(), Configuration.Provider {
     // Fires on sync failures, crypto errors, storage errors; not on expected rejections.
     sdk.setErrorListener(errorLogListener)
 
+    // v1.5.0: Delivery listener. Fires once per event after the server acks a sync batch,
+    // with identifiers and the server error only (never the payload).
+    sdk.setDeliveryListener { d ->
+      Log.i("KioskOps", "Delivery ${d.status}: type=${d.type} id=${d.eventId} error=${d.error}")
+    }
+
     // v1.0.0: Data rights authorization callback.
     // cuiDefaults requires authorization before export/delete/wipe operations.
     // In production, verify the caller's identity (PIN, biometric, backend token).
