@@ -442,7 +442,22 @@ torn-read to fix.
 
 ---
 
-## v1.4.0 Cross-platform foundation
+## v1.5.0 Reliability and API Guard [RELEASED]
+
+Focus: enforce the public API, and close the delivery and retention loops.
+
+### Internal
+- [x] Public API guard: `checkApi` diffs the release API against `api/kiosk-ops-sdk.api`
+  (Kotlin `abi-tools`; BCV and the Kotlin ABI plugin dump nothing under AGP 9)
+- [x] Retention on a dedicated periodic worker (`enforceRetention()`)
+- [x] Java `*Blocking` wrappers share one future helper
+
+### Observability
+- [x] Per-event delivery confirmation callbacks (`setDeliveryListener()`)
+
+---
+
+## v1.6.0 Cross-platform foundation
 
 Focus: second runtime, first platform; plus the verification, security, and
 documentation items carried over from v1.3.
@@ -455,13 +470,6 @@ documentation items carried over from v1.3.
 ### Internal refactors
 - [ ] `KioskOpsSdk` namespace split (`fleet.*`, `audit.*`, `health.*`
   accessors with flat-method deprecated forwards)
-- [x] Java blocking-wrapper helper collapsing the six
-  `*Blocking` methods to one `future { }` delegate
-- [x] Retention moved to a dedicated `RetentionWorker` (decouples from
-  heartbeat)
-
-### Observability
-- [x] Event delivery confirmation callbacks (post-ack)
 
 ### Security (carried from v1.3)
 - [ ] Full SCT signature verification per RFC 6962. The current
@@ -472,10 +480,6 @@ documentation items carried over from v1.3.
      signed releases and earns a Scorecard >=6.0; pin by hash.
   3. Evaluate Conscrypt (BoringSSL-backed) native CT verification on
      Android 10+.
-- [ ] Re-establish API-compatibility enforcement. BCV was dropped in 1.2.1
-  as AGP-9-incompatible, so the SDK has had no enforced public-API guard
-  since 1.2.0 despite the v1.0 API-freeze commitment. Evaluate an
-  AGP-9-compatible validator or Metalava.
 
 ### Release verification infrastructure (carried from v1.3)
 - [ ] Backward-compatibility fixture: pinned sample-app at the previous

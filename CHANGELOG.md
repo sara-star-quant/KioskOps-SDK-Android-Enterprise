@@ -7,10 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-08
+
+Additive API only: a delivery listener and `enforceRetention()`. No breaking changes.
+
 ### Added
 
 - `KioskOpsSdk.enforceRetention()` and a periodic retention worker scheduled by `applySchedulingFromConfig()`. Retention no longer depends on a heartbeat succeeding; `heartbeat()` still enforces it, so manual callers are unaffected.
 - `KioskOpsSdk.setDeliveryListener()` reports a per-event `EventDelivery` (`DELIVERED`, `RETRY_SCHEDULED`, `QUARANTINED`) after the server acknowledges a sync batch. No payloads in the callback; a throwing listener is logged and ignored.
+- Public API guard: `:kiosk-ops-sdk:checkApi` fails the build when the release API differs from `kiosk-ops-sdk/api/kiosk-ops-sdk.api`; `updateApi` refreshes it. Uses Kotlin `abi-tools`.
+
+### Changed
+
+- The six `*Blocking` Java wrappers share one internal helper; signatures and behavior are unchanged.
+- Pin guava to 33.8.0-jre on the build classpaths (build tooling only; not in the AAR).
 
 ## [1.4.2] - 2026-11-08
 
