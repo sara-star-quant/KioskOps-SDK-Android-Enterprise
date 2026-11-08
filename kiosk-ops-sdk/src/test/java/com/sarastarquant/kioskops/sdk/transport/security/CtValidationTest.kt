@@ -17,12 +17,12 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.reflect.Proxy
 import java.math.BigInteger
 import java.security.Principal
 import java.security.PublicKey
 import java.security.cert.X509Certificate
 import java.util.Date
-import java.util.concurrent.TimeUnit
 import javax.security.auth.x500.X500Principal
 
 /**
@@ -125,25 +125,21 @@ class CtValidationTest {
   }
 
   /**
-   * Minimal Interceptor.Chain implementation for unit testing.
-   * Only [request] and [proceed] are used by CertificateTransparencyValidator.
+   * Minimal Interceptor.Chain for unit testing. Only [Interceptor.Chain.request] and
+   * [Interceptor.Chain.proceed] are used by CertificateTransparencyValidator. A dynamic proxy
+   * keeps this stable when OkHttp adds abstract members to the interface.
    */
-  private class FakeInterceptorChain(
-    private val fakeRequest: Request,
-    private val fakeResponse: Response,
-  ) : Interceptor.Chain {
-    override fun request(): Request = fakeRequest
-    override fun proceed(request: Request): Response = fakeResponse
-
-    override fun connection() = null
-    override fun call() = throw UnsupportedOperationException()
-    override fun connectTimeoutMillis() = 0
-    override fun readTimeoutMillis() = 0
-    override fun writeTimeoutMillis() = 0
-    override fun withConnectTimeout(timeout: Int, unit: TimeUnit) = this
-    override fun withReadTimeout(timeout: Int, unit: TimeUnit) = this
-    override fun withWriteTimeout(timeout: Int, unit: TimeUnit) = this
-  }
+  private fun FakeInterceptorChain(fakeRequest: Request, fakeResponse: Response): Interceptor.Chain =
+    Proxy.newProxyInstance(
+      Interceptor.Chain::class.java.classLoader,
+      arrayOf(Interceptor.Chain::class.java),
+    ) { _, method, _ ->
+      when (method.name) {
+        "request" -> fakeRequest
+        "proceed" -> fakeResponse
+        else -> throw UnsupportedOperationException(method.name)
+      }
+    } as Interceptor.Chain
 
   // ---------------------------------------------------------------
   // Stub certificate helpers
