@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-11-08
+
+No SDK API changes. Runtime dependencies and CI actions updated.
+
+### Changed
+
+- Update okhttp to 5.5.1 and sqlcipher-android to 4.19.1.
+- Update androidx core-ktx 1.19.1, work 2.12.0, datastore 1.3.0, kotlinx-serialization 1.12.0, kover 0.9.11, junit 6.1.3.
+- Update CI actions: upload-artifact, deploy-pages, attest-build-provenance, gradle/actions wrapper-validation and dependency-submission.
+
 ## [1.4.1] - 2026-10-22
 
 No SDK API or runtime behavior changes. Dependency fixes are in build and test tooling; the AAR now targets Java 17 and a Kotlin 2.3 language floor (see Changed).
