@@ -1,7 +1,15 @@
+import org.jetbrains.kotlin.abi.tools.AbiFilters
+import org.jetbrains.kotlin.abi.tools.AbiTools
+
 // Build-tooling plugins (dokka, kover, cyclonedx) bring jackson and freemarker onto this
 // module's plugin classpath. Never in the AAR; pinned to patched versions. jackson-annotations
 // is published as major.minor only (2.21), without patch releases.
 buildscript {
+  dependencies {
+    // Kotlin's ABI dump engine for the public API guard below. Keep in step with `kotlin` in
+    // libs.versions.toml. Build tooling only; never in the AAR.
+    classpath("org.jetbrains.kotlin:abi-tools:2.4.21")
+  }
   configurations.classpath {
     resolutionStrategy.eachDependency {
       if (requested.group.startsWith("com.fasterxml.jackson")) {
@@ -253,3 +261,57 @@ afterEvaluate {
     }
   }
 }
+
+// Public API guard. Dumps the release AAR's public API in BCV text format and compares it with
+// the committed api/kiosk-ops-sdk.api. `checkApi` fails on any difference (wired into `check`);
+// run `updateApi` after an intentional API change and commit the result.
+abstract class ApiDumpTask : DefaultTask() {
+  @get:InputFiles
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  abstract val classes: ConfigurableFileCollection
+
+  @get:OutputFile
+  abstract val dump: RegularFileProperty
+
+  @TaskAction
+  fun dumpApi() {
+    val out = StringBuilder()
+    AbiTools.getInstance().printJvmDump(out, classes.files, AbiFilters(emptySet(), setOf("com.sarastarquant.kioskops.sdk.R"), emptySet(), emptySet()))
+    dump.get().asFile.writeText(out.toString())
+  }
+}
+
+val apiReference = layout.projectDirectory.file("api/kiosk-ops-sdk.api")
+
+val dumpApi by tasks.registering(ApiDumpTask::class) {
+  classes.from(tasks.named("bundleLibCompileToJarRelease"))
+  dump.set(layout.buildDirectory.file("api/kiosk-ops-sdk.api"))
+}
+
+val updateApi by tasks.registering(Copy::class) {
+  from(dumpApi.map { it.dump })
+  into(apiReference.asFile.parentFile)
+}
+
+abstract class ApiCheckTask : DefaultTask() {
+  @get:InputFile
+  abstract val reference: RegularFileProperty
+
+  @get:InputFile
+  abstract val actual: RegularFileProperty
+
+  @TaskAction
+  fun check() {
+    val diff = AbiTools.getInstance().filesDiff(reference.get().asFile, actual.get().asFile)
+    if (!diff.isNullOrBlank()) {
+      throw GradleException("Public API changed. Run :kiosk-ops-sdk:updateApi if intended.\n$diff")
+    }
+  }
+}
+
+val checkApi by tasks.registering(ApiCheckTask::class) {
+  reference.set(apiReference)
+  actual.set(dumpApi.flatMap { it.dump })
+}
+
+tasks.named("check") { dependsOn(checkApi) }

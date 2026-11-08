@@ -42,6 +42,7 @@ jobs:
             :kiosk-ops-sdk:koverHtmlReportDebug \
             :kiosk-ops-sdk:koverVerifyDebug \
             :kiosk-ops-sdk:detekt \
+            :kiosk-ops-sdk:checkApi \
             lintDebug \
             :kiosk-ops-sdk:assembleRelease
 
