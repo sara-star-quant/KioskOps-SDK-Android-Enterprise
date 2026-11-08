@@ -16,6 +16,7 @@ import com.sarastarquant.kioskops.sdk.audit.KeystoreAttestationProvider
 import com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail
 import com.sarastarquant.kioskops.sdk.compliance.DataRightsManager
 import com.sarastarquant.kioskops.sdk.compliance.RetentionEnforcer
+import com.sarastarquant.kioskops.sdk.compliance.RetentionReport
 import com.sarastarquant.kioskops.sdk.crypto.AesGcmKeystoreCryptoProvider
 import com.sarastarquant.kioskops.sdk.crypto.ConditionalCryptoProvider
 import com.sarastarquant.kioskops.sdk.crypto.CryptoProvider
@@ -50,6 +51,7 @@ import com.sarastarquant.kioskops.sdk.util.Clock
 import com.sarastarquant.kioskops.sdk.util.DeviceId
 import com.sarastarquant.kioskops.sdk.util.Hashing
 import com.sarastarquant.kioskops.sdk.work.DiagnosticsSchedulerWorker
+import com.sarastarquant.kioskops.sdk.work.KioskOpsRetentionWorker
 import com.sarastarquant.kioskops.sdk.work.KioskOpsSyncWorker
 import com.sarastarquant.kioskops.sdk.work.KioskOpsEventSyncWorker
 import com.sarastarquant.kioskops.sdk.sync.KioskOpsDeliveryListener
@@ -714,9 +716,23 @@ class KioskOpsSdk private constructor(
     telemetry.emit("heartbeat", fields)
     persistentAudit.record("heartbeat", mapOf("reason" to reason, "queueDepth" to depth.toString()))
 
-    // Retention across storages (centralized via RetentionEnforcer)
-    retentionEnforcer.enforce(cfg)
+    // Retention also runs on its own schedule (KioskOpsRetentionWorker); keep it here so hosts
+    // that call heartbeat() manually without scheduling still get enforcement.
+    enforceRetention()
+  }
+
+  /**
+   * Applies retention across queue, telemetry, audit, and exported files now.
+   *
+   * Runs periodically via [applySchedulingFromConfig] and on every [heartbeat]. Idempotent.
+   *
+   * @since 1.5.0
+   */
+  suspend fun enforceRetention(): RetentionReport {
+    val cfg = cfg()
+    val report = retentionEnforcer.enforce(cfg)
     purgeOldExports(cfg)
+    return report
   }
 
   /** **Threading**: Main-safe. File IO dispatched internally. */
@@ -909,6 +925,11 @@ class KioskOpsSdk private constructor(
     // crash-loop. Config changes that legitimately need to re-schedule should go through a
     // dedicated reschedule path that cancels and re-enqueues.
     wm.enqueueUniquePeriodicWork(KioskOpsSyncWorker.WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, heartbeat)
+
+    val retention = PeriodicWorkRequestBuilder<KioskOpsRetentionWorker>(cfg.syncIntervalMinutes, TimeUnit.MINUTES)
+      .addTag(KioskOpsRetentionWorker.WORK_TAG)
+      .build()
+    wm.enqueueUniquePeriodicWork(KioskOpsRetentionWorker.WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, retention)
 
     // Network sync is scheduled only when explicitly enabled.
     if (cfg.syncPolicy.enabled) {

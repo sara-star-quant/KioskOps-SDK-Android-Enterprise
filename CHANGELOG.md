@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `KioskOpsSdk.enforceRetention()` and a periodic retention worker scheduled by `applySchedulingFromConfig()`. Retention no longer depends on a heartbeat succeeding; `heartbeat()` still enforces it, so manual callers are unaffected.
 - `KioskOpsSdk.setDeliveryListener()` reports a per-event `EventDelivery` (`DELIVERED`, `RETRY_SCHEDULED`, `QUARANTINED`) after the server acknowledges a sync batch. No payloads in the callback; a throwing listener is logged and ignored.
 
 ## [1.4.2] - 2026-11-08
