@@ -1099,13 +1099,7 @@ class KioskOpsSdk private constructor(
     payloadJson: String,
     userId: String? = null,
   ): java.util.concurrent.CompletableFuture<Boolean> {
-    val future = java.util.concurrent.CompletableFuture<Boolean>()
-    javaInteropScope.launch {
-      @Suppress("TooGenericExceptionCaught")
-      try { future.complete(enqueue(type, payloadJson, userId)) }
-      catch (e: Exception) { future.completeExceptionally(e) }
-    }
-    return future
+    return javaFuture { enqueue(type, payloadJson, userId) }
   }
 
   /**
@@ -1120,13 +1114,7 @@ class KioskOpsSdk private constructor(
     idempotencyKeyOverride: String? = null,
     userId: String? = null,
   ): java.util.concurrent.CompletableFuture<com.sarastarquant.kioskops.sdk.queue.EnqueueResult> {
-    val future = java.util.concurrent.CompletableFuture<com.sarastarquant.kioskops.sdk.queue.EnqueueResult>()
-    javaInteropScope.launch {
-      @Suppress("TooGenericExceptionCaught")
-      try { future.complete(enqueueDetailed(type, payloadJson, stableEventId, idempotencyKeyOverride, userId)) }
-      catch (e: Exception) { future.completeExceptionally(e) }
-    }
-    return future
+    return javaFuture { enqueueDetailed(type, payloadJson, stableEventId, idempotencyKeyOverride, userId) }
   }
 
   /**
@@ -1134,13 +1122,7 @@ class KioskOpsSdk private constructor(
    * @since 0.7.0
    */
   fun syncOnceBlocking(): java.util.concurrent.CompletableFuture<TransportResult<SyncOnceResult>> {
-    val future = java.util.concurrent.CompletableFuture<TransportResult<SyncOnceResult>>()
-    javaInteropScope.launch {
-      @Suppress("TooGenericExceptionCaught")
-      try { future.complete(syncOnce()) }
-      catch (e: Exception) { future.completeExceptionally(e) }
-    }
-    return future
+    return javaFuture { syncOnce() }
   }
 
   /**
@@ -1149,13 +1131,7 @@ class KioskOpsSdk private constructor(
    */
   @JvmOverloads
   fun heartbeatBlocking(reason: String = "periodic"): java.util.concurrent.CompletableFuture<Unit> {
-    val future = java.util.concurrent.CompletableFuture<Unit>()
-    javaInteropScope.launch {
-      @Suppress("TooGenericExceptionCaught")
-      try { future.complete(heartbeat(reason)) }
-      catch (e: Exception) { future.completeExceptionally(e) }
-    }
-    return future
+    return javaFuture { heartbeat(reason) }
   }
 
   /**
@@ -1163,13 +1139,7 @@ class KioskOpsSdk private constructor(
    * @since 0.7.0
    */
   fun queueDepthBlocking(): java.util.concurrent.CompletableFuture<Long> {
-    val future = java.util.concurrent.CompletableFuture<Long>()
-    javaInteropScope.launch {
-      @Suppress("TooGenericExceptionCaught")
-      try { future.complete(queueDepth()) }
-      catch (e: Exception) { future.completeExceptionally(e) }
-    }
-    return future
+    return javaFuture { queueDepth() }
   }
 
   /**
@@ -1177,10 +1147,15 @@ class KioskOpsSdk private constructor(
    * @since 0.7.0
    */
   fun healthCheckBlocking(): java.util.concurrent.CompletableFuture<HealthCheckResult> {
-    val future = java.util.concurrent.CompletableFuture<HealthCheckResult>()
+    return javaFuture { healthCheck() }
+  }
+
+  /** Runs [block] on the Java interop scope; exceptions complete the future exceptionally. */
+  private fun <T> javaFuture(block: suspend () -> T): java.util.concurrent.CompletableFuture<T> {
+    val future = java.util.concurrent.CompletableFuture<T>()
     javaInteropScope.launch {
       @Suppress("TooGenericExceptionCaught")
-      try { future.complete(healthCheck()) }
+      try { future.complete(block()) }
       catch (e: Exception) { future.completeExceptionally(e) }
     }
     return future

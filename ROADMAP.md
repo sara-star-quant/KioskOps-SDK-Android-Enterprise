@@ -455,7 +455,7 @@ documentation items carried over from v1.3.
 ### Internal refactors
 - [ ] `KioskOpsSdk` namespace split (`fleet.*`, `audit.*`, `health.*`
   accessors with flat-method deprecated forwards)
-- [ ] Java blocking-wrapper helper collapsing the six
+- [x] Java blocking-wrapper helper collapsing the six
   `*Blocking` methods to one `future { }` delegate
 - [x] Retention moved to a dedicated `RetentionWorker` (decouples from
   heartbeat)
