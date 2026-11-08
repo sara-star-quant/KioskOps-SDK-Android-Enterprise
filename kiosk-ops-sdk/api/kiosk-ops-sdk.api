@@ -228,6 +228,7 @@ public final class com/sarastarquant/kioskops/sdk/KioskOpsSdk {
 	public final fun currentConfig ()Lcom/sarastarquant/kioskops/sdk/KioskOpsConfig;
 	public final fun currentPolicyHash ()Ljava/lang/String;
 	public final fun devicePosture ()Lcom/sarastarquant/kioskops/sdk/fleet/DevicePosture;
+	public final fun enforceRetention (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun enqueue (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun enqueue (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun enqueue$default (Lcom/sarastarquant/kioskops/sdk/KioskOpsSdk;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -4617,6 +4618,17 @@ public final class com/sarastarquant/kioskops/sdk/work/KioskOpsEventSyncWorker :
 }
 
 public final class com/sarastarquant/kioskops/sdk/work/KioskOpsEventSyncWorker$Companion {
+}
+
+public final class com/sarastarquant/kioskops/sdk/work/KioskOpsRetentionWorker : androidx/work/CoroutineWorker {
+	public static final field Companion Lcom/sarastarquant/kioskops/sdk/work/KioskOpsRetentionWorker$Companion;
+	public static final field WORK_NAME Ljava/lang/String;
+	public static final field WORK_TAG Ljava/lang/String;
+	public fun <init> (Landroid/content/Context;Landroidx/work/WorkerParameters;)V
+	public fun doWork (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/sarastarquant/kioskops/sdk/work/KioskOpsRetentionWorker$Companion {
 }
 
 public final class com/sarastarquant/kioskops/sdk/work/KioskOpsSyncWorker : androidx/work/CoroutineWorker {

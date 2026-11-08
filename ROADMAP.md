@@ -457,7 +457,7 @@ documentation items carried over from v1.3.
   accessors with flat-method deprecated forwards)
 - [ ] Java blocking-wrapper helper collapsing the six
   `*Blocking` methods to one `future { }` delegate
-- [ ] Retention moved to a dedicated `RetentionWorker` (decouples from
+- [x] Retention moved to a dedicated `RetentionWorker` (decouples from
   heartbeat)
 
 ### Observability
