@@ -1,6 +1,6 @@
 // Build-tooling plugins (dokka, kover, cyclonedx) bring jackson and freemarker onto this
 // module's plugin classpath. Never in the AAR; pinned to patched versions. jackson-annotations
-// is published as major.minor only (2.21), without patch releases.
+// is published as major.minor only (2.21), without patch releases. guava is pinned for the same reason.
 buildscript {
   configurations.classpath {
     resolutionStrategy.eachDependency {
@@ -9,6 +9,9 @@ buildscript {
       }
       if (requested.group == "org.freemarker") {
         useVersion("2.3.35")
+      }
+      if (requested.group == "com.google.guava" && requested.name == "guava") {
+        useVersion("33.8.0-jre")
       }
     }
   }
