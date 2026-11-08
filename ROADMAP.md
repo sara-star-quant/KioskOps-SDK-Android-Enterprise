@@ -464,8 +464,21 @@ documentation items carried over from v1.3.
 
 ### Platform
 - [ ] Kotlin Multiplatform common module carved out of core
-- [ ] iOS target (Darwin) with Swift-friendly interop
-- [ ] React Native bridge package
+- [ ] iOS target (Darwin) with Swift-friendly interop, shipped as a preview;
+  XCFramework via Swift Package Manager
+- [ ] React Native bridge and Flutter plugin move to v2.x (iOS first)
+
+### Device trust (positioning: complement a RASP vendor, do not replace one)
+- [ ] Device attestation providers: Play Integrity (Android), App Attest
+  (iOS); the server verifies, the SDK only transports the token
+- [ ] Hardware-bound device identity: Keystore/StrongBox or Secure Enclave
+  key with attestation chain sent at enrollment
+- [ ] OWASP MASVS/MASTG mapping doc (L1, L2, R) with gaps stated plainly
+- [ ] Advisory runtime signals (root/jailbreak, debugger, hooking,
+  emulator) emitted as audit events; the host decides. Documented as
+  heuristics; never a blocking control.
+- [ ] R8/ProGuard consumer-rules guidance so host obfuscation composes
+  with the SDK
 
 ### Internal refactors
 - [ ] `KioskOpsSdk` namespace split (`fleet.*`, `audit.*`, `health.*`
@@ -510,12 +523,27 @@ Features under consideration for post-1.0 releases:
 - [ ] Webhook delivery for real-time event streaming
 - [ ] Optional lightweight mode without Room (SQLite-only queue for resource-constrained devices)
 - [ ] Module split: `kioskops-core`, `kioskops-compliance`, `kioskops-analytics`
-- [ ] Flutter plugin (evaluate demand before committing)
+- [ ] React Native bridge and Flutter plugin (v2.x; evaluate demand)
 
 ### Observability & Debugging
 - [ ] Persistent crash-safe log export (survives process death)
 - [ ] SDK health dashboard metrics (events dropped, queue depth, upload failures)
 - [ ] Event delivery confirmation callbacks (not fire-and-forget)
+
+### Buyer trust artifacts
+- [ ] Reference architecture doc: SDK, MDM, and ingest backend, with the
+  trust boundary drawn for each
+- [ ] Threat model refresh covering the iOS target and attestation flow
+- [ ] OpenVEX statements published with each release alongside the SBOM
+- [ ] Evaluate reproducible builds for the AAR
+- [ ] One named reference deployment or case study (outside the repo;
+  tracked here so it stays visible)
+
+### Explicitly out of scope
+- Native (C/C++) code obfuscation, packing, or app shielding: a separate
+  product class, a size and portability cost, and weaker than a dedicated
+  vendor. Integrate with one instead.
+- FIDO or transaction-signing identity.
 
 ### Regional & Compliance
 - [ ] Per-region endpoint routing helpers (EU/US/AU/APAC)

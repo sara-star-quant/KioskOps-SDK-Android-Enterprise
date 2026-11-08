@@ -6,7 +6,7 @@ Related: [README](README.md) | [Roadmap](ROADMAP.md) | [Features](docs/FEATURES.
 Enterprise Android SDK for offline-first kiosk, retail, logistics, and field-service apps. Encrypted event queue, tamper-evident audit trail, compliance mapping (FedRAMP/NIST/GDPR). Embedded by app teams, not sold as hardware.
 
 ## Positioning
-One sharp claim, not a security platform: "Your devices lose network and still log every event, encrypted and provably untampered, ready for audit." Avoid head-on fight with Samsung Knox and Zebra on generic device security.
+One sharp claim, not a security platform: "Your devices lose network and still log every event, encrypted and provably untampered, ready for audit." Avoid head-on fight with Samsung Knox and Zebra on generic device security, and with OneSpan/Build38 on RASP and identity. Position as the data-layer and audit complement that sits beside them.
 
 ## Beachhead
 Pick one vertical where regulated + offline + rugged overlap:
@@ -17,7 +17,7 @@ Pick one vertical where regulated + offline + rugged overlap:
 Not the OEM. The app/platform team running the Android fleet: VP Eng, Head of Store/Field Systems, compliance lead. Economic buyer is whoever owns audit risk.
 
 ## Model: open-core
-- Free tier (MIT, public GitHub): encryption + local audit log. Drives developer adoption, zero sales friction.
+- Free tier (BSL 1.1, source-available, converts to Apache 2.0 in 2032): encryption + local audit log. Drives developer adoption, zero sales friction.
 - Paid tier: compliance mappings (NIST 800-53 control coverage), audit-export tooling, signed attestation, SLA support. Compliance buyers pay for the paperwork and the support, not the crypto.
 - Attach: filesigner-sdk-android (hardware-backed signing) as a paid bundle module.
 
