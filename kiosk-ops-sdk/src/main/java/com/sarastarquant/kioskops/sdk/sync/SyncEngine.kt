@@ -28,7 +28,7 @@ import com.sarastarquant.kioskops.sdk.util.Ids
  * retried batch. Consumers that require strict global ordering should implement
  * server-side sequence checks using [com.sarastarquant.kioskops.sdk.queue.QueueEventEntity.createdAtEpochMs].
  */
-class SyncEngine(
+class SyncEngine @JvmOverloads constructor(
   private val context: Context,
   private val cfgProvider: () -> KioskOpsConfig,
   private val queue: QueueRepository,
@@ -37,6 +37,7 @@ class SyncEngine(
   private val telemetry: TelemetrySink,
   private val audit: PersistentAuditTrail,
   private val clock: Clock,
+  private val onDelivery: (EventDelivery) -> Unit = {},
 ) {
   suspend fun flushOnce(): TransportResult<SyncOnceResult> {
     val cfg = cfgProvider()
@@ -94,6 +95,7 @@ class SyncEngine(
         var rejected = 0
         var permanentFailed = 0
         var transientFailed = 0
+        val deliveries = ArrayList<EventDelivery>(batch.size)
 
         for (e in batch) {
           val ack = ackById[e.id]
@@ -101,12 +103,14 @@ class SyncEngine(
             val next = now + Backoff.nextDelayMs(e.attempts)
             queue.markFailed(e.id, "missing_ack", nextAttemptAtMs = next, permanentFailure = 0)
             transientFailed++
+            deliveries += EventDelivery(e.id, e.idempotencyKey, e.type, DeliveryStatus.RETRY_SCHEDULED, error = "missing_ack")
             continue
           }
 
           if (ack.accepted) {
             queue.markSent(e.id)
             sent++
+            deliveries += EventDelivery(e.id, e.idempotencyKey, e.type, DeliveryStatus.DELIVERED, serverEventId = ack.serverEventId)
             continue
           }
 
@@ -130,6 +134,13 @@ class SyncEngine(
           )
 
           if (isPermanent) permanentFailed++ else transientFailed++
+          deliveries += EventDelivery(
+            eventId = e.id,
+            idempotencyKey = e.idempotencyKey,
+            type = e.type,
+            status = if (isPermanent) DeliveryStatus.QUARANTINED else DeliveryStatus.RETRY_SCHEDULED,
+            error = ack.error ?: if (maxedOut) "max_attempts_exceeded" else "rejected",
+          )
         }
 
         audit.record(
@@ -152,6 +163,8 @@ class SyncEngine(
             "syncResult" to "success"
           )
         )
+
+        notifyDeliveries(deliveries)
 
         TransportResult.Success(
           value = SyncOnceResult(
@@ -211,6 +224,18 @@ class SyncEngine(
         )
 
         TransportResult.PermanentFailure(message = res.message, httpStatus = res.httpStatus, cause = res.cause)
+      }
+    }
+  }
+
+  private fun notifyDeliveries(deliveries: List<EventDelivery>) {
+    for (d in deliveries) {
+      @Suppress("TooGenericExceptionCaught")
+      try {
+        onDelivery(d)
+      } catch (t: Throwable) {
+        // Host callback must not break sync; surface the bug at warn level (no payload).
+        logs.w("Sync", "Delivery listener threw: ${t::class.java.simpleName}: ${t.message ?: "no message"}")
       }
     }
   }

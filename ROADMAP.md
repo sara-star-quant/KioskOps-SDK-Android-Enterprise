@@ -461,7 +461,7 @@ documentation items carried over from v1.3.
   heartbeat)
 
 ### Observability
-- [ ] Event delivery confirmation callbacks (post-ack)
+- [x] Event delivery confirmation callbacks (post-ack)
 
 ### Security (carried from v1.3)
 - [ ] Full SCT signature verification per RFC 6962. The current

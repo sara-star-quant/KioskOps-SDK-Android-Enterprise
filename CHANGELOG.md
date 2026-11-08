@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `KioskOpsSdk.setDeliveryListener()` reports a per-event `EventDelivery` (`DELIVERED`, `RETRY_SCHEDULED`, `QUARANTINED`) after the server acknowledges a sync batch. No payloads in the callback; a throwing listener is logged and ignored.
+
 ## [1.4.2] - 2026-11-08
 
 No SDK API changes. Runtime dependencies and CI actions updated.
