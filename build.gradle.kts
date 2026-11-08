@@ -1,6 +1,7 @@
 // Pin transitive dependencies with open CVEs across all configurations.
 // bcprov/bcpkix/bcutil/bcpg < 1.84: GHSA-c3fc-8qff-9hwx, GHSA-wg6q-6289-32hp, GHSA-p93r-85wp-75v3
 // plexus-utils < 3.6.1: GHSA-6fmv-xxpf-w3cw
+// guava < 33.7.2: GHSA (CompactHashMap/CompactHashSet deserialization memory allocation)
 // netty < 4.1.135: GHSA-3qp7-7mw8-wx86, GHSA-x4gw-5cx5-pgmh, GHSA-5x3r-wrvg-rp6q, GHSA-c2gf-v879-257j
 buildscript {
   configurations.classpath {
@@ -10,6 +11,7 @@ buildscript {
       "org.bouncycastle:bcutil-jdk18on:1.86",
       "org.bouncycastle:bcpg-jdk18on:1.86",
       "org.codehaus.plexus:plexus-utils:4.0.3",
+      "com.google.guava:guava:33.8.0-jre",
     )
   }
 }
@@ -31,6 +33,9 @@ subprojects {
       "org.bouncycastle:bcpkix-jdk18on:1.86",
       "org.bouncycastle:bcutil-jdk18on:1.86",
       "org.bouncycastle:bcpg-jdk18on:1.86",
+      // guava arrives only via Robolectric, Truth, and AGP tooling (test and build
+      // classpaths); absent from releaseRuntimeClasspath, never in the AAR.
+      "com.google.guava:guava:33.8.0-jre",
     )
     // netty arrives only via grpc-netty in the Android Unified Test Platform
     // configurations (test-only; absent from releaseRuntimeClasspath, never in the AAR).
