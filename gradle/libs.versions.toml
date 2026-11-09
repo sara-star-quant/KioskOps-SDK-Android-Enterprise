@@ -29,7 +29,7 @@ classgraph = "4.8.184"
 dokka = "2.2.0"
 detekt = "1.23.8"
 kover = "0.9.11"
-cyclonedx = "3.2.4"
+cyclonedx = "3.5.1"
 mavenPublish = "0.37.0"
 
 [libraries]
