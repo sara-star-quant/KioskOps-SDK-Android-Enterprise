@@ -121,11 +121,17 @@ components:
         R2: (linkSeq, linkHash) equals the pinned (headSeq, headHash) or the previous pin's, else Forked
         (a null link while a pin exists is Forked). The server keeps the last two pins, because a response
         lost after the server pinned leaves the device linking to the previous pin.
-        R3: when prunedThroughSeq is above the pinned headSeq, Forked unless the device audit retention
-        window has passed since the pin was received; after it, a link at prunedThroughSeq must carry
-        prunedThroughHash and any other link re-baselines the pin on trust.
-        Limits: events after the last acknowledged checkpoint, devices that never sync, attackers with code
-        execution on the device or the signing key, and device clock honesty are out of reach of these rules.
+        R3: when prunedThroughSeq is above the pin's prunedThroughSeq and at or above the pinned headSeq,
+        Forked unless the device audit retention window has passed since the pin was received; after it, a
+        link at prunedThroughSeq must carry prunedThroughHash and any other link re-baselines the pin on
+        trust. A link to the previous pin is checked under R3 against the previous pin.
+        Acknowledgement: an HTTP 2xx response with a parseable body acknowledges the checkpoint. Persist the
+        new pin durably before replying; a server that replies 2xx and then loses the pin sees every later
+        checkpoint as Forked until it re-baselines on trust.
+        Limits: events after the second-to-last acknowledged checkpoint, a prune record forged strictly below
+        both pins (it can erase older acknowledged history early; the pinned head still binds everything
+        after it), devices that never sync, attackers with code execution on the device or the signing key,
+        and device clock honesty are out of reach of these rules.
       required: [headSeq, headHash, eventCount, chainGeneration, prunedThroughSeq, prunedThroughHash]
       properties:
         headSeq:

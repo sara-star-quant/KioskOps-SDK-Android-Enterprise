@@ -64,7 +64,13 @@ nobody deleted the newest rows or rebuilt the whole chain on a rooted device. Wi
 Eight presets), every sync batch carries an `auditCheckpoint`: head seq and hash, total event
 count, chain generation, retention prune point, and a link to the last checkpoint the server
 acknowledged. The device stores that acknowledgement (`lastAckedSeq`) only after a batch send
-succeeds; a failed send leaves the link where it was.
+succeeds; a failed send leaves the link where it was, and an older acknowledgement never moves
+it back.
+
+Acknowledgement contract: an HTTP 2xx response with a parseable body is the acknowledgement. The
+server must durably persist its new pin before it replies. A server that replies 2xx and then
+loses the pin sees every later checkpoint as Forked until it re-baselines on trust; the two-pin
+rule does not cover that.
 
 Server rules. On first contact the server pins the checkpoint. After that it checks each new
 checkpoint against its pin (`AuditChainCore.compareToPin` is the reference implementation) and
@@ -74,8 +80,10 @@ pins it when the result is Consistent:
 - R2: the link (`linkSeq`, `linkHash`) equals the pinned (`headSeq`, `headHash`) or the
   previous pin's. Otherwise Forked. A null link while a pin exists is Forked. The server keeps the
   last two pins: when it pinned a checkpoint but its response never reached the device, the next
-  checkpoint still links to the previous pin.
-- R3: when `prunedThroughSeq` has moved past the pinned `headSeq`, the result is Forked unless
+  checkpoint still links to the previous pin. A link to the previous pin is checked under R3
+  against the previous pin.
+- R3: when `prunedThroughSeq` has advanced since the pin and reached the pinned `headSeq`
+  (above the pin's `prunedThroughSeq` and at or above its `headSeq`), the result is Forked unless
   at least the device's audit retention window has passed since the server received the pin.
   After the window, a link that points at the prune point must carry `prunedThroughHash`; any
   other link re-baselines the pin on trust, because the pinned row is gone and nothing is left
@@ -83,13 +91,16 @@ pins it when the result is Consistent:
 
 What the rules catch, given a pin: deleting the newest rows (R1); deleting the newest rows and
 letting the chain grow back past the pin, or recomputing the whole chain with or without new
-events (R2, the hash at the pinned seq changes); forging a prune record that moves past the pin
-before retention could have removed it (R3).
+events (R2, the hash at the pinned seq changes); forging a prune record at or past the pinned
+head before retention could have removed it (R3).
 
 What they do not catch:
 
-- Events recorded after the last acknowledged checkpoint and before a compromise. An attacker
-  who takes the device in that window can change or drop them undetected.
+- Events recorded after the second-to-last acknowledged checkpoint and before a compromise.
+  Because a link to the previous pin is accepted, an attacker who takes the device in that window
+  can change or drop them undetected.
+- A prune record forged strictly below both pins. It passes and can erase older acknowledged
+  history early; the pinned head still binds everything after it.
 - Anything about a device that never syncs. The server has nothing to pin.
 - An attacker with code execution on the device or with the signing key. Either can build any
   checkpoint the rules accept. Database write access alone is enough to defeat R2 for content at
@@ -108,7 +119,9 @@ Retention prunes are recorded, not hidden: `applyRetention()` stores the last de
 hash as `prunedThroughSeq`/`prunedThroughHash` in the same transaction as the delete, and
 verification starts from that point. Deleting the oldest rows without touching the chain state
 breaks local verification. An attacker who edits both the rows and the chain state passes local
-verification; only the server pin and rules R2 and R3 catch that, within the limits above.
+verification. The server rules then catch a forged prune record at or past a pinned head inside
+the retention window (R3) and any rewrite of the row a link points at (R2); they do not catch a
+forged prune record strictly below both pins.
 
 Retention deletes only the oldest run of events that are all past the cutoff. It never deletes a
 row early, but a row written while the device clock ran ahead blocks every later prune until the
