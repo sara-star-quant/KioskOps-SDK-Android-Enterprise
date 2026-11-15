@@ -26,7 +26,7 @@ import androidx.room.PrimaryKey
  * @property signature Optional ECDSA signature from device attestation key.
  * @property deviceAttestationBlob Optional attestation certificate chain.
  * @property chainGeneration Chain generation number (increments on restart if file-based).
- * @property seq Monotonic, gap-free position in the chain, starting at 1. 0 only on unsaved legacy values.
+ * @property seq Strictly increasing position (not necessarily gap-free) in the chain, starting at 1. 0 only on unsaved legacy values.
  * @property formatVersion Hash format version used to compute [hash].
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)

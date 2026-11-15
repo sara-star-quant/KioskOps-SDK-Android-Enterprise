@@ -73,10 +73,9 @@ class AuditDatabaseMigrationTest {
     db.close()
   }
 
-  @Test
-  fun `migration 2 to 3 backfills seq in ts then id order and keeps hashes`() {
-    ctx.deleteDatabase("mig_test.db")
-    val path = ctx.getDatabasePath("mig_test.db")
+  private fun createV2(name: String, eventCount: Long, rows: List<Triple<String, Long, String>>) {
+    ctx.deleteDatabase(name)
+    val path = ctx.getDatabasePath(name)
     path.parentFile?.mkdirs()
     val raw = android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(path, null)
     raw.execSQL(
@@ -91,26 +90,40 @@ class AuditDatabaseMigrationTest {
     for (c in listOf("ts", "name", "chainGeneration,ts", "userId")) {
       raw.execSQL("CREATE INDEX IF NOT EXISTS `index_audit_events_${c.replace(",", "_")}` ON `audit_events` ($c)")
     }
-    // Inserted out of order: b and a share ts, c is earliest.
-    raw.execSQL("INSERT INTO audit_events VALUES ('b', 2000, 'n', '{}', 'h_c', 'h_b', NULL, NULL, 1, NULL)")
-    raw.execSQL("INSERT INTO audit_events VALUES ('a', 2000, 'n', '{}', 'h_c', 'h_a', NULL, NULL, 1, NULL)")
-    raw.execSQL("INSERT INTO audit_events VALUES ('c', 1000, 'n', '{}', 'GENESIS', 'h_c', NULL, NULL, 1, NULL)")
-    raw.execSQL("INSERT INTO audit_chain_state VALUES (1, 'h_b', 2000, 1, 3)")
+    raw.beginTransaction()
+    for ((id, ts, hash) in rows) {
+      raw.execSQL("INSERT INTO audit_events VALUES (?, ?, 'n', '{}', 'p', ?, NULL, NULL, 1, NULL)", arrayOf<Any>(id, ts, hash))
+    }
+    raw.execSQL("INSERT INTO audit_chain_state VALUES (1, 'last', 0, 1, $eventCount)")
+    raw.setTransactionSuccessful()
+    raw.endTransaction()
     raw.version = 2
     raw.close()
+  }
 
-    val db = Room.databaseBuilder(ctx, AuditDatabase::class.java, "mig_test.db")
+  private fun openMigrated(name: String): AuditDatabase =
+    Room.databaseBuilder(ctx, AuditDatabase::class.java, name)
       .addMigrations(AuditMigrations.MIGRATION_1_2, AuditMigrations.MIGRATION_2_3)
       .allowMainThreadQueries()
       .build()
-    val sdb = db.openHelper.writableDatabase
+
+  private fun seqRows(db: AuditDatabase): List<Triple<String, Long, String>> {
     val rows = mutableListOf<Triple<String, Long, String>>()
-    sdb.query("SELECT id, seq, hash FROM audit_events ORDER BY seq").use {
+    db.openHelper.writableDatabase.query("SELECT id, seq, hash FROM audit_events ORDER BY seq").use {
       while (it.moveToNext()) rows += Triple(it.getString(0), it.getLong(1), it.getString(2))
     }
-    assertThat(rows).containsExactly(
+    return rows
+  }
+
+  @Test
+  fun `migration 2 to 3 backfills seq in ts then id order and keeps hashes`() {
+    // Inserted out of order: b and a share ts, c is earliest.
+    createV2("mig_test.db", 3, listOf(Triple("b", 2000L, "h_b"), Triple("a", 2000L, "h_a"), Triple("c", 1000L, "h_c")))
+    val db = openMigrated("mig_test.db")
+    assertThat(seqRows(db)).containsExactly(
       Triple("c", 1L, "h_c"), Triple("a", 2L, "h_a"), Triple("b", 3L, "h_b"),
     ).inOrder()
+    val sdb = db.openHelper.writableDatabase
     sdb.query("SELECT DISTINCT formatVersion FROM audit_events").use {
       assertThat(it.count).isEqualTo(1)
       it.moveToFirst()
@@ -123,5 +136,43 @@ class AuditDatabaseMigrationTest {
     }
     db.close()
     ctx.deleteDatabase("mig_test.db")
+  }
+
+  @Test
+  fun `migration 2 to 3 backfills 5000 rows correctly`() {
+    val rows = (0 until 5000).map { Triple("id%05d".format(4999 - it), (it / 3).toLong(), "h$it") }
+    createV2("mig_big.db", 5000, rows)
+    val db = openMigrated("mig_big.db")
+    val got = seqRows(db)
+    val expected = rows.sortedWith(compareBy<Triple<String, Long, String>>({ it.second }, { it.first }))
+    assertThat(got.map { it.first }).isEqualTo(expected.map { it.first })
+    assertThat(got.map { it.second }).isEqualTo((1L..5000L).toList())
+    assertThat(got.associate { it.first to it.third }).isEqualTo(rows.associate { it.first to it.third })
+    db.close()
+    ctx.deleteDatabase("mig_big.db")
+  }
+
+  @Test
+  fun `migration 2 to 3 on pruned legacy db keeps next seq above backfilled seqs`() = kotlinx.coroutines.test.runTest {
+    // 2 rows remain but eventCount says 10 were recorded before retention pruned 8.
+    createV2("mig_pruned.db", 10, listOf(Triple("y", 6000L, "h_y"), Triple("x", 5000L, "h_x")))
+    val db = openMigrated("mig_pruned.db")
+    assertThat(seqRows(db)).containsExactly(Triple("x", 1L, "h_x"), Triple("y", 2L, "h_y")).inOrder()
+    AuditDatabase.setInstance(db)
+    try {
+      com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail(
+        context = ctx,
+        retentionProvider = { com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy.maximalistDefaults() },
+        clock = object : com.sarastarquant.kioskops.sdk.util.Clock {
+          override fun nowMs(): Long = 7000L
+        },
+      ).record("next")
+      val last = db.auditDao().getEventsPageBySeq(2, 10).single()
+      assertThat(last.seq).isEqualTo(11L)
+    } finally {
+      AuditDatabase.setInstance(null)
+      db.close()
+      ctx.deleteDatabase("mig_pruned.db")
+    }
   }
 }

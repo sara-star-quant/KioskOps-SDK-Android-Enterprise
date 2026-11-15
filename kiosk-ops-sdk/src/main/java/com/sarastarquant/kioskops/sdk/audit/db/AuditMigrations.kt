@@ -34,12 +34,13 @@ object AuditMigrations {
     override fun migrate(db: SupportSQLiteDatabase) {
       db.execSQL("ALTER TABLE audit_events ADD COLUMN seq INTEGER NOT NULL DEFAULT 0")
       db.execSQL("ALTER TABLE audit_events ADD COLUMN formatVersion INTEGER NOT NULL DEFAULT 1")
+      // Single pass: rank once into a keyed temp table, then PK-lookup per row (linear, not quadratic).
+      db.execSQL("CREATE TEMP TABLE audit_seq_backfill (id TEXT PRIMARY KEY NOT NULL, rn INTEGER NOT NULL)")
       db.execSQL(
-        """UPDATE audit_events SET seq = (
-             SELECT COUNT(*) FROM audit_events b
-             WHERE b.ts < audit_events.ts OR (b.ts = audit_events.ts AND b.id <= audit_events.id)
-           )"""
+        "INSERT INTO audit_seq_backfill SELECT id, ROW_NUMBER() OVER (ORDER BY ts ASC, id ASC) FROM audit_events"
       )
+      db.execSQL("UPDATE audit_events SET seq = (SELECT rn FROM audit_seq_backfill WHERE id = audit_events.id)")
+      db.execSQL("DROP TABLE audit_seq_backfill")
       db.execSQL("CREATE INDEX IF NOT EXISTS index_audit_events_seq ON audit_events(seq)")
       db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughSeq INTEGER NOT NULL DEFAULT 0")
       db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughHash TEXT NOT NULL DEFAULT 'GENESIS'")
