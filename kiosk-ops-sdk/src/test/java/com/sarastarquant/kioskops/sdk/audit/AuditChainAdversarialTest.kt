@@ -9,6 +9,8 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.PinResult
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.util.Clock
@@ -18,7 +20,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -112,7 +113,6 @@ class AuditChainAdversarialTest {
     assertThat(result).isInstanceOf(ChainVerificationResult.HashMismatch::class.java)
   }
 
-  @Ignore("fixed by task 5")
   @Test
   fun `deleting oldest events is detected`() = runTest {
     for (i in 1..5) {
@@ -128,20 +128,22 @@ class AuditChainAdversarialTest {
     assertThat(result).isNotInstanceOf(ChainVerificationResult.Valid::class.java)
   }
 
-  @Ignore("pending: truncation needs a server-pinned checkpoint")
   @Test
   fun `deleting tail events is detected`() = runTest {
     for (i in 1..5) {
       trail.record("event_$i")
       nowMs += 1000
     }
+    // The remaining rows still form a valid chain; the server-pinned checkpoint is what catches this.
+    val pin = trail.createCheckpoint(sign = false)
 
     db.openHelper.writableDatabase.execSQL(
       "DELETE FROM audit_events WHERE name IN ('event_4', 'event_5')",
     )
 
-    val result = trail.verifyChainIntegrity()
-    assertThat(result).isNotInstanceOf(ChainVerificationResult.Valid::class.java)
+    val current = trail.createCheckpoint(sign = false)
+    val hashAtPin = db.auditDao().getEventsPageBySeq(pin.headSeq - 1, 1).firstOrNull { it.seq == pin.headSeq }?.hash
+    assertThat(AuditChainCore.compareToPin(pin, current, hashAtPin)).isInstanceOf(PinResult.Regressed::class.java)
   }
 
   @Test

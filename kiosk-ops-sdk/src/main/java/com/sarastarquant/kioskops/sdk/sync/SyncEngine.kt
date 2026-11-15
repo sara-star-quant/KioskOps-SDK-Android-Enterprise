@@ -81,7 +81,8 @@ class SyncEngine @JvmOverloads constructor(
           payloadJson = queue.decodePayloadJson(it),
           createdAtEpochMs = it.createdAtEpochMs
         )
-      }
+      },
+      auditCheckpoint = if (cfg.securityPolicy.signedAuditCheckpoints) audit.createCheckpoint(sign = true) else null,
     )
 
     val res = transport.sendBatch(cfg, request)

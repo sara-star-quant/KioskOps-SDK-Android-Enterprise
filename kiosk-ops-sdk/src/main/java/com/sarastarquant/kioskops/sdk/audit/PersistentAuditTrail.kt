@@ -7,6 +7,7 @@ package com.sarastarquant.kioskops.sdk.audit
 
 import android.content.Context
 import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint
 import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
 import com.sarastarquant.kioskops.sdk.audit.core.ChainLink
 import com.sarastarquant.kioskops.sdk.audit.core.PageResult
@@ -139,6 +140,11 @@ class PersistentAuditTrail(
    * verified. Rows inside the interval but outside the ts window are verified too, so a backward
    * clock step cannot cause a false break.
    *
+   * Seed: when the verified interval starts at the lowest stored seq, the first row must link to
+   * the recorded prune point (`prunedThroughHash`, GENESIS if retention never pruned), so deleting
+   * the oldest rows breaks verification. A ranged interval that starts later cannot know its
+   * predecessor and seeds from its first row's own prevHash.
+   *
    * @param fromTs Optional start timestamp (inclusive).
    * @param toTs Optional end timestamp (inclusive).
    * @return Verification result.
@@ -155,6 +161,8 @@ class PersistentAuditTrail(
     var afterSeq = seqRange.first - 1
     val maxSeq = seqRange.last
 
+    val chainStartSeq = dao.getSeqBoundsInRange(Long.MIN_VALUE, Long.MAX_VALUE).minSeq
+    val pruneSeed = dao.getChainState()?.prunedThroughHash ?: GENESIS_HASH
     var expectedPrevHash: String? = null
     var count = 0
     var firstTs = 0L
@@ -163,8 +171,8 @@ class PersistentAuditTrail(
     do {
       val page = dao.getEventsPageBySeq(afterSeq, VERIFY_PAGE_SIZE).filter { it.seq <= maxSeq }
       if (page.isEmpty()) break
-      // The first row seeds the chain: a retention-pruned head still verifies.
-      val seed = expectedPrevHash ?: page.first().prevHash.also { firstTs = page.first().ts }
+      if (expectedPrevHash == null) firstTs = page.first().ts
+      val seed = expectedPrevHash ?: startSeed(page.first(), chainStartSeq, pruneSeed)
 
       val result = AuditChainCore.verifyPage(page.map { it.toLink() }, seed)
       val verified = if (result is PageResult.Broken) page.takeWhile { it.seq < result.seq } else page
@@ -182,6 +190,10 @@ class PersistentAuditTrail(
     if (count == 0) return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
     return ChainVerificationResult.Valid(eventCount = count, fromTs = firstTs, toTs = lastTs)
   }
+
+  /** The chain's first stored row links to the prune point; any later row can only vouch for itself. */
+  private fun startSeed(first: AuditEventEntity, chainStartSeq: Long?, pruneSeed: String): String =
+    if (first.seq == chainStartSeq) pruneSeed else first.prevHash
 
   /** Unranged: the whole chain. Ranged: the seq interval spanned by the ts window, or null if empty. */
   private suspend fun resolveSeqRange(fromTs: Long?, toTs: Long?): LongRange? {
@@ -287,14 +299,58 @@ class PersistentAuditTrail(
 
   /**
    * Apply retention policy to delete old events.
+   *
+   * Deletes the longest chain prefix whose events are all older than the cutoff, and records the
+   * last deleted seq and hash as the prune point in the same transaction. An event older than the
+   * cutoff that follows a newer one (backward clock step) waits until its predecessors expire.
    */
   suspend fun applyRetention() {
     val retention = retentionProvider()
     val cutoffMs = clock.nowMs() - retention.retainAuditDays.toLong() * 24 * 60 * 60 * 1000
 
     mutex.withLock {
-      dao.deleteEventsBefore(cutoffMs)
+      val boundary = dao.getPruneBoundary(cutoffMs) ?: return@withLock
+      val state = dao.getChainState() ?: return@withLock
+      dao.pruneThrough(state.copy(prunedThroughSeq = boundary.seq, prunedThroughHash = boundary.hash))
     }
+  }
+
+  /**
+   * Snapshot the chain head for a server to pin.
+   *
+   * Head fields come from the newest stored row, not the cached chain state, so deleted tail rows
+   * show up as a lower headSeq. When [sign] is true and the device key cannot sign (no provider,
+   * or signing returned null), the checkpoint is returned unsigned and a `checkpoint_unsigned`
+   * audit event is recorded.
+   *
+   * @param sign Sign [AuditCheckpoint.signingPayload] with the device attestation key.
+   * @since 1.6.0
+   */
+  suspend fun createCheckpoint(sign: Boolean): AuditCheckpoint {
+    val unsigned = mutex.withLock {
+      val state = dao.getChainState()
+      val head = dao.getHeadEvent()
+      val prunedSeq = state?.prunedThroughSeq ?: 0L
+      val prunedHash = state?.prunedThroughHash ?: GENESIS_HASH
+      AuditCheckpoint(
+        headSeq = head?.seq ?: prunedSeq,
+        headHash = head?.hash ?: prunedHash,
+        eventCount = state?.eventCount ?: 0L,
+        chainGeneration = state?.chainGeneration ?: 1,
+        prunedThroughSeq = prunedSeq,
+        prunedThroughHash = prunedHash,
+        signature = null,
+      )
+    }
+    if (!sign) return unsigned
+
+    val provider = attestationProvider?.invoke()
+    val signature = provider?.signAuditEntry(unsigned.signingPayload())
+    if (signature == null) {
+      val reason = if (provider == null) "no_attestation_provider" else "signing_failed"
+      record("checkpoint_unsigned", mapOf("reason" to reason, "headSeq" to unsigned.headSeq.toString()))
+    }
+    return unsigned.copy(signature = signature)
   }
 
   /**

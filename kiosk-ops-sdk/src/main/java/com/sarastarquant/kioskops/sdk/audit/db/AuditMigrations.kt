@@ -29,6 +29,10 @@ object AuditMigrations {
   /**
    * v2 -> v3: Add monotonic seq and formatVersion to events, prune watermark to chain state.
    * Existing rows get seq in (ts, id) order, the order the v1 hash format verified in.
+   *
+   * A chain whose head retention already pruned (first row's prevHash is not GENESIS) gets a prune
+   * baseline at that row: trust on first use. Truncation before the upgrade is not detectable;
+   * every later one is.
    */
   val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -44,6 +48,12 @@ object AuditMigrations {
       db.execSQL("CREATE INDEX IF NOT EXISTS index_audit_events_seq ON audit_events(seq)")
       db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughSeq INTEGER NOT NULL DEFAULT 0")
       db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughHash TEXT NOT NULL DEFAULT 'GENESIS'")
+      db.execSQL(
+        "UPDATE audit_chain_state SET " +
+          "prunedThroughSeq = (SELECT seq - 1 FROM audit_events ORDER BY seq ASC LIMIT 1), " +
+          "prunedThroughHash = (SELECT prevHash FROM audit_events ORDER BY seq ASC LIMIT 1) " +
+          "WHERE (SELECT prevHash FROM audit_events ORDER BY seq ASC LIMIT 1) <> 'GENESIS'"
+      )
     }
   }
 }

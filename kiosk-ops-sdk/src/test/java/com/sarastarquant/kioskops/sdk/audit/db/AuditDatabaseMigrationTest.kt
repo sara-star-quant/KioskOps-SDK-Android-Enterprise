@@ -10,6 +10,9 @@ import androidx.room.Room
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import com.sarastarquant.kioskops.sdk.audit.ChainVerificationResult
+import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -73,7 +76,12 @@ class AuditDatabaseMigrationTest {
     db.close()
   }
 
-  private fun createV2(name: String, eventCount: Long, rows: List<Triple<String, Long, String>>) {
+  private fun createV2(
+    name: String,
+    eventCount: Long,
+    rows: List<Triple<String, Long, String>>,
+    prevHashOf: (String) -> String = { "p" },
+  ) {
     ctx.deleteDatabase(name)
     val path = ctx.getDatabasePath(name)
     path.parentFile?.mkdirs()
@@ -92,7 +100,10 @@ class AuditDatabaseMigrationTest {
     }
     raw.beginTransaction()
     for ((id, ts, hash) in rows) {
-      raw.execSQL("INSERT INTO audit_events VALUES (?, ?, 'n', '{}', 'p', ?, NULL, NULL, 1, NULL)", arrayOf<Any>(id, ts, hash))
+      raw.execSQL(
+        "INSERT INTO audit_events VALUES (?, ?, 'n', '{}', ?, ?, NULL, NULL, 1, NULL)",
+        arrayOf<Any>(id, ts, prevHashOf(id), hash),
+      )
     }
     raw.execSQL("INSERT INTO audit_chain_state VALUES (1, 'last', 0, 1, $eventCount)")
     raw.setTransactionSuccessful()
@@ -118,7 +129,9 @@ class AuditDatabaseMigrationTest {
   @Test
   fun `migration 2 to 3 backfills seq in ts then id order and keeps hashes`() {
     // Inserted out of order: b and a share ts, c is earliest.
-    createV2("mig_test.db", 3, listOf(Triple("b", 2000L, "h_b"), Triple("a", 2000L, "h_a"), Triple("c", 1000L, "h_c")))
+    createV2(
+      "mig_test.db", 3, listOf(Triple("b", 2000L, "h_b"), Triple("a", 2000L, "h_a"), Triple("c", 1000L, "h_c")),
+    ) { "GENESIS" }
     val db = openMigrated("mig_test.db")
     assertThat(seqRows(db)).containsExactly(
       Triple("c", 1L, "h_c"), Triple("a", 2L, "h_a"), Triple("b", 3L, "h_b"),
@@ -173,6 +186,39 @@ class AuditDatabaseMigrationTest {
       AuditDatabase.setInstance(null)
       db.close()
       ctx.deleteDatabase("mig_pruned.db")
+    }
+  }
+
+  @Test
+  fun `pruned legacy chain stays valid after migration`() = kotlinx.coroutines.test.runTest {
+    // A v1-format chain of 5 events whose 2 oldest retention removed before the upgrade.
+    var prev = "GENESIS"
+    val chain = (1..5).map { i ->
+      val id = "e$i"
+      val ts = 1000L * i
+      val hash = AuditChainCore.hash(AuditChainCore.content(AuditHashFormat.V1, id, ts, "n", "{}", prev))
+      val row = Triple(id, ts, hash) to prev
+      prev = hash
+      row
+    }
+    val kept = chain.drop(2)
+    createV2("mig_legacy.db", 5, kept.map { it.first }) { id -> kept.first { it.first.first == id }.second }
+    val db = openMigrated("mig_legacy.db")
+    AuditDatabase.setInstance(db)
+    try {
+      val state = db.auditDao().getChainState()!!
+      assertThat(state.prunedThroughSeq).isEqualTo(0L)
+      assertThat(state.prunedThroughHash).isEqualTo(chain[1].first.third)
+      val result = com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail(
+        context = ctx,
+        retentionProvider = { com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy.maximalistDefaults() },
+      ).verifyChainIntegrity()
+      assertThat(result).isInstanceOf(ChainVerificationResult.Valid::class.java)
+      assertThat((result as ChainVerificationResult.Valid).eventCount).isEqualTo(3)
+    } finally {
+      AuditDatabase.setInstance(null)
+      db.close()
+      ctx.deleteDatabase("mig_legacy.db")
     }
   }
 }

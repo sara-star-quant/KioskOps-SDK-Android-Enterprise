@@ -45,14 +45,46 @@ internal object AuditChainCore {
   ): String = when (format) {
     AuditHashFormat.FILE_V0 -> "$ts|$name|$fieldsJson|$prevHash"
     AuditHashFormat.V1 -> "$id|$ts|$name|$fieldsJson|$prevHash"
-    AuditHashFormat.V2 -> buildString {
-      for (value in arrayOf(id, ts.toString(), name, fieldsJson, prevHash)) {
-        append(value.toByteArray(Charsets.UTF_8).size).append(':').append(value)
-      }
-    }
+    AuditHashFormat.V2 -> lengthPrefixed(id, ts.toString(), name, fieldsJson, prevHash)
+  }
+
+  /** Concatenates each value as `"<utf8 byte length>:<value>"`, so no value can alias a neighbour. */
+  fun lengthPrefixed(vararg values: String): String = buildString {
+    for (value in values) append(value.toByteArray(Charsets.UTF_8).size).append(':').append(value)
   }
 
   fun hash(content: String): String = Hashing.sha256Base64Url(content)
+
+  /**
+   * Compares the device's [current] checkpoint with a [pin] the server stored earlier.
+   * [hashAtPinSeq] is the hash the device holds at `pin.headSeq`, or null if that row is gone.
+   *
+   * - Forked: the generation changed, or the hash at `pin.headSeq` differs from `pin.headHash`
+   *   (including a prune record ending exactly at `pin.headSeq` with another hash).
+   * - Regressed: headSeq or eventCount went down, or the row at `pin.headSeq` is missing and
+   *   retention did not prune it (`current.prunedThroughSeq < pin.headSeq`).
+   * - Consistent otherwise.
+   */
+  fun compareToPin(pin: AuditCheckpoint, current: AuditCheckpoint, hashAtPinSeq: String?): PinResult {
+    val observedHash = when {
+      hashAtPinSeq != null -> hashAtPinSeq
+      current.prunedThroughSeq == pin.headSeq -> current.prunedThroughHash
+      else -> null
+    }
+    return when {
+      current.chainGeneration != pin.chainGeneration ->
+        PinResult.Forked("chain generation ${current.chainGeneration} differs from pinned ${pin.chainGeneration}")
+      current.headSeq < pin.headSeq -> PinResult.Regressed("headSeq ${current.headSeq} is below pinned ${pin.headSeq}")
+      current.eventCount < pin.eventCount ->
+        PinResult.Regressed("eventCount ${current.eventCount} is below pinned ${pin.eventCount}")
+      pin.headSeq == 0L -> PinResult.Consistent
+      observedHash != null && observedHash != pin.headHash ->
+        PinResult.Forked("hash at seq ${pin.headSeq} differs from the pinned head")
+      hashAtPinSeq == null && current.prunedThroughSeq < pin.headSeq ->
+        PinResult.Regressed("event at pinned seq ${pin.headSeq} is missing and was not pruned")
+      else -> PinResult.Consistent
+    }
+  }
 
   /**
    * Verifies [events] in order: seq strictly increases, each prevHash links to the previous hash

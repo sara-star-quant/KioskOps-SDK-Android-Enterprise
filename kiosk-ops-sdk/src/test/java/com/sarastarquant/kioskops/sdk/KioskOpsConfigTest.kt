@@ -84,6 +84,21 @@ class KioskOpsConfigTest {
   // ========================================================================
 
   @Test
+  fun `regulated presets enable signed checkpoints`() {
+    val url = "https://api.example.com/"
+    val presets = listOf(
+      KioskOpsConfig.fedRampDefaults(url, "L"),
+      KioskOpsConfig.cuiDefaults(url, "L"),
+      KioskOpsConfig.cjisDefaults(url, "L"),
+      KioskOpsConfig.gdprDefaults(url, "L"),
+      KioskOpsConfig.asdEssentialEightDefaults(url, "L"),
+    )
+    for (config in presets) assertThat(config.securityPolicy.signedAuditCheckpoints).isTrue()
+    assertThat(KioskOpsConfig(url, "L", true).securityPolicy.signedAuditCheckpoints).isFalse()
+    assertThat(SecurityPolicy.highSecurityDefaults().signedAuditCheckpoints).isFalse()
+  }
+
+  @Test
   fun `fedRampDefaults enables high security and strict validation`() {
     val config = KioskOpsConfig.fedRampDefaults("https://api.example.com/", "FED-001")
 

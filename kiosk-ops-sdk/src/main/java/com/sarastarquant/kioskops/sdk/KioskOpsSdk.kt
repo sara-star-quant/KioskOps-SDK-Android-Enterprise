@@ -271,7 +271,7 @@ class KioskOpsSdk private constructor(
       context = appContext,
       retentionProvider = { cfg().retentionPolicy },
       clock = clock,
-      attestationProvider = if (cfg().securityPolicy.signAuditEntries) {
+      attestationProvider = if (cfg().securityPolicy.let { it.signAuditEntries || it.signedAuditCheckpoints }) {
         { KeystoreAttestationProvider(appContext) }
       } else {
         null

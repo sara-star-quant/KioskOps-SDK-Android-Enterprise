@@ -17,7 +17,38 @@ data class SecurityPolicy(
   val useRoomBackedAudit: Boolean = true,
   /** Sign audit entries with device attestation. Opt-in for high-security deployments. */
   val signAuditEntries: Boolean = false,
+  /**
+   * Attach a device-signed audit chain checkpoint to every sync batch, so the server can pin the
+   * chain head and detect rollback, truncation or rewrite on the next sync.
+   * @since 1.6.0
+   */
+  val signedAuditCheckpoints: Boolean = false,
 ) {
+  /** Binary compatibility with callers compiled before [signedAuditCheckpoints] existed. */
+  @Deprecated("Kept for binary compatibility", level = DeprecationLevel.HIDDEN)
+  constructor(
+    encryptQueuePayloads: Boolean,
+    encryptTelemetryAtRest: Boolean,
+    encryptDiagnosticsBundle: Boolean,
+    encryptExportedLogs: Boolean,
+    maxEventPayloadBytes: Int,
+    keyRotationPolicy: KeyRotationPolicy = KeyRotationPolicy.default(),
+    keyDerivationConfig: KeyDerivationConfig = KeyDerivationConfig.default(),
+    useRoomBackedAudit: Boolean = true,
+    signAuditEntries: Boolean = false,
+  ) : this(
+    encryptQueuePayloads,
+    encryptTelemetryAtRest,
+    encryptDiagnosticsBundle,
+    encryptExportedLogs,
+    maxEventPayloadBytes,
+    keyRotationPolicy,
+    keyDerivationConfig,
+    useRoomBackedAudit,
+    signAuditEntries,
+    signedAuditCheckpoints = false,
+  )
+
   companion object {
     fun maximalistDefaults() = SecurityPolicy(
       encryptQueuePayloads = true,
