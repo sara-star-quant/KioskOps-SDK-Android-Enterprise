@@ -325,6 +325,7 @@ class SyncInFlightTest {
     val respond: (BatchSendRequest) -> TransportResult<BatchSendResponse>,
     val rows: Map<String, Row>,
     val deliveries: List<Triple<String, DeliveryStatus, String?>>,
+    val result: TransportResult<SyncOnceResult>,
   )
 
   @Test
@@ -357,9 +358,20 @@ class SyncInFlightTest {
           Triple("T2", DeliveryStatus.QUARANTINED, "bad"),
           Triple("T3", DeliveryStatus.RETRY_SCHEDULED, "missing_ack"),
         ),
+        // rejected counts the two non-accepted acks only; transientFailed includes the missing ack.
+        result = TransportResult.Success(
+          SyncOnceResult(attempted = 4, sent = 1, permanentFailed = 1, transientFailed = 2, rejected = 2),
+          httpStatus = 200,
+        ),
       ),
-      OutcomeCase("transient failure", { TransportResult.TransientFailure("down", httpStatus = 503) }, backedOff, emptyList()),
-      OutcomeCase("permanent failure", { TransportResult.PermanentFailure("auth", httpStatus = 401) }, backedOff, emptyList()),
+      OutcomeCase(
+        "transient failure", { TransportResult.TransientFailure("down", httpStatus = 503) }, backedOff, emptyList(),
+        TransportResult.TransientFailure("down", httpStatus = 503),
+      ),
+      OutcomeCase(
+        "permanent failure", { TransportResult.PermanentFailure("auth", httpStatus = 401) }, backedOff, emptyList(),
+        TransportResult.PermanentFailure("auth", httpStatus = 401),
+      ),
     )
 
     for (case in cases) {
@@ -375,8 +387,9 @@ class SyncInFlightTest {
       }
       val f = fixture(transport, events = 4, onDelivery = { delivered += it })
 
-      f.engine.flushOnce()
+      val result = f.engine.flushOnce()
 
+      assertWithMessage(case.name).that(result).isEqualTo(case.result)
       val rows = rowsByType()
       val nextAt = { r: Row -> if (r.state == "SENT") 0L else r.nextAttemptAt }
       assertWithMessage(case.name).that(rows.mapValues { (_, r) -> r.copy(nextAttemptAt = nextAt(r)) }).isEqualTo(case.rows)
@@ -459,4 +472,26 @@ class SyncInFlightTest {
     assertThat(sentTypes).containsExactly("T1")
     assertThat(rowsByType().mapValues { it.value.state }).isEqualTo(mapOf("T0" to "FAILED", "T1" to "SENT"))
   }
+
+  @Test
+  fun `cancellation exception from the transport while the flush is active is a transient failure`() =
+    runBlocking<Unit> {
+      val transport = object : Transport {
+        override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> =
+          throw CancellationException("x")
+      }
+      val f = fixture(transport)
+
+      val result = f.engine.flushOnce()
+
+      assertThat(result).isInstanceOf(TransportResult.TransientFailure::class.java)
+      assertThat((result as TransportResult.TransientFailure).message)
+        .isEqualTo("transport_exception: CancellationException")
+      val rows = rows()
+      assertThat(rows.map { it.state }).containsExactly("FAILED", "FAILED")
+      assertThat(rows.map { it.attempts }).containsExactly(0, 0)
+      assertThat(rows.map { it.nextAttemptAt }).containsExactly(
+        clock.now + Backoff.nextDelayMs(0), clock.now + Backoff.nextDelayMs(0),
+      )
+    }
 }

@@ -18,6 +18,8 @@ import com.sarastarquant.kioskops.sdk.util.Clock
 import com.sarastarquant.kioskops.sdk.util.DeviceId
 import com.sarastarquant.kioskops.sdk.util.Ids
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -168,23 +170,42 @@ class SyncEngine @JvmOverloads constructor(
     sendGuarded(cfg, request)
   } catch (e: CancellationException) {
     withContext(NonCancellable) {
-      for (ev in batch) queue.markBatchFailureNoAttemptBump(ev.id, "cancelled", nextAttemptAtMs = now)
+      for (ev in batch) {
+        // A failed reset must not mask the cancellation or skip the remaining rows.
+        @Suppress("TooGenericExceptionCaught")
+        try {
+          queue.markBatchFailureNoAttemptBump(ev.id, "cancelled", nextAttemptAtMs = now)
+        } catch (t: Throwable) {
+          e.addSuppressed(t)
+        }
+      }
     }
     throw e
   }
 
-  /** A transport that throws instead of returning a result is treated as a transient batch failure. */
+  /**
+   * A transport that throws instead of returning a result is treated as a transient batch failure. That
+   * includes a CancellationException the transport raised itself (for example a timeout inside it) while
+   * this coroutine is still active; only a cancellation of the flush itself propagates.
+   */
   @Suppress("TooGenericExceptionCaught")
   private suspend fun sendGuarded(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> =
     try {
       transport.sendBatch(cfg, request)
     } catch (e: CancellationException) {
-      throw e
+      if (!currentCoroutineContext().isActive) throw e
+      transportException(e)
     } catch (t: Throwable) {
-      TransportResult.TransientFailure(message = "transport_exception: ${t::class.java.simpleName}", cause = t)
+      transportException(t)
     }
 
-  /** Only on HTTP success. A lost acknowledgement is covered by the next checkpoint's link, so it never blocks the batch. */
+  private fun transportException(t: Throwable) =
+    TransportResult.TransientFailure(message = "transport_exception: ${t::class.java.simpleName}", cause = t)
+
+  /**
+   * Called only on HTTP success. A failure is logged and never blocks the batch. One lost acknowledgement is
+   * covered by the server's previous-pin rule; repeated loss makes the server report Forked.
+   */
   @Suppress("TooGenericExceptionCaught")
   private suspend fun acknowledgeCheckpoint(checkpoint: AuditCheckpoint) {
     try {
