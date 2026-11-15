@@ -590,7 +590,6 @@ public final class com/sarastarquant/kioskops/sdk/audit/PersistentAuditTrail {
 	public fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/sarastarquant/kioskops/sdk/util/Clock;Lkotlin/jvm/functions/Function0;)V
 	public synthetic fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function0;Lcom/sarastarquant/kioskops/sdk/util/Clock;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun applyRetention (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun createCheckpoint (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun deleteEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exportSignedAuditRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -679,7 +678,6 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/db/AuditDao
 	public abstract fun countEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun countEventsInRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun deleteEventsBefore (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteEventsThroughSeq (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -712,7 +710,6 @@ public final class com/sarastarquant/kioskops/sdk/audit/db/AuditDao_Impl : com/s
 	public fun countEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun countEventsInRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun deleteEventsBefore (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteEventsThroughSeq (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -341,7 +341,7 @@ class PersistentAuditTrail(
    * @param sign Sign [AuditCheckpoint.signingPayload] with the device attestation key.
    * @since 1.6.0
    */
-  suspend fun createCheckpoint(sign: Boolean): AuditCheckpoint {
+  internal suspend fun createCheckpoint(sign: Boolean): AuditCheckpoint {
     val unsigned = mutex.withLock {
       val state = dao.getChainState()
       val head = dao.getHeadEvent()

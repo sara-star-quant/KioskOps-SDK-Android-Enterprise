@@ -78,12 +78,6 @@ interface AuditDao {
   suspend fun getOldestEvent(): AuditEventEntity?
 
   /**
-   * Delete events older than a timestamp.
-   */
-  @Query("DELETE FROM audit_events WHERE ts < :beforeTs")
-  suspend fun deleteEventsBefore(beforeTs: Long): Int
-
-  /**
    * Delete all events.
    */
   @Query("DELETE FROM audit_events")
