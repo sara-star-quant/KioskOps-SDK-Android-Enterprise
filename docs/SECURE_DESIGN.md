@@ -152,6 +152,17 @@ Host requirement: keep `android:allowBackup="false"` (or exclude the audit datab
 backup and device transfer). A restored backup is an older chain; it is indistinguishable from a
 rollback and the server will flag it as one.
 
+Per-user erasure is a known limit. `DataRightsManager.deleteUserData` deletes the user's audit
+rows without a prune record, so it removes links from the chain. `verifyChainIntegrity` then
+reports Broken for any chain that contains erased rows, until retention prunes past them. When the
+erased row is the one at `lastAckedSeq`, the next checkpoint carries no link hash and a pinning
+server reports Forked. A chain event that records erasures is planned work.
+
+Data wipes reset the chain. `DataRightsManager.wipeAllSdkData` deletes the audit database and the
+device audit key; clearing app data or reinstalling does the same. The next checkpoint starts a
+new chain, so a pinning server reports Regressed. An operator must re-baseline (re-enroll) the
+device on the server.
+
 If the device cannot sign (no key, or signing fails) the checkpoint goes out unsigned and the
 SDK records a `checkpoint_unsigned` audit event. It never skips silently.
 

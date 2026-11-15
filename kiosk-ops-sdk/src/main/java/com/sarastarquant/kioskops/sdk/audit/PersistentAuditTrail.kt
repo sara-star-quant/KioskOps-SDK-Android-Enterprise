@@ -403,6 +403,10 @@ class PersistentAuditTrail(
 
   /**
    * Delete all events for a specific user.
+   *
+   * Removes chain links: [verifyChainIntegrity] reports Broken for a chain that contains deleted
+   * rows, and deleting the row at the last acknowledged checkpoint makes a pinning server report the
+   * next checkpoint as Forked.
    * @since 0.5.0
    */
   suspend fun deleteEventsByUserId(userId: String): Int {
