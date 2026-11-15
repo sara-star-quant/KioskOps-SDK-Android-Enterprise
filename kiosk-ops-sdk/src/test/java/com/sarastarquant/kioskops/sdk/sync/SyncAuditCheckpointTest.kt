@@ -12,7 +12,9 @@ import com.google.common.truth.Truth.assertThat
 import com.sarastarquant.kioskops.sdk.KioskOpsConfig
 import com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail
 import com.sarastarquant.kioskops.sdk.audit.SoftwareAttestationProvider
+import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
+import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.compliance.SecurityPolicy
 import com.sarastarquant.kioskops.sdk.crypto.NoopCryptoProvider
 import com.sarastarquant.kioskops.sdk.logging.RingLog
@@ -47,22 +49,30 @@ class SyncAuditCheckpointTest {
     AuditDatabase.setInstance(db)
   }
 
+  private val provider = SoftwareAttestationProvider()
+
   @After
   fun tearDown() {
     db.close()
     AuditDatabase.setInstance(null)
   }
 
-  private class CapturingTransport : Transport {
+  private class CapturingTransport(var fail: Boolean = false) : Transport {
     val requests = mutableListOf<BatchSendRequest>()
     override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> {
       requests += request
+      if (fail) return TransportResult.TransientFailure("down", httpStatus = 503)
       val acks = request.events.map { EventAck(it.id, it.idempotencyKey, accepted = true) }
       return TransportResult.Success(BatchSendResponse(acks.size, acks), httpStatus = 200)
     }
   }
 
-  private suspend fun flushWith(checkpoints: Boolean): BatchSendRequest {
+  private suspend fun flushWith(
+    checkpoints: Boolean,
+    transport: CapturingTransport = CapturingTransport(),
+    audit: PersistentAuditTrail = PersistentAuditTrail(ctx, { RetentionPolicy.maximalistDefaults() }, Clock.SYSTEM,
+      attestationProvider = { provider }),
+  ): BatchSendRequest {
     val cfg = KioskOpsConfig(
       baseUrl = "https://sync.test/",
       locationId = "TEST",
@@ -73,9 +83,6 @@ class SyncAuditCheckpointTest {
     )
     val logs = RingLog(ctx)
     val queue = QueueRepository(ctx, logs, NoopCryptoProvider)
-    val provider = SoftwareAttestationProvider()
-    val audit = PersistentAuditTrail(ctx, { cfg.retentionPolicy }, Clock.SYSTEM, attestationProvider = { provider })
-    val transport = CapturingTransport()
     assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
 
     SyncEngine(
@@ -89,10 +96,8 @@ class SyncAuditCheckpointTest {
       clock = Clock.SYSTEM,
     ).flushOnce()
 
-    val request = transport.requests.single()
-    request.auditCheckpoint?.let { cp ->
-      assertThat(provider.verifySignature(cp.signingPayload(), cp.signature!!)).isTrue()
-    }
+    val request = transport.requests.last()
+    request.auditCheckpoint?.let { cp -> assertThat(AuditChainCore.verifyCheckpointSignature(cp, provider)).isTrue() }
     return request
   }
 
@@ -104,6 +109,38 @@ class SyncAuditCheckpointTest {
     assertThat(checkpoint).isNotNull()
     // sync_batch_start is recorded before the request is built, so the head covers it.
     assertThat(checkpoint!!.headSeq).isAtLeast(1L)
+  }
+
+  @Test
+  fun `checkpoint is acknowledged only after a successful send`() = runTest {
+    val transport = CapturingTransport()
+    val audit = PersistentAuditTrail(ctx, { RetentionPolicy.maximalistDefaults() }, Clock.SYSTEM,
+      attestationProvider = { provider })
+
+    val first = flushWith(checkpoints = true, transport, audit).auditCheckpoint!!
+    assertThat(first.linkSeq).isNull()
+    assertThat(db.auditDao().getChainState()!!.lastAckedSeq).isEqualTo(first.headSeq)
+
+    transport.fail = true
+    val failed = flushWith(checkpoints = true, transport, audit).auditCheckpoint!!
+    assertThat(failed.linkSeq).isEqualTo(first.headSeq)
+    assertThat(db.auditDao().getChainState()!!.lastAckedSeq).isEqualTo(first.headSeq)
+
+    transport.fail = false
+    val next = flushWith(checkpoints = true, transport, audit).auditCheckpoint!!
+    assertThat(next.linkSeq).isEqualTo(first.headSeq)
+    assertThat(next.linkHash).isEqualTo(first.headHash)
+    assertThat(db.auditDao().getChainState()!!.lastAckedSeq).isEqualTo(next.headSeq)
+  }
+
+  @Test
+  fun `named copy on the policy types still resolves`() {
+    val policy = SecurityPolicy.maximalistDefaults().copy(signAuditEntries = true)
+    assertThat(policy.signAuditEntries).isTrue()
+    assertThat(policy.copy(signedAuditCheckpoints = true).signedAuditCheckpoints).isTrue()
+    val request = BatchSendRequest("b", "d", "a", "l", 1, emptyList()).copy(batchId = "b2")
+    assertThat(request.batchId).isEqualTo("b2")
+    assertThat(request.auditCheckpoint).isNull()
   }
 
   @Test

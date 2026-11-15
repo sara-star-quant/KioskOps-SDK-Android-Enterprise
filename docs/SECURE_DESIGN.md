@@ -61,32 +61,71 @@ Keystore-backed key attested by the device.
 The hash chain alone proves the stored rows are internally consistent. It cannot prove that
 nobody deleted the newest rows or rebuilt the whole chain on a rooted device. With
 `SecurityPolicy.signedAuditCheckpoints` on (on in the FedRAMP, CUI, CJIS, GDPR and ASD Essential
-Eight presets), every sync batch carries an `auditCheckpoint`: the head seq and hash, the total
-event count, the chain generation and the retention prune point, signed with the device audit key.
+Eight presets), every sync batch carries an `auditCheckpoint`: head seq and hash, total event
+count, chain generation, retention prune point, and a link to the last checkpoint the server
+acknowledged. The device stores that acknowledgement (`lastAckedSeq`) only after a batch send
+succeeds; a failed send leaves the link where it was.
 
-What it proves: once the server pins a checkpoint, rolling back, truncating or rewriting the
-chain is detectable on the next sync. A lower `headSeq` or `eventCount` is a rollback or
-truncation; a different hash at the pinned seq is a rewrite.
+Server rules. On first contact the server pins the checkpoint. After that it checks each new
+checkpoint against its pin (`AuditChainCore.compareToPin` is the reference implementation) and
+pins it when the result is Consistent:
 
-What it does not prove:
+- R1: same `chainGeneration`, and `headSeq` and `eventCount` not below the pin. Otherwise Regressed.
+- R2: `linkSeq` equals the pinned `headSeq` and `linkHash` equals the pinned `headHash`.
+  Otherwise Forked. A null link while a pin exists is Forked.
+- R3: when `prunedThroughSeq` has moved past the pinned `headSeq`, the result is Forked unless
+  at least the device's audit retention window has passed since the server received the pin.
+  After the window, a link that points at the prune point must carry `prunedThroughHash`; any
+  other link re-baselines the pin on trust, because the pinned row is gone and nothing is left
+  to compare.
 
-- Events recorded after the last successful sync and before a compromise. An attacker who takes
-  the device in that window can change them undetected.
+What the rules catch, given a pin: deleting the newest rows (R1); deleting the newest rows and
+letting the chain grow back past the pin, or recomputing the whole chain with or without new
+events (R2, the hash at the pinned seq changes); forging a prune record that moves past the pin
+before retention could have removed it (R3).
+
+What they do not catch:
+
+- Events recorded after the last acknowledged checkpoint and before a compromise. An attacker
+  who takes the device in that window can change or drop them undetected.
 - Anything about a device that never syncs. The server has nothing to pin.
-- Anything against an attacker who also holds the device signing key. The key is
-  Keystore-backed and non-exportable, which raises the bar but does not remove it.
-- Clock honesty. Timestamps are the device's word; ordering comes from `seq`.
+- An attacker with code execution on the device or with the signing key. Either can build any
+  checkpoint the rules accept. Database write access alone is enough to defeat R2 for content at
+  or before the pin if the attacker keeps the stored hash at the pinned row unchanged; that edit
+  fails local `verifyChainIntegrity`, not the server rules.
+- Device clock honesty. Event timestamps are the device's word; ordering comes from `seq`, and
+  the R3 window runs on the server clock.
+- Truncation before a trust-on-first-use point (below).
 
-Trust on first use: chains that exist before an upgrade, and chains a server sees for the first
-time, are trusted as found. For a database whose oldest rows retention removed before seq
-existed, the upgrade records the first remaining row as the prune point. Truncation before that
-moment is not detectable.
+Trust on first use: a server trusts the first checkpoint it sees from a device, and R3 trusts a
+re-baseline after the retention window. A database whose oldest rows retention removed before
+seq existed gets its first remaining row recorded as the prune point when it upgrades.
+Truncation before any of these moments is not detectable.
+
+A server that pins a checkpoint but whose response never reaches the device sees the next
+checkpoint link to the previous pin, and R2 reports Forked. Keep the previous pin and check
+against it before treating that as tampering.
 
 Retention prunes are recorded, not hidden: `applyRetention()` stores the last deleted seq and
 hash as `prunedThroughSeq`/`prunedThroughHash` in the same transaction as the delete, and
-verification starts from that point. Deleting the oldest rows any other way breaks
-verification, and the checkpoint shows a legitimate prune as a moved prune point rather than a
-missing head.
+verification starts from that point. Deleting the oldest rows without touching the chain state
+breaks local verification. An attacker who edits both the rows and the chain state passes local
+verification; only the server pin and rules R2 and R3 catch that, within the limits above.
+
+Retention deletes only the oldest run of events that are all past the cutoff. It never deletes a
+row early, but a row written while the device clock ran ahead blocks every later prune until the
+cutoff passes that row's timestamp. Data minimization, including under the GDPR preset, is
+therefore bounded by the device clock being sane.
+
+Signature key. The checkpoint is signed with the device audit key (`kioskops_audit_signing` in
+the Android Keystore). The SDK does not send the public key or its attestation chain, and
+`openapi.yaml` defines no enrollment endpoint. A host can read the chain with
+`KeystoreAttestationProvider(context).getAttestationChain()` (the leaf certificate carries the
+public key; its attestation challenge is generated on the device, so it shows how the key is
+stored, not freshness) and deliver it to the server over its own channel. Until a server holds an
+enrolled key it must treat checkpoint signatures as unauthenticated; rules R1 to R3 still apply.
+A valid signature proves the SDK on that device built the checkpoint from what its database
+holds, not that the database is honest.
 
 Host requirement: keep `android:allowBackup="false"` (or exclude the audit database from
 backup and device transfer). A restored backup is an older chain; it is indistinguishable from a

@@ -86,6 +86,7 @@ class SyncEngine @JvmOverloads constructor(
     )
 
     val res = transport.sendBatch(cfg, request)
+    if (res is TransportResult.Success) request.auditCheckpoint?.let { audit.acknowledgeCheckpoint(it) }
 
     return when (res) {
       is TransportResult.Success -> {

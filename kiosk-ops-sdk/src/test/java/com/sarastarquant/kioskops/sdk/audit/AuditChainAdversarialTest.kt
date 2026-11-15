@@ -136,14 +136,15 @@ class AuditChainAdversarialTest {
     }
     // The remaining rows still form a valid chain; the server-pinned checkpoint is what catches this.
     val pin = trail.createCheckpoint(sign = false)
+    trail.acknowledgeCheckpoint(pin)
 
     db.openHelper.writableDatabase.execSQL(
       "DELETE FROM audit_events WHERE name IN ('event_4', 'event_5')",
     )
 
     val current = trail.createCheckpoint(sign = false)
-    val hashAtPin = db.auditDao().getEventsPageBySeq(pin.headSeq - 1, 1).firstOrNull { it.seq == pin.headSeq }?.hash
-    assertThat(AuditChainCore.compareToPin(pin, current, hashAtPin)).isInstanceOf(PinResult.Regressed::class.java)
+    assertThat(AuditChainCore.compareToPin(pin, nowMs, current, nowMs, dayMs))
+      .isInstanceOf(PinResult.Regressed::class.java)
   }
 
   @Test

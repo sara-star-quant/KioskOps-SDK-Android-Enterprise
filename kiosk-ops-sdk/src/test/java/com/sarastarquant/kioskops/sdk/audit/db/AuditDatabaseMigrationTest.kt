@@ -142,10 +142,11 @@ class AuditDatabaseMigrationTest {
       it.moveToFirst()
       assertThat(it.getInt(0)).isEqualTo(1)
     }
-    sdb.query("SELECT prunedThroughSeq, prunedThroughHash FROM audit_chain_state").use {
+    sdb.query("SELECT prunedThroughSeq, prunedThroughHash, lastAckedSeq FROM audit_chain_state").use {
       it.moveToFirst()
       assertThat(it.getLong(0)).isEqualTo(0L)
       assertThat(it.getString(1)).isEqualTo("GENESIS")
+      assertThat(it.getLong(2)).isEqualTo(0L)
     }
     db.close()
     ctx.deleteDatabase("mig_test.db")
@@ -209,6 +210,7 @@ class AuditDatabaseMigrationTest {
       val state = db.auditDao().getChainState()!!
       assertThat(state.prunedThroughSeq).isEqualTo(0L)
       assertThat(state.prunedThroughHash).isEqualTo(chain[1].first.third)
+      assertThat(state.lastAckedSeq).isEqualTo(0L)
       val result = com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail(
         context = ctx,
         retentionProvider = { com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy.maximalistDefaults() },

@@ -112,9 +112,10 @@ class AuditCheckpointTest {
     assertThat(checkpoint.headHash).isEqualTo(hashAtSeq(5))
     assertThat(checkpoint.eventCount).isEqualTo(5L)
     assertThat(checkpoint.signature).isNotNull()
-    assertThat(provider.verifySignature(checkpoint.signingPayload(), checkpoint.signature!!)).isTrue()
-    val tampered = checkpoint.copy(headSeq = 4)
-    assertThat(provider.verifySignature(tampered.signingPayload(), checkpoint.signature!!)).isFalse()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint, provider)).isTrue()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(headSeq = 4), provider)).isFalse()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(linkSeq = 1), provider)).isFalse()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(signature = null), provider)).isFalse()
     assertThat(trail.getEventsInRange(0, Long.MAX_VALUE).map { it.name }).doesNotContain("checkpoint_unsigned")
   }
 
@@ -145,14 +146,73 @@ class AuditCheckpointTest {
     assertThat(db.auditDao().countEvents()).isEqualTo(1L)
   }
 
+  /** Server side: pins every accepted checkpoint and checks each new one against the last pin. */
+  private inner class FakeServer(private val retentionWindowMs: Long = 30 * dayMs) {
+    var pin: AuditCheckpoint? = null
+    var pinReceivedAtMs = 0L
+
+    fun receive(current: AuditCheckpoint): PinResult {
+      val result = pin?.let { AuditChainCore.compareToPin(it, pinReceivedAtMs, current, nowMs, retentionWindowMs) }
+        ?: PinResult.Consistent // First contact: the server pins.
+      if (result == PinResult.Consistent) {
+        pin = current
+        pinReceivedAtMs = nowMs
+      }
+      return result
+    }
+  }
+
+  /** One sync: build a checkpoint, let the server judge it, acknowledge it on acceptance. */
+  private suspend fun sync(trail: PersistentAuditTrail, server: FakeServer): PinResult {
+    val checkpoint = trail.createCheckpoint(sign = true)
+    val result = server.receive(checkpoint)
+    if (result == PinResult.Consistent) trail.acknowledgeCheckpoint(checkpoint)
+    return result
+  }
+
+  private fun checkpoint(
+    headSeq: Long = 5,
+    eventCount: Long = headSeq,
+    generation: Int = 1,
+    prunedThroughSeq: Long = 0,
+    prunedThroughHash: String = "GENESIS",
+    linkSeq: Long? = null,
+    linkHash: String? = null,
+  ) = AuditCheckpoint(headSeq, "h$headSeq", eventCount, generation, prunedThroughSeq, prunedThroughHash, linkSeq, linkHash, null)
+
+  @Test
+  fun `legitimate sync sequence stays consistent`() = runTest {
+    val trail = trail()
+    val server = FakeServer()
+    recordFive(trail)
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
+    trail.record("event_6")
+    val second = trail.createCheckpoint(sign = true)
+    assertThat(second.linkSeq).isEqualTo(5L)
+    assertThat(second.linkHash).isEqualTo(hashAtSeq(5))
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
+    trail.record("event_7")
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
+  }
+
+  @Test
+  fun `checkpoint before any ack has no link`() = runTest {
+    val trail = trail()
+    recordFive(trail)
+    val checkpoint = trail.createCheckpoint(sign = true)
+    assertThat(checkpoint.linkSeq).isNull()
+    assertThat(checkpoint.linkHash).isNull()
+  }
+
   @Test
   fun `checkpoint after retention records prune point and verification is valid`() = runTest {
     val trail = trail(RetentionPolicy.maximalistDefaults().copy(retainAuditDays = 1))
+    val server = FakeServer(retentionWindowMs = dayMs)
     trail.record("old_1")
     nowMs += 1000
     trail.record("old_2")
     val prunedHash = hashAtSeq(2)
-    val pin = trail.createCheckpoint(sign = true)
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
     nowMs += 2 * dayMs
     trail.record("new_1")
 
@@ -162,9 +222,32 @@ class AuditCheckpointTest {
     assertThat(checkpoint.prunedThroughSeq).isEqualTo(2L)
     assertThat(checkpoint.prunedThroughHash).isEqualTo(prunedHash)
     assertThat(checkpoint.headSeq).isEqualTo(3L)
+    // The acknowledged row was pruned exactly at the link: the link carries the prune hash.
+    assertThat(checkpoint.linkSeq).isEqualTo(2L)
+    assertThat(checkpoint.linkHash).isEqualTo(prunedHash)
     assertThat(trail.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
-    // The pinned head was pruned legitimately: consistent, not a truncation.
-    assertThat(AuditChainCore.compareToPin(pin, checkpoint, hashAtSeq(pin.headSeq))).isEqualTo(PinResult.Consistent)
+    assertThat(server.receive(checkpoint)).isEqualTo(PinResult.Consistent)
+  }
+
+  @Test
+  fun `prune past the pin is Forked inside the retention window and Consistent after it`() = runTest {
+    val trail = trail(RetentionPolicy.maximalistDefaults().copy(retainAuditDays = 1))
+    val server = FakeServer(retentionWindowMs = 10 * dayMs)
+    trail.record("old_1")
+    trail.record("old_2")
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
+    trail.record("old_3")
+    nowMs += 2 * dayMs
+    trail.record("new_1")
+    trail.applyRetention()
+
+    val checkpoint = trail.createCheckpoint(sign = true)
+    assertThat(checkpoint.prunedThroughSeq).isEqualTo(3L)
+    // Two days after the pin, a 10-day retention cannot have removed it: a forged prune record.
+    assertThat(server.receive(checkpoint)).isInstanceOf(PinResult.Forked::class.java)
+
+    nowMs += 10 * dayMs
+    assertThat(server.receive(checkpoint)).isEqualTo(PinResult.Consistent)
   }
 
   @Test
@@ -182,26 +265,62 @@ class AuditCheckpointTest {
   @Test
   fun `deleting tail events yields Regressed against pin`() = runTest {
     val trail = trail()
+    val server = FakeServer()
     recordFive(trail)
-    val pin = trail.createCheckpoint(sign = true)
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
 
     sql("DELETE FROM audit_events WHERE seq >= 4")
     // A careful attacker rolls the cached chain state back too.
+    sql("UPDATE audit_chain_state SET eventCount = 3, lastHash = '${hashAtSeq(3)}', lastAckedSeq = 0")
+
+    assertThat(trail.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
+    assertThat(sync(trail, server)).isInstanceOf(PinResult.Regressed::class.java)
+  }
+
+  @Test
+  fun `tail delete then regrowth past the pin is Forked`() = runTest {
+    val trail = trail()
+    val server = FakeServer()
+    recordFive(trail)
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
+
+    sql("DELETE FROM audit_events WHERE seq >= 4")
     sql("UPDATE audit_chain_state SET eventCount = 3, lastHash = '${hashAtSeq(3)}'")
+    repeat(3) { trail.record("regrown_$it") }
 
     val current = trail.createCheckpoint(sign = true)
+    assertThat(current.headSeq).isEqualTo(6L)
     assertThat(trail.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
-    assertThat(AuditChainCore.compareToPin(pin, current, hashAtSeq(pin.headSeq)))
-      .isInstanceOf(PinResult.Regressed::class.java)
+    assertThat(server.receive(current)).isInstanceOf(PinResult.Forked::class.java)
   }
 
   @Test
   fun `full chain recompute yields Forked against pin`() = runTest {
     val trail = trail()
+    val server = FakeServer()
     recordFive(trail)
-    val pin = trail.createCheckpoint(sign = true)
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
+    rewriteChain()
 
-    // Rewrite every row with new content and recomputed hashes; same count, same seqs.
+    assertThat(trail.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
+    assertThat(sync(trail, server)).isInstanceOf(PinResult.Forked::class.java)
+  }
+
+  @Test
+  fun `full chain recompute plus one event is Forked`() = runTest {
+    val trail = trail()
+    val server = FakeServer()
+    recordFive(trail)
+    assertThat(sync(trail, server)).isEqualTo(PinResult.Consistent)
+    rewriteChain()
+    trail.record("event_6")
+
+    assertThat(trail.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
+    assertThat(sync(trail, server)).isInstanceOf(PinResult.Forked::class.java)
+  }
+
+  /** Rewrite every row with new content and recomputed hashes; same count, same seqs. */
+  private suspend fun rewriteChain() {
     var prev = "GENESIS"
     for (row in db.auditDao().getEventsPageBySeq(0, 100)) {
       val fields = "{\"rewritten\":\"true\"}"
@@ -210,46 +329,64 @@ class AuditCheckpointTest {
       prev = hash
     }
     sql("UPDATE audit_chain_state SET lastHash = '$prev'")
+  }
 
-    val current = trail.createCheckpoint(sign = true)
+  @Test
+  fun `retention after a backward clock step never deletes early`() = runTest {
+    val trail = trail(RetentionPolicy.maximalistDefaults().copy(retainAuditDays = 1))
+    val start = nowMs
+    trail.record("old")
+    nowMs = start + 3 * dayMs
+    trail.record("future")
+    nowMs = start + 1000
+    trail.record("old_after_step_back")
+    nowMs = start + 2 * dayMs
+
+    trail.applyRetention()
+
+    val names = db.auditDao().getEventsPageBySeq(0, 100).map { it.name }
+    assertThat(names).containsExactly("future", "old_after_step_back").inOrder()
+    assertThat(db.auditDao().getChainState()!!.prunedThroughSeq).isEqualTo(1L)
     assertThat(trail.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
-    assertThat(current.headSeq).isEqualTo(pin.headSeq)
-    assertThat(AuditChainCore.compareToPin(pin, current, hashAtSeq(pin.headSeq)))
-      .isInstanceOf(PinResult.Forked::class.java)
   }
 
   @Test
-  fun `appending events stays consistent with pin`() = runTest {
-    val trail = trail()
-    recordFive(trail)
-    val pin = trail.createCheckpoint(sign = true)
-    trail.record("event_6")
+  fun `pin rules on synthetic checkpoints`() {
+    val pin = checkpoint(headSeq = 5)
+    fun judge(current: AuditCheckpoint, now: Long = 0) = AuditChainCore.compareToPin(pin, 0, current, now, dayMs)
 
-    val current = trail.createCheckpoint(sign = true)
-    assertThat(AuditChainCore.compareToPin(pin, current, hashAtSeq(pin.headSeq))).isEqualTo(PinResult.Consistent)
-  }
-
-  @Test
-  fun `missing pinned row without prune record is Regressed`() {
-    val pin = AuditCheckpoint(5, "h5", 5, 1, 0, "GENESIS", null)
-    val current = AuditCheckpoint(6, "h6", 6, 1, 0, "GENESIS", null)
-    assertThat(AuditChainCore.compareToPin(pin, current, null)).isInstanceOf(PinResult.Regressed::class.java)
-    assertThat(AuditChainCore.compareToPin(pin, current.copy(prunedThroughSeq = 5, prunedThroughHash = "other"), null))
-      .isInstanceOf(PinResult.Forked::class.java)
-    assertThat(AuditChainCore.compareToPin(pin, current.copy(chainGeneration = 2), "h5"))
-      .isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(checkpoint(headSeq = 6, linkSeq = 5, linkHash = "h5"))).isEqualTo(PinResult.Consistent)
+    assertThat(judge(checkpoint(headSeq = 6, generation = 2, linkSeq = 5, linkHash = "h5")))
+      .isInstanceOf(PinResult.Regressed::class.java)
+    assertThat(judge(checkpoint(headSeq = 6, eventCount = 4, linkSeq = 5, linkHash = "h5")))
+      .isInstanceOf(PinResult.Regressed::class.java)
+    // A pin exists, so a missing link is a fork.
+    assertThat(judge(checkpoint(headSeq = 6))).isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(checkpoint(headSeq = 6, linkSeq = 5))).isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(checkpoint(headSeq = 6, linkSeq = 4, linkHash = "h5"))).isInstanceOf(PinResult.Forked::class.java)
+    // Prune past the pin, after the window: a link at the prune point must carry the prune hash.
+    val pruned = checkpoint(headSeq = 9, prunedThroughSeq = 7, prunedThroughHash = "p7", linkSeq = 7, linkHash = "x")
+    assertThat(judge(pruned, now = dayMs)).isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(pruned.copy(linkHash = "p7"), now = dayMs)).isEqualTo(PinResult.Consistent)
+    // Any other link re-baselines on trust.
+    assertThat(judge(pruned.copy(linkSeq = 5, linkHash = null), now = dayMs)).isEqualTo(PinResult.Consistent)
   }
 
   @Test
   fun `signing payload is deterministic and length-prefixed`() {
-    val checkpoint = AuditCheckpoint(12, "ab", 13, 1, 0, "GENESIS", "ignored")
+    val checkpoint = AuditCheckpoint(12, "ab", 13, 1, 0, "GENESIS", 7, "cd", "ignored")
     assertThat(checkpoint.signingPayload())
-      .isEqualTo("kioskops-audit-checkpoint-v1|2:122:ab2:131:11:07:GENESIS")
+      .isEqualTo("kioskops-audit-checkpoint-v1|2:122:ab2:131:11:07:GENESIS1:72:cd")
     assertThat(checkpoint.copy(signature = null).signingPayload()).isEqualTo(checkpoint.signingPayload())
+    assertThat(checkpoint.copy(linkSeq = null, linkHash = null).signingPayload())
+      .isEqualTo("kioskops-audit-checkpoint-v1|2:122:ab2:131:11:07:GENESIS--")
+    // Null and empty link hash do not alias.
+    assertThat(checkpoint.copy(linkHash = null).signingPayload())
+      .isNotEqualTo(checkpoint.copy(linkHash = "").signingPayload())
 
     // These two join to the same "|"-delimited string; the length prefixes keep them apart.
-    val a = AuditCheckpoint(1, "h|2", 3, 4, 0, "p", null)
-    val b = AuditCheckpoint(1, "h", 2, 3, 4, "0|p", null)
+    val a = AuditCheckpoint(1, "h|2", 3, 4, 0, "p", null, null, null)
+    val b = AuditCheckpoint(1, "h", 2, 3, 4, "0|p", null, null, null)
     val naive = { c: AuditCheckpoint ->
       listOf(c.headSeq, c.headHash, c.eventCount, c.chainGeneration, c.prunedThroughSeq, c.prunedThroughHash)
         .joinToString("|")

@@ -112,4 +112,7 @@ data class AuditChainState(
   val prunedThroughSeq: Long = 0,
   @ColumnInfo(defaultValue = "'GENESIS'")
   val prunedThroughHash: String = "GENESIS",
+  /** headSeq of the last checkpoint a server acknowledged; 0 before the first ack. */
+  @ColumnInfo(defaultValue = "0")
+  val lastAckedSeq: Long = 0,
 )

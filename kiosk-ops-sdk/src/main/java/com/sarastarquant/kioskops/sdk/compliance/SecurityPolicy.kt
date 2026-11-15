@@ -18,8 +18,9 @@ data class SecurityPolicy(
   /** Sign audit entries with device attestation. Opt-in for high-security deployments. */
   val signAuditEntries: Boolean = false,
   /**
-   * Attach a device-signed audit chain checkpoint to every sync batch, so the server can pin the
-   * chain head and detect rollback, truncation or rewrite on the next sync.
+   * Attach a device-signed audit chain checkpoint to every sync batch. A server that pins
+   * checkpoints can check each one against the last (see docs/SECURE_DESIGN.md for the rules and
+   * their limits).
    * @since 1.6.0
    */
   val signedAuditCheckpoints: Boolean = false,

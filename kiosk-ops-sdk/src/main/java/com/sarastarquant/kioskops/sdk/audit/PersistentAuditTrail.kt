@@ -303,6 +303,9 @@ class PersistentAuditTrail(
    * Deletes the longest chain prefix whose events are all older than the cutoff, and records the
    * last deleted seq and hash as the prune point in the same transaction. An event older than the
    * cutoff that follows a newer one (backward clock step) waits until its predecessors expire.
+   * Rows are never deleted early, but a row written while the clock ran ahead blocks every later
+   * prune until the cutoff passes that row's timestamp, so data minimization depends on a sane
+   * device clock.
    */
   suspend fun applyRetention() {
     val retention = retentionProvider()
@@ -319,7 +322,8 @@ class PersistentAuditTrail(
    * Snapshot the chain head for a server to pin.
    *
    * Head fields come from the newest stored row, not the cached chain state, so deleted tail rows
-   * show up as a lower headSeq. When [sign] is true and the device key cannot sign (no provider,
+   * show up as a lower headSeq. The link names the last acknowledged checkpoint ([acknowledgeCheckpoint])
+   * and the hash this database now holds at that seq. When [sign] is true and the device key cannot sign (no provider,
    * or signing returned null), the checkpoint is returned unsigned and a `checkpoint_unsigned`
    * audit event is recorded.
    *
@@ -332,6 +336,11 @@ class PersistentAuditTrail(
       val head = dao.getHeadEvent()
       val prunedSeq = state?.prunedThroughSeq ?: 0L
       val prunedHash = state?.prunedThroughHash ?: GENESIS_HASH
+      val linkSeq = state?.lastAckedSeq?.takeIf { it > 0 }
+      val linkHash = linkSeq?.let { seq ->
+        dao.getEventsPageBySeq(seq - 1, 1).firstOrNull { it.seq == seq }?.hash
+          ?: prunedHash.takeIf { seq == prunedSeq }
+      }
       AuditCheckpoint(
         headSeq = head?.seq ?: prunedSeq,
         headHash = head?.hash ?: prunedHash,
@@ -339,6 +348,8 @@ class PersistentAuditTrail(
         chainGeneration = state?.chainGeneration ?: 1,
         prunedThroughSeq = prunedSeq,
         prunedThroughHash = prunedHash,
+        linkSeq = linkSeq,
+        linkHash = linkHash,
         signature = null,
       )
     }
@@ -351,6 +362,14 @@ class PersistentAuditTrail(
       record("checkpoint_unsigned", mapOf("reason" to reason, "headSeq" to unsigned.headSeq.toString()))
     }
     return unsigned.copy(signature = signature)
+  }
+
+  /** Record that a server accepted [checkpoint]; the next checkpoint links to its headSeq. */
+  internal suspend fun acknowledgeCheckpoint(checkpoint: AuditCheckpoint) {
+    mutex.withLock {
+      val state = dao.getChainState() ?: return@withLock
+      dao.upsertChainState(state.copy(lastAckedSeq = checkpoint.headSeq))
+    }
   }
 
   /**

@@ -5,6 +5,7 @@
 
 package com.sarastarquant.kioskops.sdk.audit.core
 
+import com.sarastarquant.kioskops.sdk.audit.DeviceAttestationProvider
 import com.sarastarquant.kioskops.sdk.util.Hashing
 
 /** One stored link of the audit hash chain, independent of the storage layer. */
@@ -56,35 +57,53 @@ internal object AuditChainCore {
   fun hash(content: String): String = Hashing.sha256Base64Url(content)
 
   /**
-   * Compares the device's [current] checkpoint with a [pin] the server stored earlier.
-   * [hashAtPinSeq] is the hash the device holds at `pin.headSeq`, or null if that row is gone.
+   * The server rule for a device checkpoint, given the [pin] the server holds for that device
+   * (received at [pinReceivedAtMs]) and the device's audit retention window. The first checkpoint
+   * from a device has no pin: the server pins it on first contact and does not call this.
    *
-   * - Forked: the generation changed, or the hash at `pin.headSeq` differs from `pin.headHash`
-   *   (including a prune record ending exactly at `pin.headSeq` with another hash).
-   * - Regressed: headSeq or eventCount went down, or the row at `pin.headSeq` is missing and
-   *   retention did not prune it (`current.prunedThroughSeq < pin.headSeq`).
+   * - R1 Regressed: chainGeneration changed, or headSeq or eventCount is below the pin.
+   * - R3 prune past the pin (`current.prunedThroughSeq > pin.headSeq`): Forked if less than
+   *   [retentionWindowMs] has passed since the pin arrived, since retention cannot have removed it
+   *   yet. Otherwise, if the link points at the prune point it must carry the prune hash; any other
+   *   link re-baselines the pin on trust (the pinned row is gone, nothing can be compared).
+   * - R2 Forked: `current.linkSeq != pin.headSeq` or `current.linkHash != pin.headHash`. A null
+   *   link while a pin exists is Forked.
    * - Consistent otherwise.
    */
-  fun compareToPin(pin: AuditCheckpoint, current: AuditCheckpoint, hashAtPinSeq: String?): PinResult {
-    val observedHash = when {
-      hashAtPinSeq != null -> hashAtPinSeq
-      current.prunedThroughSeq == pin.headSeq -> current.prunedThroughHash
-      else -> null
-    }
+  fun compareToPin(
+    pin: AuditCheckpoint,
+    pinReceivedAtMs: Long,
+    current: AuditCheckpoint,
+    nowMs: Long,
+    retentionWindowMs: Long,
+  ): PinResult {
+    regression(pin, current)?.let { return it }
     return when {
-      current.chainGeneration != pin.chainGeneration ->
-        PinResult.Forked("chain generation ${current.chainGeneration} differs from pinned ${pin.chainGeneration}")
-      current.headSeq < pin.headSeq -> PinResult.Regressed("headSeq ${current.headSeq} is below pinned ${pin.headSeq}")
-      current.eventCount < pin.eventCount ->
-        PinResult.Regressed("eventCount ${current.eventCount} is below pinned ${pin.eventCount}")
-      pin.headSeq == 0L -> PinResult.Consistent
-      observedHash != null && observedHash != pin.headHash ->
-        PinResult.Forked("hash at seq ${pin.headSeq} differs from the pinned head")
-      hashAtPinSeq == null && current.prunedThroughSeq < pin.headSeq ->
-        PinResult.Regressed("event at pinned seq ${pin.headSeq} is missing and was not pruned")
+      current.prunedThroughSeq > pin.headSeq -> when {
+        nowMs - pinReceivedAtMs < retentionWindowMs ->
+          PinResult.Forked("prune point ${current.prunedThroughSeq} passed the pin inside the retention window")
+        current.linkSeq == current.prunedThroughSeq && current.linkHash != current.prunedThroughHash ->
+          PinResult.Forked("link at the prune point does not carry the prune hash")
+        else -> PinResult.Consistent
+      }
+      current.linkSeq != pin.headSeq || current.linkHash != pin.headHash ->
+        PinResult.Forked("link (${current.linkSeq}) does not match the pinned head ${pin.headSeq}")
       else -> PinResult.Consistent
     }
   }
+
+  private fun regression(pin: AuditCheckpoint, current: AuditCheckpoint): PinResult.Regressed? = when {
+    current.chainGeneration != pin.chainGeneration ->
+      PinResult.Regressed("chain generation ${current.chainGeneration} differs from pinned ${pin.chainGeneration}")
+    current.headSeq < pin.headSeq -> PinResult.Regressed("headSeq ${current.headSeq} is below pinned ${pin.headSeq}")
+    current.eventCount < pin.eventCount ->
+      PinResult.Regressed("eventCount ${current.eventCount} is below pinned ${pin.eventCount}")
+    else -> null
+  }
+
+  /** True when [checkpoint] carries a signature that [provider] accepts over its signing payload. */
+  fun verifyCheckpointSignature(checkpoint: AuditCheckpoint, provider: DeviceAttestationProvider): Boolean =
+    checkpoint.signature?.let { provider.verifySignature(checkpoint.signingPayload(), it) } ?: false
 
   /**
    * Verifies [events] in order: seq strictly increases, each prevHash links to the previous hash

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "f72aff2cab7b841dbbfdaa5f52106432",
+    "identityHash": "f21ca8024a0bf3def4b3c31552a369f2",
     "entities": [
       {
         "tableName": "audit_events",
@@ -137,7 +137,7 @@
       },
       {
         "tableName": "audit_chain_state",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `lastHash` TEXT NOT NULL, `lastTs` INTEGER NOT NULL, `chainGeneration` INTEGER NOT NULL, `eventCount` INTEGER NOT NULL, `prunedThroughSeq` INTEGER NOT NULL DEFAULT 0, `prunedThroughHash` TEXT NOT NULL DEFAULT 'GENESIS', PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `lastHash` TEXT NOT NULL, `lastTs` INTEGER NOT NULL, `chainGeneration` INTEGER NOT NULL, `eventCount` INTEGER NOT NULL, `prunedThroughSeq` INTEGER NOT NULL DEFAULT 0, `prunedThroughHash` TEXT NOT NULL DEFAULT 'GENESIS', `lastAckedSeq` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -182,6 +182,13 @@
             "affinity": "TEXT",
             "notNull": true,
             "defaultValue": "'GENESIS'"
+          },
+          {
+            "fieldPath": "lastAckedSeq",
+            "columnName": "lastAckedSeq",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {
@@ -194,7 +201,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f72aff2cab7b841dbbfdaa5f52106432')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f21ca8024a0bf3def4b3c31552a369f2')"
     ]
   }
 }
