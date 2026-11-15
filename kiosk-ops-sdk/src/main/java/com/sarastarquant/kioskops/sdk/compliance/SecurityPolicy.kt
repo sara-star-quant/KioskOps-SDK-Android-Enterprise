@@ -50,6 +50,31 @@ data class SecurityPolicy(
     signedAuditCheckpoints = false,
   )
 
+  /** Binary compatibility with callers compiled before [signedAuditCheckpoints] existed. */
+  @Deprecated("kept for binary compatibility", level = DeprecationLevel.HIDDEN)
+  fun copy(
+    encryptQueuePayloads: Boolean = this.encryptQueuePayloads,
+    encryptTelemetryAtRest: Boolean = this.encryptTelemetryAtRest,
+    encryptDiagnosticsBundle: Boolean = this.encryptDiagnosticsBundle,
+    encryptExportedLogs: Boolean = this.encryptExportedLogs,
+    maxEventPayloadBytes: Int = this.maxEventPayloadBytes,
+    keyRotationPolicy: KeyRotationPolicy = this.keyRotationPolicy,
+    keyDerivationConfig: KeyDerivationConfig = this.keyDerivationConfig,
+    useRoomBackedAudit: Boolean = this.useRoomBackedAudit,
+    signAuditEntries: Boolean = this.signAuditEntries,
+  ): SecurityPolicy = copy(
+    encryptQueuePayloads,
+    encryptTelemetryAtRest,
+    encryptDiagnosticsBundle,
+    encryptExportedLogs,
+    maxEventPayloadBytes,
+    keyRotationPolicy,
+    keyDerivationConfig,
+    useRoomBackedAudit,
+    signAuditEntries,
+    signedAuditCheckpoints,
+  )
+
   companion object {
     fun maximalistDefaults() = SecurityPolicy(
       encryptQueuePayloads = true,

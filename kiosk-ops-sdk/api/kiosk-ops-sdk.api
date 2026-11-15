@@ -1078,7 +1078,9 @@ public final class com/sarastarquant/kioskops/sdk/compliance/SecurityPolicy {
 	public final fun component7 ()Lcom/sarastarquant/kioskops/sdk/crypto/KeyDerivationConfig;
 	public final fun component8 ()Z
 	public final fun component9 ()Z
+	public final synthetic fun copy (ZZZZILcom/sarastarquant/kioskops/sdk/crypto/KeyRotationPolicy;Lcom/sarastarquant/kioskops/sdk/crypto/KeyDerivationConfig;ZZ)Lcom/sarastarquant/kioskops/sdk/compliance/SecurityPolicy;
 	public final fun copy (ZZZZILcom/sarastarquant/kioskops/sdk/crypto/KeyRotationPolicy;Lcom/sarastarquant/kioskops/sdk/crypto/KeyDerivationConfig;ZZZ)Lcom/sarastarquant/kioskops/sdk/compliance/SecurityPolicy;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/compliance/SecurityPolicy;ZZZZILcom/sarastarquant/kioskops/sdk/crypto/KeyRotationPolicy;Lcom/sarastarquant/kioskops/sdk/crypto/KeyDerivationConfig;ZZILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/compliance/SecurityPolicy;
 	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/compliance/SecurityPolicy;ZZZZILcom/sarastarquant/kioskops/sdk/crypto/KeyRotationPolicy;Lcom/sarastarquant/kioskops/sdk/crypto/KeyDerivationConfig;ZZZILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/compliance/SecurityPolicy;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEncryptDiagnosticsBundle ()Z
@@ -4224,7 +4226,9 @@ public final class com/sarastarquant/kioskops/sdk/transport/BatchSendRequest {
 	public final fun component5 ()J
 	public final fun component6 ()Ljava/util/List;
 	public final fun component7 ()Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;
+	public final synthetic fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/util/List;)Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;
 	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/util/List;Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;)Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/util/List;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;
 	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/util/List;Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/transport/BatchSendRequest;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAppVersion ()Ljava/lang/String;
