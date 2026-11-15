@@ -640,11 +640,11 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/db/AuditDao
 	public abstract fun getEventNameCounts (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getEventsByName (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getEventsForVerification (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getEventsInRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getEventsPageBySeq (JILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getLatestEvent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getOldestEvent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getSeqBoundsInRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun insertEvent (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun insertEventWithChainUpdate (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun upsertChainState (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -668,11 +668,11 @@ public final class com/sarastarquant/kioskops/sdk/audit/db/AuditDao_Impl : com/s
 	public fun getEventNameCounts (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getEventsByName (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun getEventsForVerification (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getEventsInRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getEventsPageBySeq (JILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getLatestEvent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getOldestEvent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSeqBoundsInRange (JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun insertEvent (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun insertEventWithChainUpdate (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun upsertChainState (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -753,6 +753,19 @@ public final class com/sarastarquant/kioskops/sdk/audit/db/EventNameCount {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCount ()I
 	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/db/SeqBounds {
+	public fun <init> (Ljava/lang/Long;Ljava/lang/Long;)V
+	public final fun component1 ()Ljava/lang/Long;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/Long;Ljava/lang/Long;)Lcom/sarastarquant/kioskops/sdk/audit/db/SeqBounds;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/db/SeqBounds;Ljava/lang/Long;Ljava/lang/Long;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/db/SeqBounds;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxSeq ()Ljava/lang/Long;
+	public final fun getMinSeq ()Ljava/lang/Long;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

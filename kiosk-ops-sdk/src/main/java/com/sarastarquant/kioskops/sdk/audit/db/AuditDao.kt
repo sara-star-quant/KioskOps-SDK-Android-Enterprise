@@ -116,16 +116,14 @@ interface AuditDao {
   }
 
   /**
-   * Get events for chain verification in order.
-   */
-  @Query("SELECT * FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs ORDER BY seq ASC")
-  suspend fun getEventsForVerification(fromTs: Long, toTs: Long): List<AuditEventEntity>
-
-  /**
    * Get a page of events after a sequence number, in chain order.
    */
   @Query("SELECT * FROM audit_events WHERE seq > :afterSeq ORDER BY seq ASC LIMIT :limit")
   suspend fun getEventsPageBySeq(afterSeq: Long, limit: Int): List<AuditEventEntity>
+
+  /** Lowest and highest seq among events whose ts is within the range; both null if none. */
+  @Query("SELECT MIN(seq) AS minSeq, MAX(seq) AS maxSeq FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs")
+  suspend fun getSeqBoundsInRange(fromTs: Long, toTs: Long): SeqBounds
 
   /**
    * Delete all events for a specific user.
@@ -149,4 +147,13 @@ interface AuditDao {
 data class EventNameCount(
   val name: String,
   val count: Int,
+)
+
+/**
+ * Result of the seq bounds query.
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+data class SeqBounds(
+  val minSeq: Long?,
+  val maxSeq: Long?,
 )

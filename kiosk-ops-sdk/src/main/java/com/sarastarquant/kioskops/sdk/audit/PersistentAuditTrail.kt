@@ -8,6 +8,8 @@ package com.sarastarquant.kioskops.sdk.audit
 import android.content.Context
 import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
 import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
+import com.sarastarquant.kioskops.sdk.audit.core.ChainLink
+import com.sarastarquant.kioskops.sdk.audit.core.PageResult
 import com.sarastarquant.kioskops.sdk.audit.db.AuditChainState
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.audit.db.AuditEventEntity
@@ -57,6 +59,7 @@ class PersistentAuditTrail(
 
   companion object {
     private const val GENESIS_HASH = "GENESIS"
+    internal const val VERIFY_PAGE_SIZE = 500
     private val RECORD_FORMAT = AuditHashFormat.V2
   }
 
@@ -129,7 +132,12 @@ class PersistentAuditTrail(
   }
 
   /**
-   * Verify the integrity of the audit chain.
+   * Verify the integrity of the audit chain, reading at most [VERIFY_PAGE_SIZE] rows at a time.
+   *
+   * When [fromTs] or [toTs] is given, the range resolves to the contiguous seq interval from the
+   * lowest to the highest seq among rows whose ts is inside the window, and that whole interval is
+   * verified. Rows inside the interval but outside the ts window are verified too, so a backward
+   * clock step cannot cause a false break.
    *
    * @param fromTs Optional start timestamp (inclusive).
    * @param toTs Optional end timestamp (inclusive).
@@ -142,65 +150,78 @@ class PersistentAuditTrail(
     val effectiveFromTs = fromTs ?: 0L
     val effectiveToTs = toTs ?: Long.MAX_VALUE
 
-    val events = dao.getEventsForVerification(effectiveFromTs, effectiveToTs)
+    val seqRange = resolveSeqRange(fromTs, toTs)
+      ?: return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
+    var afterSeq = seqRange.first - 1
+    val maxSeq = seqRange.last
 
-    if (events.isEmpty()) {
-      return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
-    }
+    var expectedPrevHash: String? = null
+    var count = 0
+    var firstTs = 0L
+    var lastTs = 0L
 
-    var expectedPrevHash = events.first().prevHash
+    do {
+      val page = dao.getEventsPageBySeq(afterSeq, VERIFY_PAGE_SIZE).filter { it.seq <= maxSeq }
+      if (page.isEmpty()) break
+      // The first row seeds the chain: a retention-pruned head still verifies.
+      val seed = expectedPrevHash ?: page.first().prevHash.also { firstTs = page.first().ts }
 
-    for (event in events) {
-      // Unknown format: the stored hash cannot be recomputed, so the chain cannot be trusted past here.
+      val result = AuditChainCore.verifyPage(page.map { it.toLink() }, seed)
+      val verified = if (result is PageResult.Broken) page.takeWhile { it.seq < result.seq } else page
+
+      signatureFailure(verified)?.let { return it }
+      if (result is PageResult.Broken) return brokenResult(page.first { it.seq == result.seq }, verified, seed)
+
+      result as PageResult.Ok
+      expectedPrevHash = result.lastHash
+      afterSeq = result.lastSeq
+      count += page.size
+      lastTs = page.last().ts
+    } while (page.size == VERIFY_PAGE_SIZE)
+
+    if (count == 0) return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
+    return ChainVerificationResult.Valid(eventCount = count, fromTs = firstTs, toTs = lastTs)
+  }
+
+  /** Unranged: the whole chain. Ranged: the seq interval spanned by the ts window, or null if empty. */
+  private suspend fun resolveSeqRange(fromTs: Long?, toTs: Long?): LongRange? {
+    if (fromTs == null && toTs == null) return 1L..Long.MAX_VALUE
+    val bounds = dao.getSeqBoundsInRange(fromTs ?: 0L, toTs ?: Long.MAX_VALUE)
+    val (min, max) = bounds.minSeq to bounds.maxSeq
+    return if (min == null || max == null) null else min..max
+  }
+
+  private fun AuditEventEntity.toLink() =
+    ChainLink(seq, id, ts, name, fieldsJson, prevHash, hash, formatVersion)
+
+  private fun signatureFailure(events: List<AuditEventEntity>): ChainVerificationResult? {
+    val provider = attestationProvider?.invoke() ?: return null
+    val bad = events.firstOrNull { event ->
       val format = AuditHashFormat.forStoredVersion(event.formatVersion)
-        ?: return ChainVerificationResult.Broken(
-          brokenAtId = event.id,
-          brokenAtTs = event.ts,
-          expectedPrevHash = expectedPrevHash,
-          actualPrevHash = event.prevHash,
+      event.signature != null && format != null &&
+        !provider.verifySignature(
+          AuditChainCore.content(format, event.id, event.ts, event.name, event.fieldsJson, event.prevHash),
+          event.signature,
         )
-
-      // Verify the event's own hash
-      val content = AuditChainCore.content(format, event.id, event.ts, event.name, event.fieldsJson, event.prevHash)
-      val expectedHash = AuditChainCore.hash(content)
-
-      if (event.hash != expectedHash) {
-        return ChainVerificationResult.HashMismatch(
-          eventId = event.id,
-          eventTs = event.ts,
-        )
-      }
-
-      // Verify chain linkage (skip for first event in range)
-      if (event != events.first() && event.prevHash != expectedPrevHash) {
-        return ChainVerificationResult.Broken(
-          brokenAtId = event.id,
-          brokenAtTs = event.ts,
-          expectedPrevHash = expectedPrevHash,
-          actualPrevHash = event.prevHash,
-        )
-      }
-
-      // Verify signature if present
-      if (event.signature != null && attestationProvider != null) {
-        val provider = attestationProvider.invoke()
-        if (!provider.verifySignature(content, event.signature)) {
-          return ChainVerificationResult.SignatureInvalid(
-            eventId = event.id,
-            eventTs = event.ts,
-            reason = "Signature verification failed",
-          )
-        }
-      }
-
-      expectedPrevHash = event.hash
     }
+    return bad?.let { ChainVerificationResult.SignatureInvalid(it.id, it.ts, "Signature verification failed") }
+  }
 
-    return ChainVerificationResult.Valid(
-      eventCount = events.size,
-      fromTs = events.first().ts,
-      toTs = events.last().ts,
-    )
+  /**
+   * A link failure is a chain break; anything else (hash, unknown format version) is the event itself.
+   * HashMismatch has no reason field, so an unknown format version is not distinguishable there.
+   */
+  private fun brokenResult(
+    event: AuditEventEntity,
+    verified: List<AuditEventEntity>,
+    seed: String,
+  ): ChainVerificationResult {
+    val expected = verified.lastOrNull()?.hash ?: seed
+    return if (event.prevHash != expected) {
+      ChainVerificationResult.Broken(event.id, event.ts, expected, event.prevHash)
+    } else {
+      ChainVerificationResult.HashMismatch(event.id, event.ts)
+    }
   }
 
   /**

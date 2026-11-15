@@ -101,7 +101,7 @@ class AuditChainAdversarialTest {
   }
 
   @Test
-  fun `unknown format version is reported as broken`() = runTest {
+  fun `unknown format version is reported as hash mismatch`() = runTest {
     trail.record("first")
     trail.record("second")
     db.openHelper.writableDatabase.execSQL(
@@ -109,7 +109,7 @@ class AuditChainAdversarialTest {
     )
 
     val result = trail.verifyChainIntegrity()
-    assertThat(result).isInstanceOf(ChainVerificationResult.Broken::class.java)
+    assertThat(result).isInstanceOf(ChainVerificationResult.HashMismatch::class.java)
   }
 
   @Ignore("fixed by task 5")
