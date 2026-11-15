@@ -13,6 +13,8 @@ import com.sarastarquant.kioskops.sdk.transport.TransportResult
 import com.sarastarquant.kioskops.sdk.util.Clock
 import com.sarastarquant.kioskops.sdk.util.DeviceId
 import com.sarastarquant.kioskops.sdk.util.Ids
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Fleet-ops sync engine.
@@ -39,7 +41,15 @@ class SyncEngine @JvmOverloads constructor(
   private val clock: Clock,
   private val onDelivery: (EventDelivery) -> Unit = {},
 ) {
-  suspend fun flushOnce(): TransportResult<SyncOnceResult> {
+  private val flushLock = Mutex()
+
+  /**
+   * Send one batch. Calls are serialized: a second caller waits until the first finishes, so audit
+   * checkpoints reach the server in the order the device created them.
+   */
+  suspend fun flushOnce(): TransportResult<SyncOnceResult> = flushLock.withLock { flushOnceLocked() }
+
+  private suspend fun flushOnceLocked(): TransportResult<SyncOnceResult> {
     val cfg = cfgProvider()
     if (!cfg.syncPolicy.enabled) {
       return TransportResult.Success(

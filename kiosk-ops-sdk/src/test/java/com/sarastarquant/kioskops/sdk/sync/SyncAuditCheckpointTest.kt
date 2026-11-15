@@ -27,6 +27,11 @@ import com.sarastarquant.kioskops.sdk.transport.Transport
 import com.sarastarquant.kioskops.sdk.transport.TransportEvent
 import com.sarastarquant.kioskops.sdk.transport.TransportResult
 import com.sarastarquant.kioskops.sdk.util.Clock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -160,5 +165,56 @@ class SyncAuditCheckpointTest {
         "\"events\":[{\"id\":\"e1\",\"idempotencyKey\":\"k1\",\"type\":\"T\",\"payloadJson\":\"{\\\"x\\\":1}\"," +
         "\"createdAtEpochMs\":7}]}"
     )
+  }
+
+  @Test
+  fun `concurrent flushes run one at a time`() = runBlocking {
+    val calls = java.util.Collections.synchronizedList(mutableListOf<String>())
+    val transport = object : Transport {
+      val requests = java.util.Collections.synchronizedList(mutableListOf<BatchSendRequest>())
+      override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> {
+        calls += "start ${request.batchId}"
+        delay(200)
+        requests += request
+        calls += "end ${request.batchId}"
+        val acks = request.events.map { EventAck(it.id, it.idempotencyKey, accepted = true) }
+        return TransportResult.Success(BatchSendResponse(acks.size, acks), httpStatus = 200)
+      }
+    }
+    val cfg = KioskOpsConfig(
+      baseUrl = "https://sync.test/",
+      locationId = "TEST",
+      kioskEnabled = false,
+      syncPolicy = SyncPolicy(enabled = true, endpointPath = "events/batch", batchSize = 1),
+      securityPolicy = SecurityPolicy.maximalistDefaults()
+        .copy(encryptQueuePayloads = false, signedAuditCheckpoints = true),
+    )
+    val logs = RingLog(ctx)
+    val queue = QueueRepository(ctx, logs, NoopCryptoProvider)
+    assertThat(queue.enqueue("T1", "{\"x\":1}", cfg).isAccepted).isTrue()
+    assertThat(queue.enqueue("T1", "{\"x\":2}", cfg).isAccepted).isTrue()
+    val engine = SyncEngine(
+      context = ctx,
+      cfgProvider = { cfg },
+      queue = queue,
+      transport = transport,
+      logs = logs,
+      telemetry = object : TelemetrySink { override fun emit(event: String, fields: Map<String, String>) = Unit },
+      audit = PersistentAuditTrail(ctx, { RetentionPolicy.maximalistDefaults() }, Clock.SYSTEM,
+        attestationProvider = { provider }),
+      clock = Clock.SYSTEM,
+    )
+
+    val results = listOf(
+      async(Dispatchers.Default) { engine.flushOnce() },
+      async(Dispatchers.Default) { engine.flushOnce() },
+    ).awaitAll()
+
+    assertThat(results.map { (it as TransportResult.Success).value.sent }).containsExactly(1, 1)
+    val (first, second) = transport.requests
+    assertThat(calls).containsExactly(
+      "start ${first.batchId}", "end ${first.batchId}", "start ${second.batchId}", "end ${second.batchId}",
+    ).inOrder()
+    assertThat(second.auditCheckpoint!!.linkSeq).isEqualTo(first.auditCheckpoint!!.headSeq)
   }
 }

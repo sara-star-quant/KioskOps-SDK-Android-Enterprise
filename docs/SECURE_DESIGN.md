@@ -72,6 +72,11 @@ server must durably persist its new pin before it replies. A server that replies
 loses the pin sees every later checkpoint as Forked until it re-baselines on trust; the two-pin
 rule does not cover that.
 
+Ordering: the server must process each device's checkpoints one at a time. R1 compares against
+the latest pin, so a newer checkpoint pinned first makes a concurrently handled older one read
+Regressed. The SDK serializes its own syncs (`SyncEngine.flushOnce` holds one lock per engine),
+but a slow server can still see a retry overtake a request it has not finished.
+
 Server rules. On first contact the server pins the checkpoint. After that it checks each new
 checkpoint against its pin (`AuditChainCore.compareToPin` is the reference implementation) and
 pins it when the result is Consistent:
