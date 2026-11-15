@@ -29,7 +29,11 @@ object AuditMigrations {
   /**
    * v2 -> v3: Add monotonic seq and formatVersion to events, prune watermark and last acknowledged
    * checkpoint seq to chain state.
-   * Existing rows get seq in (ts, id) order, the order the v1 hash format verified in.
+   * Existing rows get seq in rowid order. `audit_events` has a TEXT primary key, so it is a rowid
+   * table and rowids grow with insertion: rowid order is the order the chain was built in. ids are
+   * random UUIDs, so (ts, id) would misorder same-millisecond events and events across a backward
+   * clock step. Caveat: VACUUM may renumber rowids of a table without an INTEGER PRIMARY KEY; Room
+   * never vacuums, and the SDK does not either.
    *
    * A chain whose head retention already pruned (first row's prevHash is not GENESIS) gets a prune
    * baseline at that row: trust on first use. Truncation before the upgrade is not detectable;
@@ -42,7 +46,7 @@ object AuditMigrations {
       // Single pass: rank once into a keyed temp table, then PK-lookup per row (linear, not quadratic).
       db.execSQL("CREATE TEMP TABLE audit_seq_backfill (id TEXT PRIMARY KEY NOT NULL, rn INTEGER NOT NULL)")
       db.execSQL(
-        "INSERT INTO audit_seq_backfill SELECT id, ROW_NUMBER() OVER (ORDER BY ts ASC, id ASC) FROM audit_events"
+        "INSERT INTO audit_seq_backfill SELECT id, ROW_NUMBER() OVER (ORDER BY rowid) FROM audit_events"
       )
       db.execSQL("UPDATE audit_events SET seq = (SELECT rn FROM audit_seq_backfill WHERE id = audit_events.id)")
       db.execSQL("DROP TABLE audit_seq_backfill")
