@@ -12,6 +12,9 @@ import com.google.common.truth.Truth.assertThat
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.util.Clock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -53,7 +56,6 @@ class AuditChainAdversarialTest {
     AuditDatabase.setInstance(null)
   }
 
-  @Ignore("pending: chain order must not depend on timestamps")
   @Test
   fun `same millisecond events verify valid`() = runTest {
     for (i in 1..50) {
@@ -65,7 +67,6 @@ class AuditChainAdversarialTest {
     assertThat((result as ChainVerificationResult.Valid).eventCount).isEqualTo(50)
   }
 
-  @Ignore("pending: chain order must not depend on timestamps")
   @Test
   fun `backward clock step verifies valid`() = runTest {
     trail.record("before_1")
@@ -153,5 +154,26 @@ class AuditChainAdversarialTest {
     assertThat(retentionTrail.getStatistics().totalEvents).isEqualTo(2)
     val result = retentionTrail.verifyChainIntegrity()
     assertThat(result).isInstanceOf(ChainVerificationResult.Valid::class.java)
+  }
+
+  @Test
+  fun `new events get next seq under mutex`() = runTest {
+    (1..50).map { i -> async(Dispatchers.Default) { trail.record("e_$i") } }.awaitAll()
+
+    val seqs = db.auditDao().getEventsPageBySeq(0, 100).map { it.seq }
+    assertThat(seqs).containsExactlyElementsIn((1L..50L).toList()).inOrder()
+  }
+
+  @Test
+  fun `seq keeps increasing after retention prune`() = runTest {
+    trail.record("old_1")
+    trail.record("old_2")
+    nowMs += 400 * dayMs
+    trail.record("new_1")
+    trail.applyRetention()
+    trail.record("new_2")
+
+    val seqs = db.auditDao().getEventsPageBySeq(0, 100).map { it.seq }
+    assertThat(seqs).isEqualTo(listOf(3L, 4L))
   }
 }

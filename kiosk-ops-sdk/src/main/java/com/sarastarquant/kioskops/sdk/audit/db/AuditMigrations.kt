@@ -25,4 +25,24 @@ object AuditMigrations {
       db.execSQL("CREATE INDEX IF NOT EXISTS index_audit_events_userId ON audit_events(userId)")
     }
   }
+
+  /**
+   * v2 -> v3: Add monotonic seq and formatVersion to events, prune watermark to chain state.
+   * Existing rows get seq in (ts, id) order, the order the v1 hash format verified in.
+   */
+  val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE audit_events ADD COLUMN seq INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE audit_events ADD COLUMN formatVersion INTEGER NOT NULL DEFAULT 1")
+      db.execSQL(
+        """UPDATE audit_events SET seq = (
+             SELECT COUNT(*) FROM audit_events b
+             WHERE b.ts < audit_events.ts OR (b.ts = audit_events.ts AND b.id <= audit_events.id)
+           )"""
+      )
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_audit_events_seq ON audit_events(seq)")
+      db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughSeq INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughHash TEXT NOT NULL DEFAULT 'GENESIS'")
+    }
+  }
 }

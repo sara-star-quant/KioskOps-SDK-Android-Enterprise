@@ -24,7 +24,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 @Database(
   entities = [AuditEventEntity::class, AuditChainState::class],
-  version = 2,
+  version = 3,
   exportSchema = true,
 )
 abstract class AuditDatabase : RoomDatabase() {
@@ -67,7 +67,7 @@ abstract class AuditDatabase : RoomDatabase() {
         AuditDatabase::class.java,
         DATABASE_NAME
       )
-        .addMigrations(AuditMigrations.MIGRATION_1_2)
+        .addMigrations(AuditMigrations.MIGRATION_1_2, AuditMigrations.MIGRATION_2_3)
         .apply { openHelperFactory?.let { openHelperFactory(it) } }
         .build()
     }

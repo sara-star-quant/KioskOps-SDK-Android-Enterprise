@@ -118,8 +118,14 @@ interface AuditDao {
   /**
    * Get events for chain verification in order.
    */
-  @Query("SELECT * FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs ORDER BY ts ASC, id ASC")
+  @Query("SELECT * FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs ORDER BY seq ASC")
   suspend fun getEventsForVerification(fromTs: Long, toTs: Long): List<AuditEventEntity>
+
+  /**
+   * Get a page of events after a sequence number, in chain order.
+   */
+  @Query("SELECT * FROM audit_events WHERE seq > :afterSeq ORDER BY seq ASC LIMIT :limit")
+  suspend fun getEventsPageBySeq(afterSeq: Long, limit: Int): List<AuditEventEntity>
 
   /**
    * Delete all events for a specific user.

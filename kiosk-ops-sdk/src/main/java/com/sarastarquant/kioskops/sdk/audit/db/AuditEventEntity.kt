@@ -6,6 +6,7 @@
 package com.sarastarquant.kioskops.sdk.audit.db
 
 import androidx.annotation.RestrictTo
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -25,6 +26,8 @@ import androidx.room.PrimaryKey
  * @property signature Optional ECDSA signature from device attestation key.
  * @property deviceAttestationBlob Optional attestation certificate chain.
  * @property chainGeneration Chain generation number (increments on restart if file-based).
+ * @property seq Monotonic, gap-free position in the chain, starting at 1. 0 only on unsaved legacy values.
+ * @property formatVersion Hash format version used to compute [hash].
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 @Entity(
@@ -34,6 +37,7 @@ import androidx.room.PrimaryKey
     Index(value = ["name"]),
     Index(value = ["chainGeneration", "ts"]),
     Index(value = ["userId"]),
+    Index(value = ["seq"]),
   ]
 )
 data class AuditEventEntity(
@@ -49,7 +53,12 @@ data class AuditEventEntity(
   val chainGeneration: Int = 1,
   /** @since 0.5.0 */
   val userId: String? = null,
+  @ColumnInfo(defaultValue = "0")
+  val seq: Long = 0,
+  @ColumnInfo(defaultValue = "1")
+  val formatVersion: Int = 1,
 ) {
+  @Suppress("CyclomaticComplexMethod")
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is AuditEventEntity) return false
@@ -62,7 +71,9 @@ data class AuditEventEntity(
       signature == other.signature &&
       (deviceAttestationBlob?.contentEquals(other.deviceAttestationBlob) ?: (other.deviceAttestationBlob == null)) &&
       chainGeneration == other.chainGeneration &&
-      userId == other.userId
+      userId == other.userId &&
+      seq == other.seq &&
+      formatVersion == other.formatVersion
   }
 
   override fun hashCode(): Int {
@@ -76,6 +87,8 @@ data class AuditEventEntity(
     result = 31 * result + (deviceAttestationBlob?.contentHashCode() ?: 0)
     result = 31 * result + chainGeneration
     result = 31 * result + (userId?.hashCode() ?: 0)
+    result = 31 * result + seq.hashCode()
+    result = 31 * result + formatVersion
     return result
   }
 }
@@ -95,4 +108,8 @@ data class AuditChainState(
   val lastTs: Long,
   val chainGeneration: Int,
   val eventCount: Long,
+  @ColumnInfo(defaultValue = "0")
+  val prunedThroughSeq: Long = 0,
+  @ColumnInfo(defaultValue = "'GENESIS'")
+  val prunedThroughHash: String = "GENESIS",
 )

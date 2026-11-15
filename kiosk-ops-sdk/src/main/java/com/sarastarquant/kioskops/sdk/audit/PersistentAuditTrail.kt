@@ -110,14 +110,13 @@ class PersistentAuditTrail(
         deviceAttestationBlob = attestationBlob,
         chainGeneration = chainState.chainGeneration,
         userId = userId,
+        seq = chainState.eventCount + 1,
       )
 
       // Update chain state
-      val newChainState = AuditChainState(
-        id = 1,
+      val newChainState = chainState.copy(
         lastHash = hash,
         lastTs = ts,
-        chainGeneration = chainState.chainGeneration,
         eventCount = chainState.eventCount + 1,
       )
 
