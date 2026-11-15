@@ -66,11 +66,12 @@ class SyncInFlightTest {
     AuditDatabase.setInstance(null)
   }
 
-  private fun cfg(checkpoints: Boolean = false) = KioskOpsConfig(
+  private fun cfg(checkpoints: Boolean = false, batchSize: Int = 50, maxAttempts: Int = 12) = KioskOpsConfig(
     baseUrl = "https://sync.test/",
     locationId = "TEST",
     kioskEnabled = false,
-    syncPolicy = SyncPolicy(enabled = true, endpointPath = "events/batch", batchSize = 50),
+    syncPolicy = SyncPolicy(enabled = true, endpointPath = "events/batch", batchSize = batchSize,
+      maxAttemptsPerEvent = maxAttempts),
     securityPolicy = SecurityPolicy.maximalistDefaults()
       .copy(encryptQueuePayloads = false, signedAuditCheckpoints = checkpoints),
   )
@@ -129,6 +130,14 @@ class SyncInFlightTest {
         return out
       }
     }
+  }
+
+  /** Makes the stored payload of [type] undecodable by giving it an encoding the codec does not know. */
+  private fun corruptPayload(type: String) {
+    val db = SQLiteDatabase.openDatabase(
+      ctx.getDatabasePath("kiosk_ops_queue.db").path, null, SQLiteDatabase.OPEN_READWRITE,
+    )
+    db.use { it.execSQL("UPDATE queue_events SET payloadEncoding = 'unknown' WHERE type = ?", arrayOf(type)) }
   }
 
   private fun ackAll(request: BatchSendRequest) =
@@ -379,5 +388,75 @@ class SyncInFlightTest {
       ).containsExactlyElementsIn(case.deliveries)
       sentIds.forEach { f.queue.delete(it) }
     }
+  }
+
+  @Test
+  fun `undecodable event is quarantined or backed off without stalling the batch`() = runBlocking<Unit> {
+    val sentTypes = mutableListOf<List<String>>()
+    val transport = object : Transport {
+      override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> {
+        sentTypes += request.events.map { it.type }
+        return TransportResult.Success(BatchSendResponse(request.events.size, ackAll(request)), httpStatus = 200)
+      }
+    }
+    val delivered = mutableListOf<EventDelivery>()
+    val f = fixture(transport, cfg(maxAttempts = 2), events = 3, onDelivery = { delivered += it })
+    corruptPayload("T1")
+
+    val first = f.engine.flushOnce() as TransportResult.Success
+
+    assertThat(first.value).isEqualTo(
+      SyncOnceResult(attempted = 3, sent = 2, permanentFailed = 0, transientFailed = 1, rejected = 1),
+    )
+    assertThat(sentTypes).containsExactly(listOf("T0", "T2"))
+    val retryAt = clock.now + Backoff.nextDelayMs(0)
+    assertThat(rowsByType()).isEqualTo(
+      mapOf(
+        "T0" to rowsByType().getValue("T0").copy(state = "SENT", attempts = 0),
+        "T1" to Row("FAILED", 1, retryAt),
+        "T2" to rowsByType().getValue("T2").copy(state = "SENT", attempts = 0),
+      ),
+    )
+    assertThat(delivered.map { Triple(it.type, it.status, it.error) }).containsExactly(
+      Triple("T0", DeliveryStatus.DELIVERED, null),
+      Triple("T1", DeliveryStatus.RETRY_SCHEDULED, "payload_decode_failed"),
+      Triple("T2", DeliveryStatus.DELIVERED, null),
+    ).inOrder()
+
+    val early = f.engine.flushOnce() as TransportResult.Success
+    assertThat(early.value.attempted).isEqualTo(0)
+
+    clock.now = retryAt
+    delivered.clear()
+    val capped = f.engine.flushOnce() as TransportResult.Success
+
+    assertThat(capped.value).isEqualTo(
+      SyncOnceResult(attempted = 1, sent = 0, permanentFailed = 1, transientFailed = 0, rejected = 1),
+    )
+    assertThat(sentTypes).hasSize(1)
+    assertThat(rowsByType().getValue("T1")).isEqualTo(Row("QUARANTINED", 2, Long.MAX_VALUE))
+    assertThat(delivered.map { Triple(it.type, it.status, it.error) }).containsExactly(
+      Triple("T1", DeliveryStatus.QUARANTINED, "payload_decode_failed"),
+    )
+  }
+
+  @Test
+  fun `undecodable head event does not stall the queue`() = runBlocking<Unit> {
+    val sentTypes = mutableListOf<String>()
+    val transport = object : Transport {
+      override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> {
+        sentTypes += request.events.map { it.type }
+        return TransportResult.Success(BatchSendResponse(request.events.size, ackAll(request)), httpStatus = 200)
+      }
+    }
+    val f = fixture(transport, cfg(batchSize = 1), events = 2)
+    corruptPayload("T0")
+
+    f.engine.flushOnce()
+    val second = f.engine.flushOnce() as TransportResult.Success
+
+    assertThat(second.value.sent).isEqualTo(1)
+    assertThat(sentTypes).containsExactly("T1")
+    assertThat(rowsByType().mapValues { it.value.state }).isEqualTo(mapOf("T0" to "FAILED", "T1" to "SENT"))
   }
 }

@@ -10,6 +10,7 @@ import com.sarastarquant.kioskops.sdk.queue.QueueRepository
 import com.sarastarquant.kioskops.sdk.telemetry.TelemetrySink
 import com.sarastarquant.kioskops.sdk.transport.BatchSendRequest
 import com.sarastarquant.kioskops.sdk.transport.BatchSendResponse
+import com.sarastarquant.kioskops.sdk.transport.EventAck
 import com.sarastarquant.kioskops.sdk.transport.Transport
 import com.sarastarquant.kioskops.sdk.transport.TransportEvent
 import com.sarastarquant.kioskops.sdk.transport.TransportResult
@@ -72,25 +73,32 @@ class SyncEngine @JvmOverloads constructor(
     audit.record("sync_batch_start", mapOf("batchSize" to batch.size.toString()))
     telemetry.emit("sync_batch_start", mapOf("batchSize" to batch.size.toString(), "syncResult" to "start"))
 
+    // Events whose payload cannot be decoded are never sent; they are settled as rejected acks below.
+    val events = decodeEvents(batch)
+    val sendable = batch.filter { it.id in events }
+
     // The checkpoint is taken before any event is marked SENDING, so a signing failure strands nothing.
     @Suppress("TooGenericExceptionCaught")
     val checkpoint = try {
-      createCheckpoint(cfg)
+      if (sendable.isEmpty()) null else createCheckpoint(cfg)
     } catch (e: CancellationException) {
       throw e
     } catch (t: Throwable) {
       logs.w("Sync", "Audit checkpoint failed: ${t::class.java.simpleName}")
       return onBatchTransientFailure(batch, TransportResult.TransientFailure("checkpoint_failed", cause = t), now)
     }
-    val request = buildRequest(cfg, batch, now, checkpoint)
-    val res = sendInFlight(cfg, request, batch, now)
+    val res = if (sendable.isEmpty()) {
+      TransportResult.Success(BatchSendResponse(acceptedCount = 0, acks = emptyList()))
+    } else {
+      sendInFlight(cfg, buildRequest(cfg, events.values.toList(), now, checkpoint), sendable, now)
+    }
 
     // The server has answered: record that answer to completion even if the caller is cancelled.
     return withContext(NonCancellable) {
       when (res) {
         is TransportResult.Success -> {
-          acknowledgeCheckpoint(request)
-          onBatchSuccess(cfg, batch, res, now)
+          checkpoint?.let { acknowledgeCheckpoint(it) }
+          onBatchSuccess(cfg, batch, res, now, undecodable = batch.filter { it.id !in events })
         }
         is TransportResult.TransientFailure -> onBatchTransientFailure(batch, res, now)
         is TransportResult.PermanentFailure -> onBatchPermanentFailure(batch, res, now)
@@ -108,9 +116,31 @@ class SyncEngine @JvmOverloads constructor(
   private suspend fun createCheckpoint(cfg: KioskOpsConfig): AuditCheckpoint? =
     if (cfg.securityPolicy.signedAuditCheckpoints) audit.createCheckpoint(sign = true) else null
 
-  private suspend fun buildRequest(
+  /** Decoded events by id, in batch order. An event whose payload fails to decode is left out. */
+  private suspend fun decodeEvents(batch: List<QueueEventEntity>): Map<String, TransportEvent> {
+    val out = LinkedHashMap<String, TransportEvent>(batch.size)
+    for (e in batch) {
+      @Suppress("TooGenericExceptionCaught")
+      try {
+        out[e.id] = TransportEvent(
+          id = e.id,
+          idempotencyKey = e.idempotencyKey,
+          type = e.type,
+          payloadJson = queue.decodePayloadJson(e),
+          createdAtEpochMs = e.createdAtEpochMs
+        )
+      } catch (c: CancellationException) {
+        throw c
+      } catch (t: Throwable) {
+        logs.w("Sync", "Payload decode failed: ${t::class.java.simpleName}")
+      }
+    }
+    return out
+  }
+
+  private fun buildRequest(
     cfg: KioskOpsConfig,
-    batch: List<QueueEventEntity>,
+    events: List<TransportEvent>,
     now: Long,
     checkpoint: AuditCheckpoint?,
   ) = BatchSendRequest(
@@ -119,15 +149,7 @@ class SyncEngine @JvmOverloads constructor(
     appVersion = appVersionSafe(context),
     locationId = cfg.locationId,
     sentAtEpochMs = now,
-    events = batch.map {
-      TransportEvent(
-        id = it.id,
-        idempotencyKey = it.idempotencyKey,
-        type = it.type,
-        payloadJson = queue.decodePayloadJson(it),
-        createdAtEpochMs = it.createdAtEpochMs
-      )
-    },
+    events = events,
     auditCheckpoint = checkpoint,
   )
 
@@ -164,8 +186,7 @@ class SyncEngine @JvmOverloads constructor(
 
   /** Only on HTTP success. A lost acknowledgement is covered by the next checkpoint's link, so it never blocks the batch. */
   @Suppress("TooGenericExceptionCaught")
-  private suspend fun acknowledgeCheckpoint(request: BatchSendRequest) {
-    val checkpoint = request.auditCheckpoint ?: return
+  private suspend fun acknowledgeCheckpoint(checkpoint: AuditCheckpoint) {
     try {
       audit.acknowledgeCheckpoint(checkpoint)
     } catch (e: CancellationException) {
@@ -180,8 +201,9 @@ class SyncEngine @JvmOverloads constructor(
     batch: List<QueueEventEntity>,
     res: TransportResult.Success<BatchSendResponse>,
     now: Long,
+    undecodable: List<QueueEventEntity>,
   ): TransportResult<SyncOnceResult> {
-    val ackById = res.value.acks.associateBy { it.id }
+    val ackById = res.value.acks.associateBy { it.id } + undecodable.associate { it.id to decodeFailureAck(it) }
     var sent = 0
     var rejected = 0
     var permanentFailed = 0
@@ -227,6 +249,10 @@ class SyncEngine @JvmOverloads constructor(
       httpStatus = res.httpStatus
     )
   }
+
+  /** An undecodable event is settled like a retryable rejection: backoff with an attempt bump, quarantine at the cap. */
+  private fun decodeFailureAck(e: QueueEventEntity) =
+    EventAck(id = e.id, idempotencyKey = e.idempotencyKey, accepted = false, retryable = true, error = "payload_decode_failed")
 
   /** Store one event's decision and return the delivery the host is told about. */
   private suspend fun applyOutcome(e: QueueEventEntity, decision: EventDecision): EventDelivery = when (decision) {
