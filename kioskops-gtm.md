@@ -3,10 +3,10 @@
 Related: [README](README.md) | [Roadmap](ROADMAP.md) | [Features](docs/FEATURES.md) | [Security and Compliance](docs/SECURITY_COMPLIANCE.md)
 
 ## Product
-Enterprise Android SDK for offline-first kiosk, retail, logistics, and field-service apps. Encrypted event queue, tamper-evident audit trail, compliance mapping (FedRAMP/NIST/GDPR). Embedded by app teams, not sold as hardware.
+Enterprise Android SDK for offline-first kiosk, retail, logistics, and field-service apps. Encrypted event queue, hash-chained audit trail, compliance mapping (FedRAMP/NIST/GDPR). Embedded by app teams, not sold as hardware.
 
 ## Positioning
-One sharp claim, not a security platform: "Your devices lose network and still log every event, encrypted and provably untampered, ready for audit." Avoid head-on fight with Samsung Knox and Zebra on generic device security, and with OneSpan/Build38 on RASP and identity. Position as the data-layer and audit complement that sits beside them.
+One sharp claim, not a security platform: "Your devices lose network and still log every event, encrypted, with a hash-chained audit trail a server can anchor, ready for audit." Avoid head-on fight with Samsung Knox and Zebra on generic device security, and with OneSpan/Build38 on RASP and identity. Position as the data-layer and audit complement that sits beside them.
 
 ## Beachhead
 Pick one vertical where regulated + offline + rugged overlap:

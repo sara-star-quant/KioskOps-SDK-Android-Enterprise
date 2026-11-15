@@ -85,7 +85,7 @@ When enabled via `FieldEncryptionPolicy`:
 
 ### GDPR data rights (v0.5.0)
 - **Data export**: `exportUserData(userId)` exports queue events, audit events, and telemetry for a specific user (Art. 20)
-- **Data deletion**: `deleteUserData(userId)` erases user data from queue and audit databases (Art. 17)
+- **Data deletion**: `deleteUserData(userId)` erases user data from queue and audit databases (Art. 17). Erasing a user's audit rows removes chain links, so verification reports a break for chains that contain erased rows; see [SECURE_DESIGN.md](SECURE_DESIGN.md)
 - **Full wipe**: `wipeAllSdkData()` removes all SDK data from the device
 - **userId tracking**: Optional userId column on queue and audit events for data subject identification
 
@@ -512,14 +512,14 @@ Audit events are stored in a dedicated Room database:
 Each event includes:
 - `hash`: SHA-256 of event content
 - `prevHash`: Hash of the previous event
-- Links form a tamper-evident chain
+- Links form a hash chain; altering a stored event or its link is detectable by verification
 
 #### Signed Entries (Optional)
 
-When `signAuditEntries` is enabled:
-- Events are signed with ECDSA P-256
+When `signAuditEntries` is enabled, the persistent audit trail gets a Keystore-backed attestation provider:
+- An entry is signed with ECDSA P-256 only when the caller passes `record(sign = true)`; the SDK's own `record` calls do not, so SDK-written entries are unsigned
 - Signing key is hardware-backed when available
-- Attestation chain is stored for verification
+- The audit checkpoint sent with sync batches is signed with the same provider (see [SECURE_DESIGN.md](SECURE_DESIGN.md))
 
 ### Configuration
 
@@ -640,7 +640,7 @@ Each time the audit trail is initialized fresh (e.g., database cleared), the cha
 
 #### SOC 2 Type II
 
-1. Enable signed entries for non-repudiation
+1. Enable signed audit checkpoints and pin them server-side
 2. Export monthly audit ranges for evidence
 3. Include verification results in compliance reports
 

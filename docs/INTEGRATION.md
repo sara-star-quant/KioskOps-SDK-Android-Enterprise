@@ -162,7 +162,7 @@ MainScope().launch {
 
 A heartbeat:
 - writes a redacted telemetry event to local storage
-- appends a tamper-evident audit record
+- appends an audit record to the hash chain
 - captures a minimal posture snapshot (device owner indicator, OS/model, best-effort lock-task flag)
 - applies retention across queue + telemetry + audit + exported artifacts
 

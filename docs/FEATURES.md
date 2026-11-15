@@ -13,7 +13,8 @@
 | PII detection | On | Detects and handles PII via `PiiPolicy` (email, phone, ssn, credit card, address, DOB, IP, passport, national ID) with configurable actions (REJECT, REDACT, FLAG) |
 | Payload size limit | 64 KB | Configurable per deployment |
 | Queue pressure control | 10K events / 50 MB | DROP_OLDEST, DROP_NEWEST, or BLOCK |
-| Tamper-evident audit | On | Hash-chain with SHA-256, Room-backed |
+| Hash-chained audit | On | SHA-256 chain, Room-backed |
+| Signed audit checkpoints | Off; on in the FedRAMP, CUI, CJIS, GDPR, and ASD presets | One checkpoint per sync batch, linked to the last acknowledged one, for server-side pinning |
 | Retention controls | 7-30 days | Configurable per data type |
 
 ### Transport Security (v0.2.0)

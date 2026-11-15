@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/Docs-Dokka-brightgreen.svg)](https://sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise/)
 
-**An offline-first event pipeline with a tamper-evident audit trail, for regulated device fleets.**
+**An offline-first event pipeline with a hash-chained audit trail that a server can anchor, for regulated device fleets.**
 Devices lose network and keep recording: events are encrypted at rest, validated, PII-screened, hash-chained, and synced when connectivity returns.
 Android today (API 33+), iOS in preview from v1.6.0.
 
@@ -23,7 +23,7 @@ API reference: [sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise](https
 
 ## Scope
 
-KioskOps is an embedded data-layer and audit SDK. It protects the events your app produces, records that they were not altered, and maps its controls to compliance frameworks.
+KioskOps is an embedded data-layer and audit SDK. It protects the events your app produces, makes alteration of the audit record detectable, and maps its controls to compliance frameworks.
 
 | It is | It is not |
 |-------|-----------|
@@ -172,7 +172,7 @@ val accepted = KioskOpsSdk.get().enqueueBlocking("button_press", """{"screen": "
 - **PII detection and redaction** - Regex-based scanner with REJECT/REDACT/FLAG actions; pluggable detector interface
 - **Event validation** - JSON Schema-based validation with strict/permissive modes
 - **Anomaly detection** - Statistical detector for payload size, event rate, schema deviation, and cardinality tracking
-- **Tamper-evident audit** - SHA-256 hash-chain, Room-backed, persistent across restarts
+- **Hash-chained audit** - SHA-256 chain, Room-backed, persistent across restarts; signed checkpoints let a server detect rollback, truncation, and rewrites (limits in [docs/SECURE_DESIGN.md](docs/SECURE_DESIGN.md))
 - **GDPR compliance APIs** - User data export (Art. 20), deletion (Art. 17), full device wipe
 - **Fleet operations** - Policy drift detection, device posture, diagnostics export, remote config
 - **Network sync** - Opt-in batch sync with exponential backoff
