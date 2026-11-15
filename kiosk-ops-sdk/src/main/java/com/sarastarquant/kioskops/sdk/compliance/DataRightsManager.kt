@@ -212,6 +212,12 @@ class DataRightsManager(
    *
    * The deletion itself is audit-logged (without userId to avoid re-creating data).
    *
+   * Known limit: erasing the user's audit rows removes links from the audit hash chain, so
+   * [com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail.verifyChainIntegrity] reports Broken
+   * for a chain that contains erased rows until retention prunes past them. When an erased row is
+   * the head of the last acknowledged checkpoint, a server that pins checkpoints reports the next one
+   * as Forked. A chain event that records erasures is planned work. See docs/SECURE_DESIGN.md.
+   *
    * @param userId The user identifier whose data should be deleted.
    * @return Deletion result.
    * @since 0.5.0
@@ -243,6 +249,10 @@ class DataRightsManager(
    * Wipe all SDK data from the device.
    *
    * Deletes data across all databases, files, and SharedPreferences.
+   *
+   * This resets the audit chain and deletes the device audit key. A server that pins audit
+   * checkpoints reports the device's next checkpoint as Regressed; an operator must re-baseline
+   * (re-enroll) the device. Clearing app data or reinstalling has the same effect.
    *
    * @return Deletion result.
    * @since 0.5.0

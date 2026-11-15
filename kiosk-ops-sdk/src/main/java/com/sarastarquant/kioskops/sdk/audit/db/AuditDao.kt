@@ -20,6 +20,7 @@ import androidx.room.Update
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 @Dao
+@Suppress("TooManyFunctions") // One function per query is the Room DAO shape.
 interface AuditDao {
 
   /**
@@ -77,12 +78,6 @@ interface AuditDao {
   suspend fun getOldestEvent(): AuditEventEntity?
 
   /**
-   * Delete events older than a timestamp.
-   */
-  @Query("DELETE FROM audit_events WHERE ts < :beforeTs")
-  suspend fun deleteEventsBefore(beforeTs: Long): Int
-
-  /**
    * Delete all events.
    */
   @Query("DELETE FROM audit_events")
@@ -116,10 +111,40 @@ interface AuditDao {
   }
 
   /**
-   * Get events for chain verification in order.
+   * Get a page of events after a sequence number, in chain order.
    */
-  @Query("SELECT * FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs ORDER BY ts ASC, id ASC")
-  suspend fun getEventsForVerification(fromTs: Long, toTs: Long): List<AuditEventEntity>
+  @Query("SELECT * FROM audit_events WHERE seq > :afterSeq ORDER BY seq ASC LIMIT :limit")
+  suspend fun getEventsPageBySeq(afterSeq: Long, limit: Int): List<AuditEventEntity>
+
+  /** The newest event in chain order. */
+  @Query("SELECT * FROM audit_events ORDER BY seq DESC LIMIT 1")
+  suspend fun getHeadEvent(): AuditEventEntity?
+
+  /**
+   * The highest-seq event older than [beforeTs] such that every event at or below its seq is
+   * also older than [beforeTs]: the end of the prunable chain prefix. Null if none.
+   */
+  @Query(
+    "SELECT * FROM audit_events WHERE ts < :beforeTs AND seq < " +
+      "COALESCE((SELECT MIN(seq) FROM audit_events WHERE ts >= :beforeTs), 9223372036854775807) " +
+      "ORDER BY seq DESC LIMIT 1"
+  )
+  suspend fun getPruneBoundary(beforeTs: Long): AuditEventEntity?
+
+  /** Delete every event with seq at or below [seq]. */
+  @Query("DELETE FROM audit_events WHERE seq <= :seq")
+  suspend fun deleteEventsThroughSeq(seq: Long): Int
+
+  /** Atomic prune: record the prune point in [state], then delete through `state.prunedThroughSeq`. */
+  @Transaction
+  suspend fun pruneThrough(state: AuditChainState) {
+    upsertChainState(state)
+    deleteEventsThroughSeq(state.prunedThroughSeq)
+  }
+
+  /** Lowest and highest seq among events whose ts is within the range; both null if none. */
+  @Query("SELECT MIN(seq) AS minSeq, MAX(seq) AS maxSeq FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs")
+  suspend fun getSeqBoundsInRange(fromTs: Long, toTs: Long): SeqBounds
 
   /**
    * Delete all events for a specific user.
@@ -143,4 +168,13 @@ interface AuditDao {
 data class EventNameCount(
   val name: String,
   val count: Int,
+)
+
+/**
+ * Result of the seq bounds query.
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+data class SeqBounds(
+  val minSeq: Long?,
+  val maxSeq: Long?,
 )

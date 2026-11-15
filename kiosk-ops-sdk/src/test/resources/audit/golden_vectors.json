@@ -1,0 +1,228 @@
+{
+  "V1": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "ts": 1700000000000,
+      "name": "sdk_initialized",
+      "fieldsJson": "{}",
+      "prevHash": "GENESIS",
+      "hash": "v-pqhi3M1gIIez1GN65VuUr0igedBlnXV6y9zearxT8"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "ts": 1700000000001,
+      "name": "a|b",
+      "fieldsJson": "{}",
+      "prevHash": "GENESIS",
+      "hash": "H8oVZ7-YiHS6cqZqQsRNKE0UsbjRAehixPPVoBiGnDI"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "ts": 1700000000002,
+      "name": "enqueue_accepted",
+      "fieldsJson": "{\"type\":\"scan\",\"note\":\"caf\u00e9 \u65e5\u672c \ud83d\ude00\"}",
+      "prevHash": "q3pXbqf6ZbYwq2s1N0d8i6E5mK9Lr4cTa0yVhWuJxDE",
+      "hash": "xzMW95uzThTitYAnwMe97Ryl2sf9su_iqy140xovFfI"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "ts": 0,
+      "name": "",
+      "fieldsJson": "",
+      "prevHash": "",
+      "hash": "l3G_w45jwfPjRGIy4sKCROSKAOLx-nIAh3Ml4YL4Hbg"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000005",
+      "ts": 1700000000004,
+      "name": "sync_batch_success",
+      "fieldsJson": "{\"key_1\":\"value_1_x\",\"key_2\":\"value_2_xx\",\"key_3\":\"value_3_xxx\",\"key_4\":\"value_4_xxxx\",\"key_5\":\"value_5_xxxxx\",\"key_6\":\"value_6_xxxxxx\",\"key_7\":\"value_7_xxxxxxx\",\"key_8\":\"value_8_xxxxxxxx\",\"key_9\":\"value_9_xxxxxxxxx\",\"key_10\":\"value_10_xxxxxxxxxx\",\"key_11\":\"value_11_xxxxxxxxxxx\",\"key_12\":\"value_12_xxxxxxxxxxxx\",\"key_13\":\"value_13_xxxxxxxxxxxxx\",\"key_14\":\"value_14_xxxxxxxxxxxxxx\",\"key_15\":\"value_15_xxxxxxxxxxxxxxx\",\"key_16\":\"value_16_xxxxxxxxxxxxxxxx\",\"key_17\":\"value_17_xxxxxxxxxxxxxxxxx\",\"key_18\":\"value_18_xxxxxxxxxxxxxxxxxx\",\"key_19\":\"value_19_xxxxxxxxxxxxxxxxxxx\",\"key_20\":\"value_20_xxxxxxxxxxxxxxxxxxxx\",\"key_21\":\"value_21_xxxxxxxxxxxxxxxxxxxxx\",\"key_22\":\"value_22_xxxxxxxxxxxxxxxxxxxxxx\",\"key_23\":\"value_23_xxxxxxxxxxxxxxxxxxxxxxx\",\"key_24\":\"value_24_xxxxxxxxxxxxxxxxxxxxxxxx\",\"key_25\":\"value_25_xxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_26\":\"value_26_xxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_27\":\"value_27_xxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_28\":\"value_28_xxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_29\":\"value_29_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_30\":\"value_30_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_31\":\"value_31_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_32\":\"value_32_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_33\":\"value_33_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_34\":\"value_34_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_35\":\"value_35_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_36\":\"value_36_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_37\":\"value_37_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_38\":\"value_38_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_39\":\"value_39_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_40\":\"value_40_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_41\":\"value_41_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_42\":\"value_42_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_43\":\"value_43_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_44\":\"value_44_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_45\":\"value_45_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_46\":\"value_46_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_47\":\"value_47_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_48\":\"value_48_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_49\":\"value_49_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_50\":\"value_50_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_51\":\"value_51_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_52\":\"value_52_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_53\":\"value_53_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_54\":\"value_54_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_55\":\"value_55_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_56\":\"value_56_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_57\":\"value_57_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_58\":\"value_58_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_59\":\"value_59_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_60\":\"value_60_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+      "prevHash": "GENESIS",
+      "hash": "qKqXz-2xRI_VC3A7cNTjfGbwikD4Sq6PYMGHP70Mx0I"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000006",
+      "ts": 9223372036854775807,
+      "name": "policy|update|applied",
+      "fieldsJson": "{\"a\":\"b|c\",\"pipe\":\"|\"}",
+      "prevHash": "prev|hash",
+      "hash": "jTmIoP717YIE7Sb2iKLehBRb4VCn9an-henpkk0Kovo"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000007",
+      "ts": -1,
+      "name": "neg_ts",
+      "fieldsJson": "{\"k\":\"line1\\nline2\"}",
+      "prevHash": "GENESIS",
+      "hash": "kootyGtJ81gSs1fhtJg84sK3xP5v0qy--dy6jTPvIyI"
+    }
+  ],
+  "V2": [
+    {
+      "id": "00000000-0000-0000-0000-000000000021",
+      "ts": 1700000000000,
+      "name": "sdk_initialized",
+      "fieldsJson": "{}",
+      "prevHash": "GENESIS",
+      "hash": "hecgqt2LYyNhNe6glfAhgGS3In-VQvkMSgCFXWOn-4k"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000022",
+      "ts": 1700000000001,
+      "name": "a|b",
+      "fieldsJson": "{}",
+      "prevHash": "GENESIS",
+      "hash": "7GkJHJijShJqgjzGuE6bpyrEy14Yv9NA9XOWrWzZsqw"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000023",
+      "ts": 1700000000002,
+      "name": "enqueue_accepted",
+      "fieldsJson": "{\"type\":\"scan\",\"note\":\"caf\u00e9 \u65e5\u672c \ud83d\ude00\"}",
+      "prevHash": "q3pXbqf6ZbYwq2s1N0d8i6E5mK9Lr4cTa0yVhWuJxDE",
+      "hash": "ZfBOK08sGArch9sRPVoaZ5HXgpJbxG48uI972cBJy1U"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000024",
+      "ts": 0,
+      "name": "",
+      "fieldsJson": "",
+      "prevHash": "",
+      "hash": "z79kjI9eA6qALr4p7jlfZDv6YfzDjIncjaruPHibtPw"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000025",
+      "ts": 1700000000004,
+      "name": "sync_batch_success",
+      "fieldsJson": "{\"key_1\":\"value_1_x\",\"key_2\":\"value_2_xx\",\"key_3\":\"value_3_xxx\",\"key_4\":\"value_4_xxxx\",\"key_5\":\"value_5_xxxxx\",\"key_6\":\"value_6_xxxxxx\",\"key_7\":\"value_7_xxxxxxx\",\"key_8\":\"value_8_xxxxxxxx\",\"key_9\":\"value_9_xxxxxxxxx\",\"key_10\":\"value_10_xxxxxxxxxx\",\"key_11\":\"value_11_xxxxxxxxxxx\",\"key_12\":\"value_12_xxxxxxxxxxxx\",\"key_13\":\"value_13_xxxxxxxxxxxxx\",\"key_14\":\"value_14_xxxxxxxxxxxxxx\",\"key_15\":\"value_15_xxxxxxxxxxxxxxx\",\"key_16\":\"value_16_xxxxxxxxxxxxxxxx\",\"key_17\":\"value_17_xxxxxxxxxxxxxxxxx\",\"key_18\":\"value_18_xxxxxxxxxxxxxxxxxx\",\"key_19\":\"value_19_xxxxxxxxxxxxxxxxxxx\",\"key_20\":\"value_20_xxxxxxxxxxxxxxxxxxxx\",\"key_21\":\"value_21_xxxxxxxxxxxxxxxxxxxxx\",\"key_22\":\"value_22_xxxxxxxxxxxxxxxxxxxxxx\",\"key_23\":\"value_23_xxxxxxxxxxxxxxxxxxxxxxx\",\"key_24\":\"value_24_xxxxxxxxxxxxxxxxxxxxxxxx\",\"key_25\":\"value_25_xxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_26\":\"value_26_xxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_27\":\"value_27_xxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_28\":\"value_28_xxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_29\":\"value_29_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_30\":\"value_30_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_31\":\"value_31_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_32\":\"value_32_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_33\":\"value_33_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_34\":\"value_34_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_35\":\"value_35_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_36\":\"value_36_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_37\":\"value_37_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_38\":\"value_38_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_39\":\"value_39_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_40\":\"value_40_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_41\":\"value_41_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_42\":\"value_42_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_43\":\"value_43_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_44\":\"value_44_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_45\":\"value_45_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_46\":\"value_46_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_47\":\"value_47_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_48\":\"value_48_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_49\":\"value_49_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_50\":\"value_50_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_51\":\"value_51_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_52\":\"value_52_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_53\":\"value_53_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_54\":\"value_54_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_55\":\"value_55_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_56\":\"value_56_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_57\":\"value_57_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_58\":\"value_58_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_59\":\"value_59_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"key_60\":\"value_60_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+      "prevHash": "GENESIS",
+      "hash": "NH6jnGKWxiJ2WFUGwUIGGvrEyN8kM8dsxMdUTe7d9SA"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000026",
+      "ts": 9223372036854775807,
+      "name": "policy|update|applied",
+      "fieldsJson": "{\"a\":\"b|c\",\"pipe\":\"|\"}",
+      "prevHash": "prev|hash",
+      "hash": "QkOnD6USxq3ZLejASVhy5eh4BOugo5pA1uNIy000u48"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000027",
+      "ts": -1,
+      "name": "neg_ts",
+      "fieldsJson": "{\"k\":\"line1\\nline2\"}",
+      "prevHash": "GENESIS",
+      "hash": "zWfpw3k3a7rvvN2Wlzx7Nc9q9FHZpUt4k-ObXTLh6iM"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000220",
+      "ts": 1700000000100,
+      "name": "a|b",
+      "fieldsJson": "{}",
+      "prevHash": "GENESIS",
+      "hash": "zgMtozqt2Z6JCsAvXTvKbIlF4GHJXTSZEl4wcY6D0x4"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000220",
+      "ts": 1700000000100,
+      "name": "a",
+      "fieldsJson": "b|{}",
+      "prevHash": "GENESIS",
+      "hash": "nW3XRKCqXLz4EkDgrfEVGOWNeMafqHzq85ksqrHvu7k"
+    }
+  ],
+  "FILE_V0": [
+    {
+      "ts": 1700000000000,
+      "name": "sdk_initialized",
+      "fields": {},
+      "prevHash": "GENESIS",
+      "hash": "OUQpfx3hO2egMKPTayGEsKrP8Y_T27mKygyfE82Wgi8"
+    },
+    {
+      "ts": 1700000000001,
+      "name": "enqueue_rejected",
+      "fields": {
+        "reason": "pii",
+        "type": "scan"
+      },
+      "prevHash": "GENESIS",
+      "hash": "l1vtscWaVOh75sEWt-lZPNwv4v-ybltglu-jMbFKjaI"
+    },
+    {
+      "ts": 1700000000002,
+      "name": "a|b",
+      "fields": {
+        "z": "1",
+        "a": "2",
+        "m": "3"
+      },
+      "prevHash": "prev",
+      "hash": "Htoks_qZ5ibOPmJwRzye9ydwIjp8aMVLRGvp8UDY_P8"
+    },
+    {
+      "ts": 1700000000003,
+      "name": "unicode",
+      "fields": {
+        "note": "caf\u00e9 \u65e5\u672c \ud83d\ude00"
+      },
+      "prevHash": "GENESIS",
+      "hash": "rBSlBtZjwU8B_c81wcsevdHLxTmdDdFWJPFnMjWcLbI"
+    },
+    {
+      "ts": 0,
+      "name": "",
+      "fields": {},
+      "prevHash": "",
+      "hash": "5joHfzNKpuPwSbDOxJDs9U1NKT4muK103ZFa_x1_Zp8"
+    },
+    {
+      "ts": 1700000000005,
+      "name": "long",
+      "fields": {
+        "key_01": "v",
+        "key_02": "vv",
+        "key_03": "vvv",
+        "key_04": "vvvv",
+        "key_05": "vvvvv",
+        "key_06": "vvvvvv",
+        "key_07": "vvvvvvv",
+        "key_08": "vvvvvvvv",
+        "key_09": "vvvvvvvvv",
+        "key_10": "vvvvvvvvvv",
+        "key_11": "vvvvvvvvvvv",
+        "key_12": "vvvvvvvvvvvv",
+        "key_13": "vvvvvvvvvvvvv",
+        "key_14": "vvvvvvvvvvvvvv",
+        "key_15": "vvvvvvvvvvvvvvv",
+        "key_16": "vvvvvvvvvvvvvvvv",
+        "key_17": "vvvvvvvvvvvvvvvvv",
+        "key_18": "vvvvvvvvvvvvvvvvvv",
+        "key_19": "vvvvvvvvvvvvvvvvvvv",
+        "key_20": "vvvvvvvvvvvvvvvvvvvv",
+        "key_21": "vvvvvvvvvvvvvvvvvvvvv",
+        "key_22": "vvvvvvvvvvvvvvvvvvvvvv",
+        "key_23": "vvvvvvvvvvvvvvvvvvvvvvv",
+        "key_24": "vvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_25": "vvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_26": "vvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_27": "vvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_28": "vvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_29": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_30": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_31": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_32": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_33": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_34": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_35": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_36": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_37": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_38": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_39": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+        "key_40": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+      },
+      "prevHash": "GENESIS",
+      "hash": "64uXNpKE8Z0XdRAvnMnah3Cw2fZd402pnOgdCZIZ7r4"
+    }
+  ]
+}

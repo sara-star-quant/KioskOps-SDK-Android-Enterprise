@@ -8,7 +8,7 @@
     <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun matchesType(element: JsonElement, expected: String): Boolean</ID>
     <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
     <ID>CyclomaticComplexMethod:StatisticalAnomalyDetector.kt$StatisticalAnomalyDetector$override fun analyze(eventType: String, payloadJson: String): AnomalyResult</ID>
-    <ID>CyclomaticComplexMethod:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
+    <ID>CyclomaticComplexMethod:SyncEngine.kt$SyncEngine$private suspend fun flushOnceLocked(): TransportResult&lt;SyncOnceResult></ID>
     <ID>EmptyFunctionBlock:GeofenceTransitionListener.kt$GeofenceTransitionAdapter${}</ID>
     <ID>EmptyFunctionBlock:Logger.kt$NoOpLogger${}</ID>
     <ID>EmptyFunctionBlock:Meter.kt$NoOpCounter${}</ID>
@@ -20,7 +20,7 @@
     <ID>ImplicitDefaultLocale:SpanContext.kt$SpanContext$String.format("%02x", traceFlags)</ID>
     <ID>LongMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
     <ID>LongMethod:RemoteConfigManager.kt$RemoteConfigManager$suspend fun processConfigBundle( bundle: Bundle, source: ConfigSource, ): ConfigUpdateResult</ID>
-    <ID>LongMethod:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
+    <ID>LongMethod:SyncEngine.kt$SyncEngine$private suspend fun flushOnceLocked(): TransportResult&lt;SyncOnceResult></ID>
     <ID>LongParameterList:QueueRepository.kt$QueueRepository$( type: String, payloadJson: String, bytes: ByteArray, nowOverrideMs: Long?, cfg: KioskOpsConfig, stableEventId: String?, idempotencyKeyOverride: String?, droppedOldest: Int, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, )</ID>
     <ID>LoopWithTooManyJumpStatements:SyncEngine.kt$SyncEngine$for</ID>
     <ID>MatchingDeclarationName:NistCompliance.kt$NistControl</ID>
@@ -43,12 +43,12 @@
     <ID>ReturnCount:KeystoreAttestationProvider.kt$KeystoreAttestationProvider$override fun getAttestationBlob(): ByteArray?</ID>
     <ID>ReturnCount:KioskOpsTracer.kt$KioskOpsSpanBuilder$override fun startSpan(): Span</ID>
     <ID>ReturnCount:KioskOpsTracer.kt$KioskOpsSpanBuilder$private fun getContextFromCorrelation(): SpanContext?</ID>
-    <ID>ReturnCount:PersistentAuditTrail.kt$PersistentAuditTrail$suspend fun verifyChainIntegrity( fromTs: Long? = null, toTs: Long? = null, ): ChainVerificationResult</ID>
+    <ID>ReturnCount:PersistentAuditTrail.kt$PersistentAuditTrail$private suspend fun verifyOnce(fromTs: Long?, toTs: Long?): ChainVerificationResult</ID>
     <ID>ReturnCount:QueueRepository.kt$QueueRepository$suspend fun enqueue( type: String, payloadJson: String, cfg: KioskOpsConfig, stableEventId: String? = null, idempotencyKeyOverride: String? = null, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, ): EnqueueResult</ID>
     <ID>ReturnCount:RemoteConfigManager.kt$RemoteConfigManager$private fun determineAbVariant(bundle: Bundle, policy: RemoteConfigPolicy): String?</ID>
     <ID>ReturnCount:RemoteConfigManager.kt$RemoteConfigManager$private fun verifySignature( bundle: Bundle, signature: String?, publicKey: String?, ): Boolean</ID>
     <ID>ReturnCount:SpanContext.kt$SpanContext.Companion$fun fromTraceparent(traceparent: String): SpanContext?</ID>
-    <ID>ReturnCount:SyncEngine.kt$SyncEngine$suspend fun flushOnce(): TransportResult&lt;SyncOnceResult></ID>
+    <ID>ReturnCount:SyncEngine.kt$SyncEngine$private suspend fun flushOnceLocked(): TransportResult&lt;SyncOnceResult></ID>
     <ID>ReturnCount:VersionedCryptoProvider.kt$VersionedCryptoProvider$fun shouldRotate(): Boolean</ID>
     <ID>SwallowedException:KeyAttestationReporter.kt$KeyAttestationReporter$e: Exception</ID>
     <ID>SwallowedException:KeyMetadataStore.kt$KeyMetadataStore$e: Exception</ID>

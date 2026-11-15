@@ -109,6 +109,87 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TransportEvent'
+        auditCheckpoint:
+          $ref: '#/components/schemas/AuditCheckpoint'
+    AuditCheckpoint:
+      type: object
+      description: >-
+        Snapshot of the device audit chain head. Sent only when SecurityPolicy.signedAuditCheckpoints
+        is on, and only on non-empty batches (an idle device sends no checkpoint); absent otherwise.
+        Process each device's checkpoints one at a time: R1 compares against the latest pin. The server's
+        audit retention window for a device must match the device's (RetentionPolicy.retainAuditDays);
+        lower the server's window before lowering the device's, or legitimate prunes read Forked.
+        On first contact the server pins it. After that the server checks each
+        checkpoint against its pin and pins it when Consistent.
+        R1: same chainGeneration, headSeq and eventCount not below the pin, else Regressed.
+        R2: (linkSeq, linkHash) equals the pinned (headSeq, headHash) or the previous pin's, else Forked
+        (a null link while a pin exists is Forked). The server keeps the last two pins, because a response
+        lost after the server pinned leaves the device linking to the previous pin.
+        R3: when prunedThroughSeq is above the pin's prunedThroughSeq and at or above the pinned headSeq,
+        Forked unless the device audit retention window has passed since the pin was received; after it, a
+        link at prunedThroughSeq must carry prunedThroughHash and any other link re-baselines the pin on
+        trust. A link to the previous pin is checked under R3 against the previous pin.
+        Acknowledgement: an HTTP 2xx response with a parseable body acknowledges the checkpoint. Persist the
+        new pin durably before replying; a server that replies 2xx and then loses the pin sees every later
+        checkpoint as Forked until it re-baselines on trust.
+        Limits: events after the second-to-last acknowledged checkpoint, a prune record forged below the
+        pinned head the checkpoint links to (it can erase older acknowledged history early; that pinned head
+        still binds everything after it), devices that never sync, attackers with code execution on the device or the signing key,
+        and device clock honesty are out of reach of these rules.
+      required: [headSeq, headHash, eventCount, chainGeneration, prunedThroughSeq, prunedThroughHash]
+      properties:
+        headSeq:
+          type: integer
+          format: int64
+          description: Seq of the newest stored audit event; equals prunedThroughSeq when every event was pruned.
+        headHash:
+          type: string
+          description: Hash of the event at headSeq (base64url SHA-256); GENESIS for an empty chain.
+        eventCount:
+          type: integer
+          format: int64
+          description: Audit events ever recorded in this chain, pruned events included. Never decreases.
+        chainGeneration:
+          type: integer
+          format: int32
+          description: Generation of the device audit chain. A change means a new chain, not a continuation.
+        prunedThroughSeq:
+          type: integer
+          format: int64
+          description: >-
+            Highest seq removed by retention, so the first remaining event normally has seq
+            prunedThroughSeq + 1; 0 when retention never pruned. A device upgraded from a database
+            whose oldest events retention removed before seq existed reports 0 here with a non-GENESIS
+            prunedThroughHash; one upgraded after retention removed every event reports its event count.
+        prunedThroughHash:
+          type: string
+          description: >-
+            Hash of the event at prunedThroughSeq; GENESIS when retention never pruned. For a device upgraded
+            from a database whose oldest events were already pruned, the prevHash of its first remaining
+            event (with prunedThroughSeq 0), or its last event hash when every event was pruned.
+        linkSeq:
+          type: integer
+          format: int64
+          description: >-
+            headSeq of the last checkpoint this server acknowledged with a successful batch response. Absent
+            before the first acknowledgement.
+        linkHash:
+          type: string
+          description: >-
+            Hash the device database holds at linkSeq when this checkpoint was built; prunedThroughHash when
+            retention pruned exactly through linkSeq. Absent when linkSeq is absent or the row at linkSeq is
+            gone for any other reason.
+        signature:
+          type: string
+          description: >-
+            Base64 ECDSA P-256 (SHA256withECDSA) signature by the device audit key over the UTF-8 bytes of
+            "kioskops-audit-checkpoint-v1|" followed by headSeq, headHash, eventCount, chainGeneration,
+            prunedThroughSeq, prunedThroughHash, linkSeq and linkHash, each written as
+            "<utf8 byte length>:<value>" with no separator; an absent linkSeq or linkHash is written as "-".
+            This API defines no endpoint to enroll the device public key; until the host delivers the key
+            (for example its Keystore attestation chain) by another channel, treat the signature as
+            unauthenticated. Absent when the device could not sign; the device then records a
+            checkpoint_unsigned audit event.
     EventAck:
       type: object
       required: [id, idempotencyKey, accepted, retryable]

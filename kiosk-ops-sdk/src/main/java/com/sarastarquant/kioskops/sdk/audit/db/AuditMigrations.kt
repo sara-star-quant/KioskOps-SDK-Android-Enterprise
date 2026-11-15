@@ -25,4 +25,46 @@ object AuditMigrations {
       db.execSQL("CREATE INDEX IF NOT EXISTS index_audit_events_userId ON audit_events(userId)")
     }
   }
+
+  /**
+   * v2 -> v3: Add monotonic seq and formatVersion to events, prune watermark and last acknowledged
+   * checkpoint seq to chain state.
+   * Existing rows get seq in rowid order. `audit_events` has a TEXT primary key, so it is a rowid
+   * table and rowids grow with insertion: rowid order is the order the chain was built in. ids are
+   * random UUIDs, so (ts, id) would misorder same-millisecond events and events across a backward
+   * clock step. Caveat: VACUUM may renumber rowids of a table without an INTEGER PRIMARY KEY; Room
+   * never vacuums, and the SDK does not either.
+   *
+   * A chain whose head retention already pruned (first row's prevHash is not GENESIS) gets a prune
+   * baseline at that row: trust on first use. Truncation before the upgrade is not detectable;
+   * every later one is. A chain whose rows retention pruned entirely gets the baseline at the
+   * chain state's head (seq eventCount, hash lastHash), so the next event links to it.
+   */
+  val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE audit_events ADD COLUMN seq INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE audit_events ADD COLUMN formatVersion INTEGER NOT NULL DEFAULT 1")
+      // Single pass: rank once into a keyed temp table, then PK-lookup per row (linear, not quadratic).
+      db.execSQL("CREATE TEMP TABLE audit_seq_backfill (id TEXT PRIMARY KEY NOT NULL, rn INTEGER NOT NULL)")
+      db.execSQL(
+        "INSERT INTO audit_seq_backfill SELECT id, ROW_NUMBER() OVER (ORDER BY rowid) FROM audit_events"
+      )
+      db.execSQL("UPDATE audit_events SET seq = (SELECT rn FROM audit_seq_backfill WHERE id = audit_events.id)")
+      db.execSQL("DROP TABLE audit_seq_backfill")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_audit_events_seq ON audit_events(seq)")
+      db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughSeq INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN prunedThroughHash TEXT NOT NULL DEFAULT 'GENESIS'")
+      db.execSQL("ALTER TABLE audit_chain_state ADD COLUMN lastAckedSeq INTEGER NOT NULL DEFAULT 0")
+      db.execSQL(
+        "UPDATE audit_chain_state SET " +
+          "prunedThroughSeq = (SELECT seq - 1 FROM audit_events ORDER BY seq ASC LIMIT 1), " +
+          "prunedThroughHash = (SELECT prevHash FROM audit_events ORDER BY seq ASC LIMIT 1) " +
+          "WHERE (SELECT prevHash FROM audit_events ORDER BY seq ASC LIMIT 1) <> 'GENESIS'"
+      )
+      db.execSQL(
+        "UPDATE audit_chain_state SET prunedThroughSeq = eventCount, prunedThroughHash = lastHash " +
+          "WHERE eventCount > 0 AND lastHash <> 'GENESIS' AND NOT EXISTS (SELECT 1 FROM audit_events)"
+      )
+    }
+  }
 }

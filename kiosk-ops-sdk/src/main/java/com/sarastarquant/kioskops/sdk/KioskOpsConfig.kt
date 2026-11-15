@@ -145,7 +145,7 @@ data class KioskOpsConfig @JvmOverloads constructor(
      * FedRAMP-compliant defaults (NIST 800-53).
      *
      * Enables all security features: validation (strict), PII detection (reject),
-     * field encryption, anomaly detection, signed audit, and 365-day audit retention.
+     * field encryption, anomaly detection, signed audit, signed audit checkpoints, and 365-day audit retention.
      *
      * **Transport security**: logs an ERROR if [baseUrl] is HTTPS without
      * [TransportSecurityPolicy.certificatePins] or
@@ -162,7 +162,7 @@ data class KioskOpsConfig @JvmOverloads constructor(
 
     /**
      * Shared high-security preset shape: strict validation, field encryption, anomaly
-     * detection, signed audit, and 365-day audit retention. Presets pass their deltas
+     * detection, signed audit, signed audit checkpoints, and 365-day audit retention. Presets pass their deltas
      * (PII action, classification, database encryption, data-rights authorization).
      */
     private fun highSecurityBase(
@@ -176,7 +176,7 @@ data class KioskOpsConfig @JvmOverloads constructor(
       baseUrl = baseUrl,
       locationId = locationId,
       kioskEnabled = true,
-      securityPolicy = SecurityPolicy.highSecurityDefaults(),
+      securityPolicy = SecurityPolicy.highSecurityDefaults().copy(signedAuditCheckpoints = true),
       retentionPolicy = RetentionPolicy.maximalistDefaults().copy(
         retainAuditDays = 365,
         minimumAuditRetentionDays = 365,
@@ -202,7 +202,7 @@ data class KioskOpsConfig @JvmOverloads constructor(
       baseUrl = baseUrl,
       locationId = locationId,
       kioskEnabled = true,
-      securityPolicy = SecurityPolicy.maximalistDefaults(),
+      securityPolicy = SecurityPolicy.maximalistDefaults().copy(signedAuditCheckpoints = true),
       validationPolicy = ValidationPolicy.permissiveDefaults(),
       piiPolicy = PiiPolicy.redactDefaults(),
       fieldEncryptionPolicy = FieldEncryptionPolicy.enabledDefaults(),

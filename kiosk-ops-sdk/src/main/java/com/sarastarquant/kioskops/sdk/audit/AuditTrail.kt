@@ -1,10 +1,11 @@
 package com.sarastarquant.kioskops.sdk.audit
 
 import android.content.Context
+import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
 import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.crypto.CryptoProvider
 import com.sarastarquant.kioskops.sdk.util.Clock
-import com.sarastarquant.kioskops.sdk.util.Hashing
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -45,8 +46,8 @@ class AuditTrail(
   fun record(name: String, fields: Map<String, String> = emptyMap()) {
     val ts = clock.nowMs()
     val prev = lastHash
-    val payload = "$ts|$name|${fields.toSortedMap()}|$prev"
-    val hash = Hashing.sha256Base64Url(payload)
+    val payload = AuditChainCore.content(AuditHashFormat.FILE_V0, "", ts, name, fields.toSortedMap().toString(), prev)
+    val hash = AuditChainCore.hash(payload)
     lastHash = hash
 
     val e = AuditEvent(ts = ts, name = name, fields = fields, prevHash = prev, hash = hash)

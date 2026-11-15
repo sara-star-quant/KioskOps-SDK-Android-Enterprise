@@ -6,12 +6,16 @@
 package com.sarastarquant.kioskops.sdk.audit
 
 import android.content.Context
+import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint
+import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
+import com.sarastarquant.kioskops.sdk.audit.core.ChainLink
+import com.sarastarquant.kioskops.sdk.audit.core.PageResult
 import com.sarastarquant.kioskops.sdk.audit.db.AuditChainState
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.audit.db.AuditEventEntity
 import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.util.Clock
-import com.sarastarquant.kioskops.sdk.util.Hashing
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
@@ -56,6 +60,8 @@ class PersistentAuditTrail(
 
   companion object {
     private const val GENESIS_HASH = "GENESIS"
+    internal const val VERIFY_PAGE_SIZE = 500
+    private val RECORD_FORMAT = AuditHashFormat.V2
   }
 
   /**
@@ -83,8 +89,8 @@ class PersistentAuditTrail(
 
       // Build event content for hashing
       val fieldsJson = json.encodeToString(fields)
-      val eventContent = buildEventContent(id, ts, name, fieldsJson, prevHash)
-      val hash = Hashing.sha256Base64Url(eventContent)
+      val eventContent = AuditChainCore.content(RECORD_FORMAT, id, ts, name, fieldsJson, prevHash)
+      val hash = AuditChainCore.hash(eventContent)
 
       // Optional signing
       var signature: String? = null
@@ -110,14 +116,14 @@ class PersistentAuditTrail(
         deviceAttestationBlob = attestationBlob,
         chainGeneration = chainState.chainGeneration,
         userId = userId,
+        seq = chainState.eventCount + 1,
+        formatVersion = RECORD_FORMAT.version,
       )
 
       // Update chain state
-      val newChainState = AuditChainState(
-        id = 1,
+      val newChainState = chainState.copy(
         lastHash = hash,
         lastTs = ts,
-        chainGeneration = chainState.chainGeneration,
         eventCount = chainState.eventCount + 1,
       )
 
@@ -127,7 +133,21 @@ class PersistentAuditTrail(
   }
 
   /**
-   * Verify the integrity of the audit chain.
+   * Verify the integrity of the audit chain, reading at most [VERIFY_PAGE_SIZE] rows at a time.
+   *
+   * When [fromTs] or [toTs] is given, the range resolves to the contiguous seq interval from the
+   * lowest to the highest seq among rows whose ts is inside the window, and that whole interval is
+   * verified. Rows inside the interval but outside the ts window are verified too, so a backward
+   * clock step cannot cause a false break.
+   *
+   * Seed: when the verified interval starts at the lowest stored seq, the first row must link to
+   * the recorded prune point (`prunedThroughHash`, GENESIS if retention never pruned), so deleting
+   * the oldest rows breaks verification. A ranged interval that starts later cannot know its
+   * predecessor and seeds from its first row's own prevHash.
+   *
+   * Pages are read without holding the record lock, so retention can prune between pages. When the
+   * prune point moved during the run, the whole verification runs once more from the start and that
+   * result is returned, even if retention moved again during the rerun.
    *
    * @param fromTs Optional start timestamp (inclusive).
    * @param toTs Optional end timestamp (inclusive).
@@ -137,61 +157,94 @@ class PersistentAuditTrail(
     fromTs: Long? = null,
     toTs: Long? = null,
   ): ChainVerificationResult {
+    val prunedBefore = dao.getChainState()?.prunedThroughSeq
+    val result = verifyOnce(fromTs, toTs)
+    if (dao.getChainState()?.prunedThroughSeq == prunedBefore) return result
+    return verifyOnce(fromTs, toTs)
+  }
+
+  private suspend fun verifyOnce(fromTs: Long?, toTs: Long?): ChainVerificationResult {
     val effectiveFromTs = fromTs ?: 0L
     val effectiveToTs = toTs ?: Long.MAX_VALUE
 
-    val events = dao.getEventsForVerification(effectiveFromTs, effectiveToTs)
+    val seqRange = resolveSeqRange(fromTs, toTs)
+      ?: return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
+    var afterSeq = seqRange.first - 1
+    val maxSeq = seqRange.last
 
-    if (events.isEmpty()) {
-      return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
-    }
+    val chainStartSeq = dao.getSeqBoundsInRange(Long.MIN_VALUE, Long.MAX_VALUE).minSeq
+    val pruneSeed = dao.getChainState()?.prunedThroughHash ?: GENESIS_HASH
+    var expectedPrevHash: String? = null
+    var count = 0
+    var firstTs = 0L
+    var lastTs = 0L
 
-    var expectedPrevHash = events.first().prevHash
+    do {
+      val page = dao.getEventsPageBySeq(afterSeq, VERIFY_PAGE_SIZE).filter { it.seq <= maxSeq }
+      if (page.isEmpty()) break
+      if (expectedPrevHash == null) firstTs = page.first().ts
+      val seed = expectedPrevHash ?: startSeed(page.first(), chainStartSeq, pruneSeed)
 
-    for (event in events) {
-      // Verify the event's own hash
-      val expectedHash = Hashing.sha256Base64Url(
-        buildEventContent(event.id, event.ts, event.name, event.fieldsJson, event.prevHash)
-      )
+      val result = AuditChainCore.verifyPage(page.map { it.toLink() }, seed)
+      val verified = if (result is PageResult.Broken) page.takeWhile { it.seq < result.seq } else page
 
-      if (event.hash != expectedHash) {
-        return ChainVerificationResult.HashMismatch(
-          eventId = event.id,
-          eventTs = event.ts,
+      signatureFailure(verified)?.let { return it }
+      if (result is PageResult.Broken) return brokenResult(page.first { it.seq == result.seq }, verified, seed)
+
+      result as PageResult.Ok
+      expectedPrevHash = result.lastHash
+      afterSeq = result.lastSeq
+      count += page.size
+      lastTs = page.last().ts
+    } while (page.size == VERIFY_PAGE_SIZE)
+
+    if (count == 0) return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
+    return ChainVerificationResult.Valid(eventCount = count, fromTs = firstTs, toTs = lastTs)
+  }
+
+  /** The chain's first stored row links to the prune point; any later row can only vouch for itself. */
+  private fun startSeed(first: AuditEventEntity, chainStartSeq: Long?, pruneSeed: String): String =
+    if (first.seq == chainStartSeq) pruneSeed else first.prevHash
+
+  /** Unranged: the whole chain. Ranged: the seq interval spanned by the ts window, or null if empty. */
+  private suspend fun resolveSeqRange(fromTs: Long?, toTs: Long?): LongRange? {
+    if (fromTs == null && toTs == null) return 1L..Long.MAX_VALUE
+    val bounds = dao.getSeqBoundsInRange(fromTs ?: 0L, toTs ?: Long.MAX_VALUE)
+    val (min, max) = bounds.minSeq to bounds.maxSeq
+    return if (min == null || max == null) null else min..max
+  }
+
+  private fun AuditEventEntity.toLink() =
+    ChainLink(seq, id, ts, name, fieldsJson, prevHash, hash, formatVersion)
+
+  private fun signatureFailure(events: List<AuditEventEntity>): ChainVerificationResult? {
+    val provider = attestationProvider?.invoke() ?: return null
+    val bad = events.firstOrNull { event ->
+      val format = AuditHashFormat.forStoredVersion(event.formatVersion)
+      event.signature != null && format != null &&
+        !provider.verifySignature(
+          AuditChainCore.content(format, event.id, event.ts, event.name, event.fieldsJson, event.prevHash),
+          event.signature,
         )
-      }
-
-      // Verify chain linkage (skip for first event in range)
-      if (event != events.first() && event.prevHash != expectedPrevHash) {
-        return ChainVerificationResult.Broken(
-          brokenAtId = event.id,
-          brokenAtTs = event.ts,
-          expectedPrevHash = expectedPrevHash,
-          actualPrevHash = event.prevHash,
-        )
-      }
-
-      // Verify signature if present
-      if (event.signature != null && attestationProvider != null) {
-        val provider = attestationProvider.invoke()
-        val content = buildEventContent(event.id, event.ts, event.name, event.fieldsJson, event.prevHash)
-        if (!provider.verifySignature(content, event.signature)) {
-          return ChainVerificationResult.SignatureInvalid(
-            eventId = event.id,
-            eventTs = event.ts,
-            reason = "Signature verification failed",
-          )
-        }
-      }
-
-      expectedPrevHash = event.hash
     }
+    return bad?.let { ChainVerificationResult.SignatureInvalid(it.id, it.ts, "Signature verification failed") }
+  }
 
-    return ChainVerificationResult.Valid(
-      eventCount = events.size,
-      fromTs = events.first().ts,
-      toTs = events.last().ts,
-    )
+  /**
+   * A link failure is a chain break; anything else (hash, unknown format version) is the event itself.
+   * HashMismatch has no reason field, so an unknown format version is not distinguishable there.
+   */
+  private fun brokenResult(
+    event: AuditEventEntity,
+    verified: List<AuditEventEntity>,
+    seed: String,
+  ): ChainVerificationResult {
+    val expected = verified.lastOrNull()?.hash ?: seed
+    return if (event.prevHash != expected) {
+      ChainVerificationResult.Broken(event.id, event.ts, expected, event.prevHash)
+    } else {
+      ChainVerificationResult.HashMismatch(event.id, event.ts)
+    }
   }
 
   /**
@@ -257,13 +310,79 @@ class PersistentAuditTrail(
 
   /**
    * Apply retention policy to delete old events.
+   *
+   * Deletes the longest chain prefix whose events are all older than the cutoff, and records the
+   * last deleted seq and hash as the prune point in the same transaction. An event older than the
+   * cutoff that follows a newer one (backward clock step) waits until its predecessors expire.
+   * Rows are never deleted early, but a row written while the clock ran ahead blocks every later
+   * prune until the cutoff passes that row's timestamp, so data minimization depends on a sane
+   * device clock.
    */
   suspend fun applyRetention() {
     val retention = retentionProvider()
     val cutoffMs = clock.nowMs() - retention.retainAuditDays.toLong() * 24 * 60 * 60 * 1000
 
     mutex.withLock {
-      dao.deleteEventsBefore(cutoffMs)
+      val boundary = dao.getPruneBoundary(cutoffMs) ?: return@withLock
+      val state = dao.getChainState() ?: return@withLock
+      dao.pruneThrough(state.copy(prunedThroughSeq = boundary.seq, prunedThroughHash = boundary.hash))
+    }
+  }
+
+  /**
+   * Snapshot the chain head for a server to pin.
+   *
+   * Head fields come from the newest stored row, not the cached chain state, so deleted tail rows
+   * show up as a lower headSeq. The link names the last acknowledged checkpoint ([acknowledgeCheckpoint])
+   * and the hash this database now holds at that seq. When [sign] is true and the device key cannot sign (no provider,
+   * or signing returned null), the checkpoint is returned unsigned and a `checkpoint_unsigned`
+   * audit event is recorded.
+   *
+   * @param sign Sign [AuditCheckpoint.signingPayload] with the device attestation key.
+   * @since 1.6.0
+   */
+  internal suspend fun createCheckpoint(sign: Boolean): AuditCheckpoint {
+    val unsigned = mutex.withLock {
+      val state = dao.getChainState()
+      val head = dao.getHeadEvent()
+      val prunedSeq = state?.prunedThroughSeq ?: 0L
+      val prunedHash = state?.prunedThroughHash ?: GENESIS_HASH
+      val linkSeq = state?.lastAckedSeq?.takeIf { it > 0 }
+      val linkHash = linkSeq?.let { seq ->
+        dao.getEventsPageBySeq(seq - 1, 1).firstOrNull { it.seq == seq }?.hash
+          ?: prunedHash.takeIf { seq == prunedSeq }
+      }
+      AuditCheckpoint(
+        headSeq = head?.seq ?: prunedSeq,
+        headHash = head?.hash ?: prunedHash,
+        eventCount = state?.eventCount ?: 0L,
+        chainGeneration = state?.chainGeneration ?: 1,
+        prunedThroughSeq = prunedSeq,
+        prunedThroughHash = prunedHash,
+        linkSeq = linkSeq,
+        linkHash = linkHash,
+        signature = null,
+      )
+    }
+    if (!sign) return unsigned
+
+    val provider = attestationProvider?.invoke()
+    val signature = provider?.signAuditEntry(unsigned.signingPayload())
+    if (signature == null) {
+      val reason = if (provider == null) "no_attestation_provider" else "signing_failed"
+      record("checkpoint_unsigned", mapOf("reason" to reason, "headSeq" to unsigned.headSeq.toString()))
+    }
+    return unsigned.copy(signature = signature)
+  }
+
+  /**
+   * Record that a server accepted [checkpoint]; the next checkpoint links to its headSeq.
+   * Monotonic: an older acknowledgement arriving late never moves the link back.
+   */
+  internal suspend fun acknowledgeCheckpoint(checkpoint: AuditCheckpoint) {
+    mutex.withLock {
+      val state = dao.getChainState() ?: return@withLock
+      if (checkpoint.headSeq > state.lastAckedSeq) dao.upsertChainState(state.copy(lastAckedSeq = checkpoint.headSeq))
     }
   }
 
@@ -284,6 +403,10 @@ class PersistentAuditTrail(
 
   /**
    * Delete all events for a specific user.
+   *
+   * Removes chain links: [verifyChainIntegrity] reports Broken for a chain that contains deleted
+   * rows, and deleting the row at the last acknowledged checkpoint makes a pinning server report the
+   * next checkpoint as Forked.
    * @since 0.5.0
    */
   suspend fun deleteEventsByUserId(userId: String): Int {
@@ -300,16 +423,5 @@ class PersistentAuditTrail(
     )
     dao.upsertChainState(state)
     return state
-  }
-
-  private fun buildEventContent(
-    id: String,
-    ts: Long,
-    name: String,
-    fieldsJson: String,
-    prevHash: String,
-  ): String {
-    // Deterministic content format for hashing
-    return "$id|$ts|$name|$fieldsJson|$prevHash"
   }
 }

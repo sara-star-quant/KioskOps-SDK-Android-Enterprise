@@ -9,13 +9,17 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.PinResult
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.util.Clock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -53,7 +57,6 @@ class AuditChainAdversarialTest {
     AuditDatabase.setInstance(null)
   }
 
-  @Ignore("pending: chain order must not depend on timestamps")
   @Test
   fun `same millisecond events verify valid`() = runTest {
     for (i in 1..50) {
@@ -65,7 +68,6 @@ class AuditChainAdversarialTest {
     assertThat((result as ChainVerificationResult.Valid).eventCount).isEqualTo(50)
   }
 
-  @Ignore("pending: chain order must not depend on timestamps")
   @Test
   fun `backward clock step verifies valid`() = runTest {
     trail.record("before_1")
@@ -79,7 +81,6 @@ class AuditChainAdversarialTest {
     assertThat((result as ChainVerificationResult.Valid).eventCount).isEqualTo(3)
   }
 
-  @Ignore("pending: hash input needs unambiguous field boundaries")
   @Test
   fun `pipe in event name cannot alias another event`() = runTest {
     trail.record("a|b", emptyMap())
@@ -93,7 +94,25 @@ class AuditChainAdversarialTest {
     assertThat(result).isInstanceOf(ChainVerificationResult.HashMismatch::class.java)
   }
 
-  @Ignore("pending: truncation needs a server-pinned checkpoint")
+  @Test
+  fun `new events are recorded in the length-prefixed format`() = runTest {
+    trail.record("first")
+    val events = trail.getEventsInRange(0, Long.MAX_VALUE)
+    assertThat(events.map { it.formatVersion }).containsExactly(2)
+  }
+
+  @Test
+  fun `unknown format version is reported as hash mismatch`() = runTest {
+    trail.record("first")
+    trail.record("second")
+    db.openHelper.writableDatabase.execSQL(
+      "UPDATE audit_events SET formatVersion = 99 WHERE name = 'second'",
+    )
+
+    val result = trail.verifyChainIntegrity()
+    assertThat(result).isInstanceOf(ChainVerificationResult.HashMismatch::class.java)
+  }
+
   @Test
   fun `deleting oldest events is detected`() = runTest {
     for (i in 1..5) {
@@ -109,20 +128,23 @@ class AuditChainAdversarialTest {
     assertThat(result).isNotInstanceOf(ChainVerificationResult.Valid::class.java)
   }
 
-  @Ignore("pending: truncation needs a server-pinned checkpoint")
   @Test
   fun `deleting tail events is detected`() = runTest {
     for (i in 1..5) {
       trail.record("event_$i")
       nowMs += 1000
     }
+    // The remaining rows still form a valid chain; the server-pinned checkpoint is what catches this.
+    val pin = trail.createCheckpoint(sign = false)
+    trail.acknowledgeCheckpoint(pin)
 
     db.openHelper.writableDatabase.execSQL(
       "DELETE FROM audit_events WHERE name IN ('event_4', 'event_5')",
     )
 
-    val result = trail.verifyChainIntegrity()
-    assertThat(result).isNotInstanceOf(ChainVerificationResult.Valid::class.java)
+    val current = trail.createCheckpoint(sign = false)
+    assertThat(AuditChainCore.compareToPin(pin, nowMs, current, nowMs, dayMs))
+      .isInstanceOf(PinResult.Regressed::class.java)
   }
 
   @Test
@@ -153,5 +175,26 @@ class AuditChainAdversarialTest {
     assertThat(retentionTrail.getStatistics().totalEvents).isEqualTo(2)
     val result = retentionTrail.verifyChainIntegrity()
     assertThat(result).isInstanceOf(ChainVerificationResult.Valid::class.java)
+  }
+
+  @Test
+  fun `new events get next seq under mutex`() = runTest {
+    (1..50).map { i -> async(Dispatchers.Default) { trail.record("e_$i") } }.awaitAll()
+
+    val seqs = db.auditDao().getEventsPageBySeq(0, 100).map { it.seq }
+    assertThat(seqs).containsExactlyElementsIn((1L..50L).toList()).inOrder()
+  }
+
+  @Test
+  fun `seq keeps increasing after retention prune`() = runTest {
+    trail.record("old_1")
+    trail.record("old_2")
+    nowMs += 400 * dayMs
+    trail.record("new_1")
+    trail.applyRetention()
+    trail.record("new_2")
+
+    val seqs = db.auditDao().getEventsPageBySeq(0, 100).map { it.seq }
+    assertThat(seqs).isEqualTo(listOf(3L, 4L))
   }
 }
