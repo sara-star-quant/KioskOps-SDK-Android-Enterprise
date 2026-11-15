@@ -214,6 +214,34 @@ class AuditDatabaseMigrationTest {
       ctx.deleteDatabase("mig_order.db")
     }
   }
+
+  @Test
+  fun `fully pruned legacy db baselines at the chain head`() = kotlinx.coroutines.test.runTest {
+    // Retention deleted all 4 recorded events before the upgrade; only the chain state remains.
+    val chain = legacyV1Chain((1..4).map { "e$it" to 1000L * it })
+    val head = chain.last().first.third
+    createLegacyV2Database(ctx, "mig_empty.db", 4, head, emptyList()) { "unused" }
+    val db = openMigrated("mig_empty.db")
+    AuditDatabase.setInstance(db)
+    try {
+      val state = db.auditDao().getChainState()!!
+      assertThat(state.prunedThroughSeq).isEqualTo(4L)
+      assertThat(state.prunedThroughHash).isEqualTo(head)
+      val trail = com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail(
+        context = ctx,
+        retentionProvider = { com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy.maximalistDefaults() },
+      )
+      trail.record("next")
+      assertThat(db.auditDao().getHeadEvent()!!.seq).isEqualTo(5L)
+      val result = trail.verifyChainIntegrity()
+      assertThat(result).isInstanceOf(ChainVerificationResult.Valid::class.java)
+      assertThat((result as ChainVerificationResult.Valid).eventCount).isEqualTo(1)
+    } finally {
+      AuditDatabase.setInstance(null)
+      db.close()
+      ctx.deleteDatabase("mig_empty.db")
+    }
+  }
 }
 
 /** A v1-format chain in the given (id, ts) insertion order: ((id, ts, hash), prevHash) per row. */

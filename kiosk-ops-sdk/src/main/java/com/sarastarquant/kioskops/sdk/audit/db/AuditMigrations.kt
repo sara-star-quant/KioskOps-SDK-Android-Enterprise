@@ -37,7 +37,8 @@ object AuditMigrations {
    *
    * A chain whose head retention already pruned (first row's prevHash is not GENESIS) gets a prune
    * baseline at that row: trust on first use. Truncation before the upgrade is not detectable;
-   * every later one is.
+   * every later one is. A chain whose rows retention pruned entirely gets the baseline at the
+   * chain state's head (seq eventCount, hash lastHash), so the next event links to it.
    */
   val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -59,6 +60,10 @@ object AuditMigrations {
           "prunedThroughSeq = (SELECT seq - 1 FROM audit_events ORDER BY seq ASC LIMIT 1), " +
           "prunedThroughHash = (SELECT prevHash FROM audit_events ORDER BY seq ASC LIMIT 1) " +
           "WHERE (SELECT prevHash FROM audit_events ORDER BY seq ASC LIMIT 1) <> 'GENESIS'"
+      )
+      db.execSQL(
+        "UPDATE audit_chain_state SET prunedThroughSeq = eventCount, prunedThroughHash = lastHash " +
+          "WHERE eventCount > 0 AND lastHash <> 'GENESIS' AND NOT EXISTS (SELECT 1 FROM audit_events)"
       )
     }
   }
