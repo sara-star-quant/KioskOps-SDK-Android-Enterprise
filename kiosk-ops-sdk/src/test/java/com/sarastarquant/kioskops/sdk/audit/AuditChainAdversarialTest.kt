@@ -80,7 +80,6 @@ class AuditChainAdversarialTest {
     assertThat((result as ChainVerificationResult.Valid).eventCount).isEqualTo(3)
   }
 
-  @Ignore("pending: hash input needs unambiguous field boundaries")
   @Test
   fun `pipe in event name cannot alias another event`() = runTest {
     trail.record("a|b", emptyMap())
@@ -94,7 +93,26 @@ class AuditChainAdversarialTest {
     assertThat(result).isInstanceOf(ChainVerificationResult.HashMismatch::class.java)
   }
 
-  @Ignore("pending: truncation needs a server-pinned checkpoint")
+  @Test
+  fun `new events are recorded in the length-prefixed format`() = runTest {
+    trail.record("first")
+    val events = trail.getEventsInRange(0, Long.MAX_VALUE)
+    assertThat(events.map { it.formatVersion }).containsExactly(2)
+  }
+
+  @Test
+  fun `unknown format version is reported as broken`() = runTest {
+    trail.record("first")
+    trail.record("second")
+    db.openHelper.writableDatabase.execSQL(
+      "UPDATE audit_events SET formatVersion = 99 WHERE name = 'second'",
+    )
+
+    val result = trail.verifyChainIntegrity()
+    assertThat(result).isInstanceOf(ChainVerificationResult.Broken::class.java)
+  }
+
+  @Ignore("fixed by task 5")
   @Test
   fun `deleting oldest events is detected`() = runTest {
     for (i in 1..5) {

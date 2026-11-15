@@ -6,12 +6,13 @@
 package com.sarastarquant.kioskops.sdk.audit
 
 import android.content.Context
+import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
 import com.sarastarquant.kioskops.sdk.audit.db.AuditChainState
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.audit.db.AuditEventEntity
 import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.util.Clock
-import com.sarastarquant.kioskops.sdk.util.Hashing
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
@@ -56,6 +57,7 @@ class PersistentAuditTrail(
 
   companion object {
     private const val GENESIS_HASH = "GENESIS"
+    private val RECORD_FORMAT = AuditHashFormat.V2
   }
 
   /**
@@ -83,8 +85,8 @@ class PersistentAuditTrail(
 
       // Build event content for hashing
       val fieldsJson = json.encodeToString(fields)
-      val eventContent = buildEventContent(id, ts, name, fieldsJson, prevHash)
-      val hash = Hashing.sha256Base64Url(eventContent)
+      val eventContent = AuditChainCore.content(RECORD_FORMAT, id, ts, name, fieldsJson, prevHash)
+      val hash = AuditChainCore.hash(eventContent)
 
       // Optional signing
       var signature: String? = null
@@ -111,6 +113,7 @@ class PersistentAuditTrail(
         chainGeneration = chainState.chainGeneration,
         userId = userId,
         seq = chainState.eventCount + 1,
+        formatVersion = RECORD_FORMAT.version,
       )
 
       // Update chain state
@@ -148,10 +151,18 @@ class PersistentAuditTrail(
     var expectedPrevHash = events.first().prevHash
 
     for (event in events) {
+      // Unknown format: the stored hash cannot be recomputed, so the chain cannot be trusted past here.
+      val format = AuditHashFormat.forStoredVersion(event.formatVersion)
+        ?: return ChainVerificationResult.Broken(
+          brokenAtId = event.id,
+          brokenAtTs = event.ts,
+          expectedPrevHash = expectedPrevHash,
+          actualPrevHash = event.prevHash,
+        )
+
       // Verify the event's own hash
-      val expectedHash = Hashing.sha256Base64Url(
-        buildEventContent(event.id, event.ts, event.name, event.fieldsJson, event.prevHash)
-      )
+      val content = AuditChainCore.content(format, event.id, event.ts, event.name, event.fieldsJson, event.prevHash)
+      val expectedHash = AuditChainCore.hash(content)
 
       if (event.hash != expectedHash) {
         return ChainVerificationResult.HashMismatch(
@@ -173,7 +184,6 @@ class PersistentAuditTrail(
       // Verify signature if present
       if (event.signature != null && attestationProvider != null) {
         val provider = attestationProvider.invoke()
-        val content = buildEventContent(event.id, event.ts, event.name, event.fieldsJson, event.prevHash)
         if (!provider.verifySignature(content, event.signature)) {
           return ChainVerificationResult.SignatureInvalid(
             eventId = event.id,
@@ -299,16 +309,5 @@ class PersistentAuditTrail(
     )
     dao.upsertChainState(state)
     return state
-  }
-
-  private fun buildEventContent(
-    id: String,
-    ts: Long,
-    name: String,
-    fieldsJson: String,
-    prevHash: String,
-  ): String {
-    // Deterministic content format for hashing
-    return "$id|$ts|$name|$fieldsJson|$prevHash"
   }
 }
