@@ -27,6 +27,7 @@ import com.sarastarquant.kioskops.sdk.transport.EventAck
 import com.sarastarquant.kioskops.sdk.transport.Transport
 import com.sarastarquant.kioskops.sdk.transport.TransportResult
 import com.sarastarquant.kioskops.sdk.util.Clock
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -130,12 +131,17 @@ class SyncInFlightTest {
     }
     val f = fixture(transport)
 
-    val job = launch(Dispatchers.Default, start = CoroutineStart.DEFAULT) { f.engine.flushOnce() }
+    var outcome: Result<TransportResult<SyncOnceResult>>? = null
+    val job = launch(Dispatchers.Default, start = CoroutineStart.DEFAULT) {
+      val r = runCatching { f.engine.flushOnce() }
+      outcome = r
+      r.getOrThrow()
+    }
     withTimeout(10_000) { entered.await() }
     job.cancel()
     job.join()
 
-    assertThat(job.isCancelled).isTrue()
+    assertThat(outcome!!.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
     val rows = rows()
     assertThat(rows.map { it.state }).doesNotContain("SENDING")
     assertThat(rows.map { it.attempts }).containsExactly(0, 0)
@@ -145,8 +151,12 @@ class SyncInFlightTest {
   @Test
   fun `checkpoint failure does not strand events`() = runBlocking<Unit> {
     val software = SoftwareAttestationProvider()
+    var signCalls = 0
     val throwing = object : DeviceAttestationProvider by software {
-      override fun signAuditEntry(payload: String): String? = error("keystore unavailable")
+      override fun signAuditEntry(payload: String): String? {
+        signCalls++
+        error("keystore unavailable")
+      }
     }
     val transport = object : Transport {
       override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest) =
@@ -156,6 +166,7 @@ class SyncInFlightTest {
 
     runCatching { f.engine.flushOnce() }
 
+    assertThat(signCalls).isAtLeast(1)
     assertThat(rows().map { it.state }).doesNotContain("SENDING")
   }
 
