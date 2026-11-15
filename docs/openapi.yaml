@@ -109,6 +109,47 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TransportEvent'
+        auditCheckpoint:
+          $ref: '#/components/schemas/AuditCheckpoint'
+    AuditCheckpoint:
+      type: object
+      description: >-
+        Snapshot of the device audit chain head. Sent only when SecurityPolicy.signedAuditCheckpoints
+        is on; absent otherwise. Pin the latest accepted checkpoint per device and reject or flag a later
+        one whose headSeq or eventCount is lower (rollback, truncation) or whose chain no longer holds the
+        pinned headHash at the pinned headSeq (rewrite).
+      required: [headSeq, headHash, eventCount, chainGeneration, prunedThroughSeq, prunedThroughHash]
+      properties:
+        headSeq:
+          type: integer
+          format: int64
+          description: Seq of the newest stored audit event; equals prunedThroughSeq when every event was pruned.
+        headHash:
+          type: string
+          description: Hash of the event at headSeq (base64url SHA-256); GENESIS for an empty chain.
+        eventCount:
+          type: integer
+          format: int64
+          description: Audit events ever recorded in this chain, pruned events included. Never decreases.
+        chainGeneration:
+          type: integer
+          format: int32
+          description: Generation of the device audit chain. A change means a new chain, not a continuation.
+        prunedThroughSeq:
+          type: integer
+          format: int64
+          description: Highest seq removed by retention; 0 when retention never pruned.
+        prunedThroughHash:
+          type: string
+          description: Hash of the event at prunedThroughSeq; GENESIS when retention never pruned.
+        signature:
+          type: string
+          description: >-
+            Base64 ECDSA P-256 (SHA256withECDSA) signature by the device audit key over the UTF-8 bytes of
+            "kioskops-audit-checkpoint-v1|" followed by headSeq, headHash, eventCount, chainGeneration,
+            prunedThroughSeq and prunedThroughHash, each written as "<utf8 byte length>:<value>" with no
+            separator. Absent when the device could not sign; the device then records a checkpoint_unsigned
+            audit event.
     EventAck:
       type: object
       required: [id, idempotencyKey, accepted, retryable]

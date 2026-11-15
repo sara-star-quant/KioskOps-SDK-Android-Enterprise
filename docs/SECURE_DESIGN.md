@@ -56,6 +56,45 @@ corresponding policy flag is on. The audit trail is tamper-evident: each entry i
 chained via SHA-256 and, when `SecurityPolicy.signAuditEntries` is on, signed with a
 Keystore-backed key attested by the device.
 
+### Audit checkpoints
+
+The hash chain alone proves the stored rows are internally consistent. It cannot prove that
+nobody deleted the newest rows or rebuilt the whole chain on a rooted device. With
+`SecurityPolicy.signedAuditCheckpoints` on (on in the FedRAMP, CUI, CJIS, GDPR and ASD Essential
+Eight presets), every sync batch carries an `auditCheckpoint`: the head seq and hash, the total
+event count, the chain generation and the retention prune point, signed with the device audit key.
+
+What it proves: once the server pins a checkpoint, rolling back, truncating or rewriting the
+chain is detectable on the next sync. A lower `headSeq` or `eventCount` is a rollback or
+truncation; a different hash at the pinned seq is a rewrite.
+
+What it does not prove:
+
+- Events recorded after the last successful sync and before a compromise. An attacker who takes
+  the device in that window can change them undetected.
+- Anything about a device that never syncs. The server has nothing to pin.
+- Anything against an attacker who also holds the device signing key. The key is
+  Keystore-backed and non-exportable, which raises the bar but does not remove it.
+- Clock honesty. Timestamps are the device's word; ordering comes from `seq`.
+
+Trust on first use: chains that exist before an upgrade, and chains a server sees for the first
+time, are trusted as found. For a database whose oldest rows retention removed before seq
+existed, the upgrade records the first remaining row as the prune point. Truncation before that
+moment is not detectable.
+
+Retention prunes are recorded, not hidden: `applyRetention()` stores the last deleted seq and
+hash as `prunedThroughSeq`/`prunedThroughHash` in the same transaction as the delete, and
+verification starts from that point. Deleting the oldest rows any other way breaks
+verification, and the checkpoint shows a legitimate prune as a moved prune point rather than a
+missing head.
+
+Host requirement: keep `android:allowBackup="false"` (or exclude the audit database from
+backup and device transfer). A restored backup is an older chain; it is indistinguishable from a
+rollback and the server will flag it as one.
+
+If the device cannot sign (no key, or signing fails) the checkpoint goes out unsigned and the
+SDK records a `checkpoint_unsigned` audit event. It never skips silently.
+
 ### 5. Defense-in-depth for credentials and secrets
 
 - SQLCipher passphrase: wrapped with a Keystore AES-GCM key.
