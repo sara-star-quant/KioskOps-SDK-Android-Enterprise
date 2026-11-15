@@ -17,7 +17,8 @@ import kotlinx.serialization.Serializable
  * @property headHash Hash of the event at [headSeq]; [prunedThroughHash] when every event was pruned.
  * @property eventCount Events ever recorded in this chain, pruned ones included.
  * @property chainGeneration Chain generation of the device audit chain.
- * @property prunedThroughSeq Highest seq removed by retention; 0 when nothing was pruned.
+ * @property prunedThroughSeq Highest seq removed by retention; 0 when nothing was pruned. A database
+ *   upgraded after retention removed its oldest events reports 0 with a non-GENESIS [prunedThroughHash].
  * @property prunedThroughHash Hash of the event at [prunedThroughSeq]; `GENESIS` when nothing was pruned.
  * @property linkSeq headSeq of the last checkpoint the server acknowledged; null before the first ack.
  * @property linkHash Hash the device holds at [linkSeq] when this checkpoint is built ([prunedThroughHash]

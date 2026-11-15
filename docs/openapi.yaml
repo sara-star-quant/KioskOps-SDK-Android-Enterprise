@@ -115,7 +115,11 @@ components:
       type: object
       description: >-
         Snapshot of the device audit chain head. Sent only when SecurityPolicy.signedAuditCheckpoints
-        is on; absent otherwise. On first contact the server pins it. After that the server checks each
+        is on, and only on non-empty batches (an idle device sends no checkpoint); absent otherwise.
+        Process each device's checkpoints one at a time: R1 compares against the latest pin. The server's
+        audit retention window for a device must match the device's (RetentionPolicy.retainAuditDays);
+        lower the server's window before lowering the device's, or legitimate prunes read Forked.
+        On first contact the server pins it. After that the server checks each
         checkpoint against its pin and pins it when Consistent.
         R1: same chainGeneration, headSeq and eventCount not below the pin, else Regressed.
         R2: (linkSeq, linkHash) equals the pinned (headSeq, headHash) or the previous pin's, else Forked
@@ -152,10 +156,17 @@ components:
         prunedThroughSeq:
           type: integer
           format: int64
-          description: Highest seq removed by retention; 0 when retention never pruned.
+          description: >-
+            Highest seq removed by retention, so the first remaining event normally has seq
+            prunedThroughSeq + 1; 0 when retention never pruned. A device upgraded from a database
+            whose oldest events retention removed before seq existed reports 0 here with a non-GENESIS
+            prunedThroughHash; one upgraded after retention removed every event reports its event count.
         prunedThroughHash:
           type: string
-          description: Hash of the event at prunedThroughSeq; GENESIS when retention never pruned.
+          description: >-
+            Hash of the event at prunedThroughSeq; GENESIS when retention never pruned. For a device upgraded
+            from a database whose oldest events were already pruned, the prevHash of its first remaining
+            event (with prunedThroughSeq 0), or its last event hash when every event was pruned.
         linkSeq:
           type: integer
           format: int64

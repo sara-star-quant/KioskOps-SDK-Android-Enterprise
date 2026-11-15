@@ -52,9 +52,12 @@ Cryptographic, storage, and transport failures surface rather than silently degr
 
 Telemetry, audit, and the event queue live on-device only. Nothing ships off-device
 without host action. The queue and audit databases are encrypted at rest when the
-corresponding policy flag is on. The audit trail is tamper-evident: each entry is
-chained via SHA-256 and, when `SecurityPolicy.signAuditEntries` is on, signed with a
-Keystore-backed key attested by the device.
+corresponding policy flag is on. Each audit entry is chained to the previous one via
+SHA-256. `SecurityPolicy.signAuditEntries` only gives the persistent audit trail a
+Keystore-backed attestation provider. An entry is signed only when a caller passes
+`record(sign = true)` and that provider is present; the SDK's own `record` calls do not pass
+`sign = true`, so SDK-written entries are unsigned. The signed artifact the SDK produces is the
+audit checkpoint below.
 
 ### Audit checkpoints
 
@@ -71,6 +74,13 @@ Acknowledgement contract: an HTTP 2xx response with a parseable body is the ackn
 server must durably persist its new pin before it replies. A server that replies 2xx and then
 loses the pin sees every later checkpoint as Forked until it re-baselines on trust; the two-pin
 rule does not cover that.
+
+Checkpoints ride only on non-empty sync batches. A device with nothing queued sends no
+checkpoint, even while its sync worker runs, so the server sees nothing new from an idle device.
+
+Retention window: R3 needs the device's audit retention window (`RetentionPolicy.retainAuditDays`),
+so the server's window for each device must match the device's. To lower `retainAuditDays` on
+devices, lower the server's window first; otherwise legitimate prunes read Forked.
 
 Ordering: the server must process each device's checkpoints one at a time. R1 compares against
 the latest pin, so a newer checkpoint pinned first makes a concurrently handled older one read
