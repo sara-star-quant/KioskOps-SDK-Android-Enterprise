@@ -66,8 +66,9 @@ internal object AuditChainCore {
    *   [retentionWindowMs] has passed since the pin arrived, since retention cannot have removed it
    *   yet. Otherwise, if the link points at the prune point it must carry the prune hash; any other
    *   link re-baselines the pin on trust (the pinned row is gone, nothing can be compared).
-   * - R2 Forked: `current.linkSeq != pin.headSeq` or `current.linkHash != pin.headHash`. A null
-   *   link while a pin exists is Forked.
+   * - R2 Forked: the link (linkSeq, linkHash) matches neither (pin.headSeq, pin.headHash) nor, when
+   *   [previousPin] is given, (previousPin.headSeq, previousPin.headHash). The previous pin covers a
+   *   response lost after the server pinned. A null link while a pin exists is Forked.
    * - Consistent otherwise.
    */
   fun compareToPin(
@@ -76,6 +77,7 @@ internal object AuditChainCore {
     current: AuditCheckpoint,
     nowMs: Long,
     retentionWindowMs: Long,
+    previousPin: AuditCheckpoint? = null,
   ): PinResult {
     regression(pin, current)?.let { return it }
     return when {
@@ -86,11 +88,14 @@ internal object AuditChainCore {
           PinResult.Forked("link at the prune point does not carry the prune hash")
         else -> PinResult.Consistent
       }
-      current.linkSeq != pin.headSeq || current.linkHash != pin.headHash ->
+      !linksTo(current, pin) && (previousPin == null || !linksTo(current, previousPin)) ->
         PinResult.Forked("link (${current.linkSeq}) does not match the pinned head ${pin.headSeq}")
       else -> PinResult.Consistent
     }
   }
+
+  private fun linksTo(current: AuditCheckpoint, pinned: AuditCheckpoint): Boolean =
+    current.linkSeq == pinned.headSeq && current.linkHash == pinned.headHash
 
   private fun regression(pin: AuditCheckpoint, current: AuditCheckpoint): PinResult.Regressed? = when {
     current.chainGeneration != pin.chainGeneration ->

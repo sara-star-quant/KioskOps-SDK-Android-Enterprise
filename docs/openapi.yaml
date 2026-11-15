@@ -118,15 +118,14 @@ components:
         is on; absent otherwise. On first contact the server pins it. After that the server checks each
         checkpoint against its pin and pins it when Consistent.
         R1: same chainGeneration, headSeq and eventCount not below the pin, else Regressed.
-        R2: linkSeq equals the pinned headSeq and linkHash equals the pinned headHash, else Forked
-        (a null link while a pin exists is Forked).
+        R2: (linkSeq, linkHash) equals the pinned (headSeq, headHash) or the previous pin's, else Forked
+        (a null link while a pin exists is Forked). The server keeps the last two pins, because a response
+        lost after the server pinned leaves the device linking to the previous pin.
         R3: when prunedThroughSeq is above the pinned headSeq, Forked unless the device audit retention
         window has passed since the pin was received; after it, a link at prunedThroughSeq must carry
         prunedThroughHash and any other link re-baselines the pin on trust.
         Limits: events after the last acknowledged checkpoint, devices that never sync, attackers with code
         execution on the device or the signing key, and device clock honesty are out of reach of these rules.
-        If a response is lost after the server pinned, the next link names the previous pin; keep it and
-        check against it before treating Forked as tampering.
       required: [headSeq, headHash, eventCount, chainGeneration, prunedThroughSeq, prunedThroughHash]
       properties:
         headSeq:

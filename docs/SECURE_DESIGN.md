@@ -71,8 +71,10 @@ checkpoint against its pin (`AuditChainCore.compareToPin` is the reference imple
 pins it when the result is Consistent:
 
 - R1: same `chainGeneration`, and `headSeq` and `eventCount` not below the pin. Otherwise Regressed.
-- R2: `linkSeq` equals the pinned `headSeq` and `linkHash` equals the pinned `headHash`.
-  Otherwise Forked. A null link while a pin exists is Forked.
+- R2: the link (`linkSeq`, `linkHash`) equals the pinned (`headSeq`, `headHash`) or the
+  previous pin's. Otherwise Forked. A null link while a pin exists is Forked. The server keeps the
+  last two pins: when it pinned a checkpoint but its response never reached the device, the next
+  checkpoint still links to the previous pin.
 - R3: when `prunedThroughSeq` has moved past the pinned `headSeq`, the result is Forked unless
   at least the device's audit retention window has passed since the server received the pin.
   After the window, a link that points at the prune point must carry `prunedThroughHash`; any
@@ -101,10 +103,6 @@ Trust on first use: a server trusts the first checkpoint it sees from a device, 
 re-baseline after the retention window. A database whose oldest rows retention removed before
 seq existed gets its first remaining row recorded as the prune point when it upgrades.
 Truncation before any of these moments is not detectable.
-
-A server that pins a checkpoint but whose response never reaches the device sees the next
-checkpoint link to the previous pin, and R2 reports Forked. Keep the previous pin and check
-against it before treating that as tampering.
 
 Retention prunes are recorded, not hidden: `applyRetention()` stores the last deleted seq and
 hash as `prunedThroughSeq`/`prunedThroughHash` in the same transaction as the delete, and

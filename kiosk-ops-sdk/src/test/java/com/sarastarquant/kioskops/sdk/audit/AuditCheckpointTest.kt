@@ -351,6 +351,22 @@ class AuditCheckpointTest {
   }
 
   @Test
+  fun `lost ack link to the previous pin is consistent`() {
+    val previous = checkpoint(headSeq = 5)
+    val pin = checkpoint(headSeq = 8, linkSeq = 5, linkHash = "h5")
+    fun judge(current: AuditCheckpoint, prev: AuditCheckpoint? = previous) =
+      AuditChainCore.compareToPin(pin, 0, current, 0, dayMs, prev)
+
+    // The server pinned seq 8, the device never saw the response and still links to seq 5.
+    assertThat(judge(checkpoint(headSeq = 9, linkSeq = 5, linkHash = "h5"))).isEqualTo(PinResult.Consistent)
+    assertThat(judge(checkpoint(headSeq = 9, linkSeq = 8, linkHash = "h8"))).isEqualTo(PinResult.Consistent)
+    assertThat(judge(checkpoint(headSeq = 9, linkSeq = 3, linkHash = "h3"))).isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(checkpoint(headSeq = 9, linkSeq = 5, linkHash = "h5"), prev = null))
+      .isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(checkpoint(headSeq = 7, linkSeq = 5, linkHash = "h5"))).isInstanceOf(PinResult.Regressed::class.java)
+  }
+
+  @Test
   fun `pin rules on synthetic checkpoints`() {
     val pin = checkpoint(headSeq = 5)
     fun judge(current: AuditCheckpoint, now: Long = 0) = AuditChainCore.compareToPin(pin, 0, current, now, dayMs)
