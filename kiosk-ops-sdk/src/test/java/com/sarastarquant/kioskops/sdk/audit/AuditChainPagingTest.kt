@@ -34,6 +34,9 @@ class AuditChainPagingTest {
   private lateinit var trail: PersistentAuditTrail
   private val pageQueries = CopyOnWriteArrayList<List<Any?>>()
 
+  /** Runs once when a page query after the given seq is issued, then clears itself. */
+  @Volatile private var onPageAfter: Pair<Long, () -> Unit>? = null
+
   private var nowMs = 1_000L
   private val clock = object : Clock {
     override fun nowMs(): Long = nowMs
@@ -45,7 +48,15 @@ class AuditChainPagingTest {
     db = Room.inMemoryDatabaseBuilder(ctx, AuditDatabase::class.java)
       .allowMainThreadQueries()
       .setQueryCallback(
-        { sql, args -> if (sql.contains("FROM audit_events WHERE seq >")) pageQueries += args },
+        { sql, args ->
+          if (sql.contains("FROM audit_events WHERE seq >")) {
+            pageQueries += args
+            onPageAfter?.takeIf { it.first == args[0] }?.let { (_, action) ->
+              onPageAfter = null
+              action()
+            }
+          }
+        },
         Executor { it.run() },
       )
       .build()
@@ -172,5 +183,26 @@ class AuditChainPagingTest {
 
     assertThat(result).isInstanceOf(PageResult.Broken::class.java)
     assertThat((result as PageResult.Broken).reason).contains("does not follow")
+  }
+
+  @Test
+  fun `retention between pages does not report a false break`() = runTest {
+    repeat(1500) {
+      trail.record("e$it")
+      nowMs++
+    }
+    // seq k has ts 999 + k; a 30-day retention run at this clock prunes seq 1..1200.
+    val retentionNow = 2200L + 30L * 24 * 60 * 60 * 1000
+    onPageAfter = PersistentAuditTrail.VERIFY_PAGE_SIZE.toLong() to {
+      nowMs = retentionNow
+      runBlocking { trail.applyRetention() }
+    }
+
+    val result = trail.verifyChainIntegrity()
+
+    assertThat(onPageAfter).isNull()
+    assertThat(db.auditDao().getChainState()!!.prunedThroughSeq).isEqualTo(1200L)
+    assertThat(result).isInstanceOf(ChainVerificationResult.Valid::class.java)
+    assertThat((result as ChainVerificationResult.Valid).eventCount).isEqualTo(300)
   }
 }

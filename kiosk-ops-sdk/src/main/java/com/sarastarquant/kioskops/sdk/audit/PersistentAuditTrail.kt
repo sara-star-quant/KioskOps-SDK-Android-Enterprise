@@ -145,6 +145,10 @@ class PersistentAuditTrail(
    * the oldest rows breaks verification. A ranged interval that starts later cannot know its
    * predecessor and seeds from its first row's own prevHash.
    *
+   * Pages are read without holding the record lock, so retention can prune between pages. When the
+   * prune point moved during the run, the whole verification runs once more from the start and that
+   * result is returned, even if retention moved again during the rerun.
+   *
    * @param fromTs Optional start timestamp (inclusive).
    * @param toTs Optional end timestamp (inclusive).
    * @return Verification result.
@@ -153,6 +157,13 @@ class PersistentAuditTrail(
     fromTs: Long? = null,
     toTs: Long? = null,
   ): ChainVerificationResult {
+    val prunedBefore = dao.getChainState()?.prunedThroughSeq
+    val result = verifyOnce(fromTs, toTs)
+    if (dao.getChainState()?.prunedThroughSeq == prunedBefore) return result
+    return verifyOnce(fromTs, toTs)
+  }
+
+  private suspend fun verifyOnce(fromTs: Long?, toTs: Long?): ChainVerificationResult {
     val effectiveFromTs = fromTs ?: 0L
     val effectiveToTs = toTs ?: Long.MAX_VALUE
 
