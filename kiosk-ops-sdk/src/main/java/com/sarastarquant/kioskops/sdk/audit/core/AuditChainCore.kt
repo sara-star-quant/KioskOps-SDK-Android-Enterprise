@@ -62,14 +62,19 @@ internal object AuditChainCore {
    * from a device has no pin: the server pins it on first contact and does not call this.
    *
    * - R1 Regressed: chainGeneration changed, or headSeq or eventCount is below the pin.
-   * - R3 prune past the pin (`current.prunedThroughSeq > pin.headSeq`): Forked if less than
-   *   [retentionWindowMs] has passed since the pin arrived, since retention cannot have removed it
-   *   yet. Otherwise, if the link points at the prune point it must carry the prune hash; any other
-   *   link re-baselines the pin on trust (the pinned row is gone, nothing can be compared).
+   * - R3 prune reached the pin (`current.prunedThroughSeq` advanced past `pin.prunedThroughSeq`
+   *   and is at or above `pin.headSeq`): Forked if less than [retentionWindowMs] has passed since
+   *   the pin arrived, since retention cannot have removed the pinned head yet. Otherwise, if the
+   *   link points at the prune point it must carry the prune hash; any other link re-baselines the
+   *   pin on trust (the pinned row is gone, nothing can be compared).
    * - R2 Forked: the link (linkSeq, linkHash) matches neither (pin.headSeq, pin.headHash) nor, when
    *   [previousPin] is given, (previousPin.headSeq, previousPin.headHash). The previous pin covers a
-   *   response lost after the server pinned. A null link while a pin exists is Forked.
+   *   response lost after the server pinned; a link to it goes through R3 against the previous pin
+   *   (received at [previousPinReceivedAtMs]). A null link while a pin exists is Forked.
    * - Consistent otherwise.
+   *
+   * A prune record forged strictly below both pins passes: it can erase older acknowledged history
+   * early, while the pinned head still binds everything after it.
    */
   fun compareToPin(
     pin: AuditCheckpoint,
@@ -78,20 +83,29 @@ internal object AuditChainCore {
     nowMs: Long,
     retentionWindowMs: Long,
     previousPin: AuditCheckpoint? = null,
+    previousPinReceivedAtMs: Long = pinReceivedAtMs,
   ): PinResult {
-    regression(pin, current)?.let { return it }
-    return when {
-      current.prunedThroughSeq > pin.headSeq -> when {
-        nowMs - pinReceivedAtMs < retentionWindowMs ->
-          PinResult.Forked("prune point ${current.prunedThroughSeq} passed the pin inside the retention window")
-        current.linkSeq == current.prunedThroughSeq && current.linkHash != current.prunedThroughHash ->
-          PinResult.Forked("link at the prune point does not carry the prune hash")
-        else -> PinResult.Consistent
-      }
-      !linksTo(current, pin) && (previousPin == null || !linksTo(current, previousPin)) ->
-        PinResult.Forked("link (${current.linkSeq}) does not match the pinned head ${pin.headSeq}")
-      else -> PinResult.Consistent
+    return regression(pin, current) ?: pruneRule(pin, nowMs - pinReceivedAtMs, current, retentionWindowMs) ?: when {
+      linksTo(current, pin) -> PinResult.Consistent
+      previousPin != null && linksTo(current, previousPin) ->
+        pruneRule(previousPin, nowMs - previousPinReceivedAtMs, current, retentionWindowMs) ?: PinResult.Consistent
+      else -> PinResult.Forked("link (${current.linkSeq}) does not match the pinned head ${pin.headSeq}")
     }
+  }
+
+  /** R3 against [anchor]; null when the prune point did not advance to the anchor's head. */
+  private fun pruneRule(
+    anchor: AuditCheckpoint,
+    sinceAnchorMs: Long,
+    current: AuditCheckpoint,
+    retentionWindowMs: Long,
+  ): PinResult? = when {
+    current.prunedThroughSeq <= anchor.prunedThroughSeq || current.prunedThroughSeq < anchor.headSeq -> null
+    sinceAnchorMs < retentionWindowMs ->
+      PinResult.Forked("prune point ${current.prunedThroughSeq} reached the pin inside the retention window")
+    current.linkSeq == current.prunedThroughSeq && current.linkHash != current.prunedThroughHash ->
+      PinResult.Forked("link at the prune point does not carry the prune hash")
+    else -> PinResult.Consistent
   }
 
   private fun linksTo(current: AuditCheckpoint, pinned: AuditCheckpoint): Boolean =

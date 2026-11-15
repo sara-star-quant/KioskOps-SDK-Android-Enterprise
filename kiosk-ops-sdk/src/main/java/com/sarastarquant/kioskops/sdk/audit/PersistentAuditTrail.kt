@@ -364,11 +364,14 @@ class PersistentAuditTrail(
     return unsigned.copy(signature = signature)
   }
 
-  /** Record that a server accepted [checkpoint]; the next checkpoint links to its headSeq. */
+  /**
+   * Record that a server accepted [checkpoint]; the next checkpoint links to its headSeq.
+   * Monotonic: an older acknowledgement arriving late never moves the link back.
+   */
   internal suspend fun acknowledgeCheckpoint(checkpoint: AuditCheckpoint) {
     mutex.withLock {
       val state = dao.getChainState() ?: return@withLock
-      dao.upsertChainState(state.copy(lastAckedSeq = checkpoint.headSeq))
+      if (checkpoint.headSeq > state.lastAckedSeq) dao.upsertChainState(state.copy(lastAckedSeq = checkpoint.headSeq))
     }
   }
 

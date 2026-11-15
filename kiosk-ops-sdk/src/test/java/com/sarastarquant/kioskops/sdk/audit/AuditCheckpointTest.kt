@@ -251,6 +251,15 @@ class AuditCheckpointTest {
   }
 
   @Test
+  fun `acknowledgement never moves backwards`() = runTest {
+    val trail = trail()
+    trail.record("first")
+    trail.acknowledgeCheckpoint(checkpoint(headSeq = 10))
+    trail.acknowledgeCheckpoint(checkpoint(headSeq = 7))
+    assertThat(db.auditDao().getChainState()!!.lastAckedSeq).isEqualTo(10L)
+  }
+
+  @Test
   fun `deleting head events without prune record is not valid`() = runTest {
     val trail = trail()
     recordFive(trail)
@@ -364,6 +373,37 @@ class AuditCheckpointTest {
     assertThat(judge(checkpoint(headSeq = 9, linkSeq = 5, linkHash = "h5"), prev = null))
       .isInstanceOf(PinResult.Forked::class.java)
     assertThat(judge(checkpoint(headSeq = 7, linkSeq = 5, linkHash = "h5"))).isInstanceOf(PinResult.Regressed::class.java)
+  }
+
+  @Test
+  fun `prune record at the pin obeys the retention window`() {
+    val pin = checkpoint(headSeq = 5)
+    fun judge(current: AuditCheckpoint, now: Long) = AuditChainCore.compareToPin(pin, 0, current, now, dayMs)
+    // Rows 1..5 deleted, prune record forged to the pinned head: the link falls back to the prune hash.
+    val forged = checkpoint(headSeq = 6, prunedThroughSeq = 5, prunedThroughHash = "h5", linkSeq = 5, linkHash = "h5")
+
+    assertThat(judge(forged, now = dayMs - 1)).isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(forged, now = dayMs)).isEqualTo(PinResult.Consistent)
+    // Strictly above the pin inside the window.
+    assertThat(judge(forged.copy(headSeq = 9, prunedThroughSeq = 7, prunedThroughHash = "p7"), now = 1))
+      .isInstanceOf(PinResult.Forked::class.java)
+    // A prune point that has not moved since the pin never trips the rule.
+    val prunedPin = checkpoint(headSeq = 5, prunedThroughSeq = 5, prunedThroughHash = "h5")
+    val unchanged = checkpoint(headSeq = 6, prunedThroughSeq = 5, prunedThroughHash = "h5", linkSeq = 5, linkHash = "h5")
+    assertThat(AuditChainCore.compareToPin(prunedPin, 0, unchanged, 1, dayMs)).isEqualTo(PinResult.Consistent)
+  }
+
+  @Test
+  fun `prune record at the previous pin obeys the retention window`() {
+    val previous = checkpoint(headSeq = 5)
+    val pin = checkpoint(headSeq = 8, linkSeq = 5, linkHash = "h5")
+    // Lost ack: the device still links to seq 5, and a prune record was forged to it.
+    val forged = checkpoint(headSeq = 9, prunedThroughSeq = 5, prunedThroughHash = "h5", linkSeq = 5, linkHash = "h5")
+    fun judge(previousReceivedAt: Long) =
+      AuditChainCore.compareToPin(pin, 10 * dayMs, forged, 10 * dayMs + 1, dayMs, previous, previousReceivedAt)
+
+    assertThat(judge(previousReceivedAt = 10 * dayMs)).isInstanceOf(PinResult.Forked::class.java)
+    assertThat(judge(previousReceivedAt = 0)).isEqualTo(PinResult.Consistent)
   }
 
   @Test
