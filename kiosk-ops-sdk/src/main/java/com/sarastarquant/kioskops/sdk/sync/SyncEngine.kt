@@ -3,6 +3,7 @@ package com.sarastarquant.kioskops.sdk.sync
 import android.content.Context
 import com.sarastarquant.kioskops.sdk.KioskOpsConfig
 import com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail
+import com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint
 import com.sarastarquant.kioskops.sdk.logging.RingLog
 import com.sarastarquant.kioskops.sdk.queue.QueueEventEntity
 import com.sarastarquant.kioskops.sdk.queue.QueueRepository
@@ -15,8 +16,11 @@ import com.sarastarquant.kioskops.sdk.transport.TransportResult
 import com.sarastarquant.kioskops.sdk.util.Clock
 import com.sarastarquant.kioskops.sdk.util.DeviceId
 import com.sarastarquant.kioskops.sdk.util.Ids
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Fleet-ops sync engine.
@@ -68,17 +72,29 @@ class SyncEngine @JvmOverloads constructor(
     audit.record("sync_batch_start", mapOf("batchSize" to batch.size.toString()))
     telemetry.emit("sync_batch_start", mapOf("batchSize" to batch.size.toString(), "syncResult" to "start"))
 
-    // Mark as SENDING to reduce accidental double-sends within a single process.
-    for (e in batch) queue.markSending(e.id)
-    val request = buildRequest(cfg, batch, now)
+    // The checkpoint is taken before any event is marked SENDING, so a signing failure strands nothing.
+    @Suppress("TooGenericExceptionCaught")
+    val checkpoint = try {
+      createCheckpoint(cfg)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (t: Throwable) {
+      logs.w("Sync", "Audit checkpoint failed: ${t::class.java.simpleName}")
+      return onBatchTransientFailure(batch, TransportResult.TransientFailure("checkpoint_failed", cause = t), now)
+    }
+    val request = buildRequest(cfg, batch, now, checkpoint)
+    val res = sendInFlight(cfg, request, batch, now)
 
-    return when (val res = transport.sendBatch(cfg, request)) {
-      is TransportResult.Success -> {
-        request.auditCheckpoint?.let { audit.acknowledgeCheckpoint(it) }
-        onBatchSuccess(cfg, batch, res, now)
+    // The server has answered: record that answer to completion even if the caller is cancelled.
+    return withContext(NonCancellable) {
+      when (res) {
+        is TransportResult.Success -> {
+          acknowledgeCheckpoint(request)
+          onBatchSuccess(cfg, batch, res, now)
+        }
+        is TransportResult.TransientFailure -> onBatchTransientFailure(batch, res, now)
+        is TransportResult.PermanentFailure -> onBatchPermanentFailure(batch, res, now)
       }
-      is TransportResult.TransientFailure -> onBatchTransientFailure(batch, res, now)
-      is TransportResult.PermanentFailure -> onBatchPermanentFailure(batch, res, now)
     }
   }
 
@@ -89,7 +105,15 @@ class SyncEngine @JvmOverloads constructor(
   private suspend fun selectBatch(cfg: KioskOpsConfig, now: Long): List<QueueEventEntity> =
     queue.nextBatch(nowMs = now, limit = cfg.syncPolicy.batchSize.coerceAtLeast(1))
 
-  private suspend fun buildRequest(cfg: KioskOpsConfig, batch: List<QueueEventEntity>, now: Long) = BatchSendRequest(
+  private suspend fun createCheckpoint(cfg: KioskOpsConfig): AuditCheckpoint? =
+    if (cfg.securityPolicy.signedAuditCheckpoints) audit.createCheckpoint(sign = true) else null
+
+  private suspend fun buildRequest(
+    cfg: KioskOpsConfig,
+    batch: List<QueueEventEntity>,
+    now: Long,
+    checkpoint: AuditCheckpoint?,
+  ) = BatchSendRequest(
     batchId = Ids.uuid(),
     deviceId = DeviceId.get(context),
     appVersion = appVersionSafe(context),
@@ -104,8 +128,52 @@ class SyncEngine @JvmOverloads constructor(
         createdAtEpochMs = it.createdAtEpochMs
       )
     },
-    auditCheckpoint = if (cfg.securityPolicy.signedAuditCheckpoints) audit.createCheckpoint(sign = true) else null,
+    auditCheckpoint = checkpoint,
   )
+
+  /**
+   * Mark the batch SENDING and send it. If the caller is cancelled while the batch is in flight, the
+   * whole batch returns to retry eligibility immediately, without an attempt bump, before rethrowing.
+   */
+  private suspend fun sendInFlight(
+    cfg: KioskOpsConfig,
+    request: BatchSendRequest,
+    batch: List<QueueEventEntity>,
+    now: Long,
+  ): TransportResult<BatchSendResponse> = try {
+    // Mark as SENDING to reduce accidental double-sends within a single process.
+    for (e in batch) queue.markSending(e.id)
+    sendGuarded(cfg, request)
+  } catch (e: CancellationException) {
+    withContext(NonCancellable) {
+      for (ev in batch) queue.markBatchFailureNoAttemptBump(ev.id, "cancelled", nextAttemptAtMs = now)
+    }
+    throw e
+  }
+
+  /** A transport that throws instead of returning a result is treated as a transient batch failure. */
+  @Suppress("TooGenericExceptionCaught")
+  private suspend fun sendGuarded(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> =
+    try {
+      transport.sendBatch(cfg, request)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (t: Throwable) {
+      TransportResult.TransientFailure(message = "transport_exception: ${t::class.java.simpleName}", cause = t)
+    }
+
+  /** Only on HTTP success. A lost acknowledgement is covered by the next checkpoint's link, so it never blocks the batch. */
+  @Suppress("TooGenericExceptionCaught")
+  private suspend fun acknowledgeCheckpoint(request: BatchSendRequest) {
+    val checkpoint = request.auditCheckpoint ?: return
+    try {
+      audit.acknowledgeCheckpoint(checkpoint)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (t: Throwable) {
+      logs.w("Sync", "Audit checkpoint acknowledgement failed: ${t::class.java.simpleName}")
+    }
+  }
 
   private suspend fun onBatchSuccess(
     cfg: KioskOpsConfig,

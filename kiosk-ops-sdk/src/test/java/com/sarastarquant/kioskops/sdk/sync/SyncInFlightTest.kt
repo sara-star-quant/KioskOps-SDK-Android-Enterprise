@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import com.sarastarquant.kioskops.sdk.KioskOpsConfig
 import com.sarastarquant.kioskops.sdk.audit.DeviceAttestationProvider
 import com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail
@@ -36,7 +37,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -82,6 +82,7 @@ class SyncInFlightTest {
     cfg: KioskOpsConfig = cfg(),
     provider: DeviceAttestationProvider = SoftwareAttestationProvider(),
     events: Int = 2,
+    onDelivery: (EventDelivery) -> Unit = {},
   ): Fixture {
     val logs = RingLog(ctx)
     val queue = QueueRepository(ctx, logs, NoopCryptoProvider)
@@ -96,6 +97,7 @@ class SyncInFlightTest {
       audit = PersistentAuditTrail(ctx, { RetentionPolicy.maximalistDefaults() }, clock,
         attestationProvider = { provider }),
       clock = clock,
+      onDelivery = onDelivery,
     )
     return Fixture(queue, engine)
   }
@@ -115,10 +117,23 @@ class SyncInFlightTest {
     }
   }
 
+  /** Stored rows keyed by event type, for tests that need per-event state. */
+  private fun rowsByType(): Map<String, Row> {
+    val db = SQLiteDatabase.openDatabase(
+      ctx.getDatabasePath("kiosk_ops_queue.db").path, null, SQLiteDatabase.OPEN_READONLY,
+    )
+    db.use {
+      it.rawQuery("SELECT type, state, attempts, nextAttemptAtEpochMs FROM queue_events", null).use { c ->
+        val out = mutableMapOf<String, Row>()
+        while (c.moveToNext()) out[c.getString(0)] = Row(c.getString(1), c.getInt(2), c.getLong(3))
+        return out
+      }
+    }
+  }
+
   private fun ackAll(request: BatchSendRequest) =
     request.events.map { EventAck(it.id, it.idempotencyKey, accepted = true) }
 
-  @Ignore("pending: a cancelled send must return its events to retry")
   @Test
   fun `cancellation during send leaves no event in SENDING`() = runBlocking<Unit> {
     val entered = CompletableDeferred<Unit>()
@@ -147,7 +162,6 @@ class SyncInFlightTest {
     assertThat(rows.map { it.attempts }).containsExactly(0, 0)
   }
 
-  @Ignore("pending: a failed checkpoint signature must not strand events in sending")
   @Test
   fun `checkpoint failure does not strand events`() = runBlocking<Unit> {
     val software = SoftwareAttestationProvider()
@@ -170,7 +184,6 @@ class SyncInFlightTest {
     assertThat(rows().map { it.state }).doesNotContain("SENDING")
   }
 
-  @Ignore("pending: an unexpected transport exception must become a transient batch failure")
   @Test
   fun `unexpected transport exception is a transient batch failure`() = runBlocking<Unit> {
     val transport = object : Transport {
@@ -235,5 +248,136 @@ class SyncInFlightTest {
     assertThat(retry.value.attempted).isEqualTo(2)
     assertThat(retry.value.sent).isEqualTo(2)
     assertThat(rows().map { it.state }).containsExactly("SENT", "SENT")
+  }
+
+  @Test
+  fun `checkpoint failure returns a transient failure and backs the batch off`() = runBlocking<Unit> {
+    val throwing = object : DeviceAttestationProvider by SoftwareAttestationProvider() {
+      override fun signAuditEntry(payload: String): String? = error("keystore unavailable")
+    }
+    var sends = 0
+    val transport = object : Transport {
+      override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> {
+        sends++
+        return TransportResult.Success(BatchSendResponse(request.events.size, ackAll(request)), httpStatus = 200)
+      }
+    }
+    val f = fixture(transport, cfg(checkpoints = true), throwing)
+
+    val result = f.engine.flushOnce()
+
+    assertThat(result).isInstanceOf(TransportResult.TransientFailure::class.java)
+    assertThat((result as TransportResult.TransientFailure).message).isEqualTo("checkpoint_failed")
+    assertThat(result.cause).isInstanceOf(IllegalStateException::class.java)
+    assertThat(sends).isEqualTo(0)
+    val rows = rows()
+    assertThat(rows.map { it.state }).containsExactly("FAILED", "FAILED")
+    assertThat(rows.map { it.attempts }).containsExactly(0, 0)
+    assertThat(rows.map { it.nextAttemptAt }).containsExactly(
+      clock.now + Backoff.nextDelayMs(0), clock.now + Backoff.nextDelayMs(0),
+    )
+    assertThat(rows.all { it.nextAttemptAt > clock.now }).isTrue()
+  }
+
+  @Test
+  fun `acknowledge failure does not strand the batch`() = runBlocking<Unit> {
+    // Any write that advances lastAckedSeq fails, so acknowledgeCheckpoint throws after the server accepted the batch.
+    val sql = auditDb.openHelper.writableDatabase
+    sql.execSQL(
+      "CREATE TRIGGER fail_ack_insert BEFORE INSERT ON audit_chain_state WHEN NEW.lastAckedSeq > 0 " +
+        "BEGIN SELECT RAISE(ABORT, 'ack write failed'); END"
+    )
+    sql.execSQL(
+      "CREATE TRIGGER fail_ack_update BEFORE UPDATE ON audit_chain_state WHEN NEW.lastAckedSeq > 0 " +
+        "BEGIN SELECT RAISE(ABORT, 'ack write failed'); END"
+    )
+    var checkpointSent = false
+    val transport = object : Transport {
+      override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> {
+        checkpointSent = request.auditCheckpoint != null
+        return TransportResult.Success(BatchSendResponse(request.events.size, ackAll(request)), httpStatus = 200)
+      }
+    }
+    val f = fixture(transport, cfg(checkpoints = true))
+
+    val result = f.engine.flushOnce() as TransportResult.Success
+
+    assertThat(checkpointSent).isTrue()
+    assertThat(result.value.sent).isEqualTo(2)
+    assertThat(rows().map { it.state }).containsExactly("SENT", "SENT")
+    sql.query("SELECT lastAckedSeq FROM audit_chain_state").use { c ->
+      assertThat(c.moveToFirst()).isTrue()
+      assertThat(c.getLong(0)).isEqualTo(0L)
+    }
+  }
+
+  private data class OutcomeCase(
+    val name: String,
+    val respond: (BatchSendRequest) -> TransportResult<BatchSendResponse>,
+    val rows: Map<String, Row>,
+    val deliveries: List<Triple<String, DeliveryStatus, String?>>,
+  )
+
+  @Test
+  fun `transport result and ack combinations map to stored rows and deliveries`() = runBlocking<Unit> {
+    val now = clock.now
+    val retryAt = now + Backoff.nextDelayMs(0)
+    val mixedAcks = { request: BatchSendRequest ->
+      val byType = request.events.associateBy { it.type }
+      val acks = listOf(
+        byType.getValue("T0").let { EventAck(it.id, it.idempotencyKey, accepted = true, serverEventId = "srv-0") },
+        byType.getValue("T1").let { EventAck(it.id, it.idempotencyKey, accepted = false, retryable = true, error = "busy") },
+        byType.getValue("T2").let { EventAck(it.id, it.idempotencyKey, accepted = false, retryable = false, error = "bad") },
+      )
+      TransportResult.Success(BatchSendResponse(acks.size, acks), httpStatus = 200)
+    }
+    val backedOff = (0..3).associate { "T$it" to Row("FAILED", 0, retryAt) }
+    val cases = listOf(
+      OutcomeCase(
+        name = "success with accepted, rejected retryable, rejected non-retryable, and missing ack",
+        respond = mixedAcks,
+        rows = mapOf(
+          "T0" to Row("SENT", 0, 0L),
+          "T1" to Row("FAILED", 1, retryAt),
+          "T2" to Row("QUARANTINED", 1, Long.MAX_VALUE),
+          "T3" to Row("FAILED", 1, retryAt),
+        ),
+        deliveries = listOf(
+          Triple("T0", DeliveryStatus.DELIVERED, "srv-0"),
+          Triple("T1", DeliveryStatus.RETRY_SCHEDULED, "busy"),
+          Triple("T2", DeliveryStatus.QUARANTINED, "bad"),
+          Triple("T3", DeliveryStatus.RETRY_SCHEDULED, "missing_ack"),
+        ),
+      ),
+      OutcomeCase("transient failure", { TransportResult.TransientFailure("down", httpStatus = 503) }, backedOff, emptyList()),
+      OutcomeCase("permanent failure", { TransportResult.PermanentFailure("auth", httpStatus = 401) }, backedOff, emptyList()),
+    )
+
+    for (case in cases) {
+      val sentOrder = mutableListOf<String>()
+      val sentIds = mutableListOf<String>()
+      val delivered = mutableListOf<EventDelivery>()
+      val transport = object : Transport {
+        override suspend fun sendBatch(cfg: KioskOpsConfig, request: BatchSendRequest): TransportResult<BatchSendResponse> {
+          sentOrder += request.events.map { it.type }
+          sentIds += request.events.map { it.id }
+          return case.respond(request)
+        }
+      }
+      val f = fixture(transport, events = 4, onDelivery = { delivered += it })
+
+      f.engine.flushOnce()
+
+      val rows = rowsByType()
+      val nextAt = { r: Row -> if (r.state == "SENT") 0L else r.nextAttemptAt }
+      assertWithMessage(case.name).that(rows.mapValues { (_, r) -> r.copy(nextAttemptAt = nextAt(r)) }).isEqualTo(case.rows)
+      assertWithMessage(case.name).that(delivered.map { it.type }).isEqualTo(
+        sentOrder.filter { t -> case.deliveries.any { it.first == t } },
+      )
+      assertWithMessage(case.name).that(
+        delivered.map { Triple(it.type, it.status, if (it.status == DeliveryStatus.DELIVERED) it.serverEventId else it.error) },
+      ).containsExactlyElementsIn(case.deliveries)
+      sentIds.forEach { f.queue.delete(it) }
+    }
   }
 }
