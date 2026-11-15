@@ -73,8 +73,8 @@ internal object AuditChainCore {
    *   (received at [previousPinReceivedAtMs]). A null link while a pin exists is Forked.
    * - Consistent otherwise.
    *
-   * A prune record forged strictly below both pins passes: it can erase older acknowledged history
-   * early, while the pinned head still binds everything after it.
+   * A prune record forged below the pinned head the checkpoint links to passes: it can erase older
+   * acknowledged history early, while that pinned head still binds everything after it.
    */
   fun compareToPin(
     pin: AuditCheckpoint,
