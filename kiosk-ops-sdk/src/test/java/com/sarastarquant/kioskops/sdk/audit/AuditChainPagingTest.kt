@@ -92,6 +92,36 @@ class AuditChainPagingTest {
     result as ChainVerificationResult.Broken
     assertThat(result.brokenAtId).isEqualTo(victim.id)
     assertThat(result.actualPrevHash).isEqualTo("forged")
+    val previous = db.auditDao().getEventsPageBySeq(1198, 1).single()
+    assertThat(result.expectedPrevHash).isEqualTo(previous.hash)
+  }
+
+  @Test
+  fun `forged prevHash at the first row of the second page is broken`() = runTest {
+    repeat(PersistentAuditTrail.VERIFY_PAGE_SIZE + 1) {
+      trail.record("e$it")
+      nowMs++
+    }
+    val dao = db.auditDao()
+    val lastOfFirstPage = dao.getEventsPageBySeq(499, 1).single()
+    val victim = dao.getEventsPageBySeq(500, 1).single()
+    assertThat(victim.seq).isEqualTo(501L)
+    // Re-hash the row over the forged prevHash so only the chain link is wrong.
+    val format = AuditHashFormat.forStoredVersion(victim.formatVersion)!!
+    val rehash = AuditChainCore.hash(
+      AuditChainCore.content(format, victim.id, victim.ts, victim.name, victim.fieldsJson, "forged"),
+    )
+    db.openHelper.writableDatabase.execSQL(
+      "UPDATE audit_events SET prevHash = 'forged', hash = '$rehash' WHERE seq = 501",
+    )
+
+    val result = trail.verifyChainIntegrity()
+
+    assertThat(result).isInstanceOf(ChainVerificationResult.Broken::class.java)
+    result as ChainVerificationResult.Broken
+    assertThat(result.brokenAtId).isEqualTo(victim.id)
+    assertThat(result.expectedPrevHash).isEqualTo(lastOfFirstPage.hash)
+    assertThat(result.actualPrevHash).isEqualTo("forged")
   }
 
   @Test
