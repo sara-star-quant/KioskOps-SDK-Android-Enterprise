@@ -95,7 +95,7 @@ class SyncEngine @JvmOverloads constructor(
       sendInFlight(cfg, buildRequest(cfg, events.values.toList(), now, checkpoint), sendable, now)
     }
 
-    // The server has answered: record that answer to completion even if the caller is cancelled.
+    // Settle the outcome to completion even if the caller is cancelled.
     return withContext(NonCancellable) {
       when (res) {
         is TransportResult.Success -> {
