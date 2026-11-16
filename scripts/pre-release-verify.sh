@@ -49,14 +49,14 @@ log "Producing release artifacts in-tree (bypasses the publishing pipeline to sk
 ./gradlew \
   :kiosk-ops-sdk:bundleReleaseAar \
   :kiosk-ops-sdk:sourceReleaseJar \
-  :kiosk-ops-sdk:javaDocReleaseJar \
+  :kiosk-ops-sdk:javadocJar \
   :kiosk-ops-sdk:generatePomFileForMavenPublication \
   --no-daemon
 
 AAR="$REPO_ROOT/kiosk-ops-sdk/build/outputs/aar/kiosk-ops-sdk-release.aar"
 POM="$REPO_ROOT/kiosk-ops-sdk/build/publications/maven/pom-default.xml"
 SOURCES="$REPO_ROOT/kiosk-ops-sdk/build/intermediates/source_jar/release/release-sources.jar"
-JAVADOC="$REPO_ROOT/kiosk-ops-sdk/build/intermediates/java_doc_jar/release/release-javadoc.jar"
+JAVADOC="$REPO_ROOT/kiosk-ops-sdk/build/libs/kiosk-ops-sdk-javadoc.jar"
 
 for f in "$AAR" "$POM" "$SOURCES" "$JAVADOC"; do
   [ -s "$f" ] || die "missing or empty artifact: $f"
