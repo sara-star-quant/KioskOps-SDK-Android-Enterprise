@@ -479,10 +479,31 @@ the common module carries.
 
 ---
 
+## v1.6.1 Audit Continuity [PLANNED]
+
+Focus: an operator can erase a user, lose a device key, or reset a device and
+still hand an auditor a chain that verifies. Correctness only; no new feature
+surface.
+
+- [ ] A data-rights erasure keeps the chain verifiable: the erase is recorded as
+  a chain event, so a GDPR request no longer turns the next audit export into a
+  reported break
+- [ ] Key loss is visible, not silent: when the signing key is reset or
+  invalidated, the chain starts a new generation with a recorded discontinuity
+  an auditor can read
+- [ ] Retry timing matches what operators are told: one documented backoff
+  ceiling, covered by a test (the code stops doubling at about 2.8 hours; older
+  notes say 6)
+
+---
+
 ## v1.7.0 Cross-platform foundation
 
 Focus: second runtime, first platform; plus the verification, security, and
 documentation items carried over from v1.3.
+
+Order of work: the portable core lands before the iOS target, so Android
+behavior and its public API are settled before a second runtime depends on them.
 
 ### Platform
 - [ ] Kotlin Multiplatform common module carved out of core
@@ -501,6 +522,19 @@ documentation items carried over from v1.3.
   heuristics; never a blocking control.
 - [ ] R8/ProGuard consumer-rules guidance so host obfuscation composes
   with the SDK
+
+### Verification (carried from v1.6.0)
+- [ ] One chain on every platform: the same golden vectors pass on each target
+  before it ships, so an event written on one runtime verifies on another
+- [ ] Server teams can prove their checkpoint handling: published conformance
+  vectors for the pin rules (monotonic head, link to the pin, prune past the
+  pin, lost acknowledgement)
+- [ ] The checkpoint protocol is checked as a model with its limits stated; the
+  model covers the protocol, not the implementation
+- [ ] The file-based audit trail joins the same length-prefixed hash format,
+  versioned so existing lines keep verifying
+- [ ] Signature verification becomes usable: a documented way for a server to
+  obtain the audit signing key and its attestation chain at enrollment
 
 ### Internal refactors
 - [ ] `KioskOpsSdk` namespace split (`fleet.*`, `audit.*`, `health.*`
