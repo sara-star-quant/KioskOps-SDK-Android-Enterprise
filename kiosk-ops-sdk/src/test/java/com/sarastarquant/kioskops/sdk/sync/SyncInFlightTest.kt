@@ -169,6 +169,7 @@ class SyncInFlightTest {
     val rows = rows()
     assertThat(rows.map { it.state }).doesNotContain("SENDING")
     assertThat(rows.map { it.attempts }).containsExactly(0, 0)
+    assertThat(rows.map { it.nextAttemptAt }).containsExactly(clock.now, clock.now)
   }
 
   @Test
