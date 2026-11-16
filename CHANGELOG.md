@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+The audit trail becomes something a server can anchor, and a sync flush no longer strands events when it is cancelled or fails. Upgrading migrates the audit database in place; read the upgrade notes first.
+
+### Upgrade notes
+
+- **Audit database schema 2 to 3.** It migrates on first open and SDK 1.5.x cannot open it afterwards. Rolling back needs the app data cleared.
+- **Java source calling the 9-argument `SecurityPolicy` constructor stops compiling.** Binary callers still link. Use Kotlin named arguments, or pass the new `signedAuditCheckpoints` argument.
+- **FedRAMP, CUI, CJIS, GDPR, and ASD presets now send an `auditCheckpoint` object with each sync batch.** Servers that validate the batch schema strictly must accept it (`docs/openapi.yaml`). `signedAuditCheckpoints = false` restores the old request body.
+- **Retention deletes only the contiguous run of oldest rows past the cutoff.** After a backward clock step some rows stay longer than the window; none are deleted early.
+- **Erasing a user's audit rows makes chain verification report a break**, and a pinning server reports a forked chain. See `docs/SECURE_DESIGN.md` for the erase and wipe limits.
+- The `@RestrictTo` audit entity, chain state, and DAO classes changed signatures. They are not public API.
+
+### Added
+
+- `SecurityPolicy.signedAuditCheckpoints` and an `auditCheckpoint` field on the batch request: a signed head, count, and prune point linked to the last checkpoint the server acknowledged, so a server can detect rollback, truncation, and rewrites. The server rules and their limits are in `docs/SECURE_DESIGN.md`.
+- Audit events carry a sequence number and a hash-format version. New events use a length-prefixed hash input, so a pipe in an event name cannot alias another event; v1 events keep verifying under their original rules.
+
+### Changed
+
+- Audit verification reads the chain in pages, orders by sequence instead of timestamp, and records where retention pruned.
+- Sync flushes are serialized, so checkpoints reach the server in the order the device created them.
+- A sync batch returns to the queue without an attempt bump when the flush is cancelled, the transport throws, or the audit checkpoint cannot be created. A throwing transport or signer yields `TransientFailure` (`transport_exception: <Class>` or `checkpoint_failed`) instead of an exception.
+- An event whose stored payload cannot be decoded is no longer sent and no longer stalls its batch: it is reported `RETRY_SCHEDULED` or `QUARANTINED` with error `payload_decode_failed`, counts as rejected, and is quarantined at `maxAttemptsPerEvent`.
+- Docs say "hash-chained audit trail a server can anchor" instead of "tamper-evident", and state what each claim covers.
+
+### Fixed
+
+- Events recorded in the same millisecond, or across a backward clock step, no longer verify as a broken chain.
+- A fully pruned or head-pruned audit database from 1.5.x verifies as valid after the upgrade.
+
+
 ## [1.5.0] - 2026-11-08
 
 Additive API only: a delivery listener and `enforceRetention()`. No breaking changes.
