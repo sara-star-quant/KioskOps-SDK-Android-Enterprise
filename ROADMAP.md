@@ -457,7 +457,7 @@ Focus: enforce the public API, and close the delivery and retention loops.
 
 ---
 
-## v1.6.0 Audit Integrity and Sync Safety [UNRELEASED]
+## v1.6.0 Audit Integrity and Sync Safety [RELEASED]
 
 Focus: an audit trail a server can anchor, and a sync flush that keeps events
 retryable through failures. Ships ahead of the cross-platform work because
