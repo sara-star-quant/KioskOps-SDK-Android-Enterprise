@@ -174,7 +174,9 @@ new chain, so a pinning server reports Regressed. An operator must re-baseline (
 device on the server.
 
 If the device cannot sign (no key, or signing fails) the checkpoint goes out unsigned and the
-SDK records a `checkpoint_unsigned` audit event. It never skips silently.
+SDK records a `checkpoint_unsigned` audit event. It never skips silently. If the attestation
+provider throws instead of returning null, the batch is held back and retried as a transient
+failure (`checkpoint_failed`); no events are sent without the checkpoint the policy requires.
 
 ### 5. Defense-in-depth for credentials and secrets
 

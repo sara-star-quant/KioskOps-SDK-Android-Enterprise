@@ -45,6 +45,8 @@ left `SENDING`.
 - If the stranded rows are younger than 5 minutes, the worker is still in flight; wait.
 - If a crash-loop caused the issue, check `getAuditStatistics()` for repeated
   `sdk_initialized` entries; the crash root cause is a separate problem.
+- Since 1.6.0, a cancelled or failed sync returns its batch to the queue in-process, so
+  `SENDING` rows on a running instance point to a crash or a database error mid-flush.
 
 ---
 

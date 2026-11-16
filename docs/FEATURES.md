@@ -157,7 +157,7 @@ See [Security & Compliance](SECURITY_COMPLIANCE.md) for the full threat model.
 Network synchronization is **disabled by default**. When enabled:
 
 - **Batch ingest** - Configurable batch size with per-event acknowledgements
-- **Exponential backoff** - 10s base, 6h max, with jitter
+- **Exponential backoff** - 10s base, doubling per attempt, capped at 10240s (about 2.8h); deterministic, no jitter
 - **HMAC request signing** - Optional integrity protection
 - **Poison event quarantine** - Non-retryable events excluded from sync
 

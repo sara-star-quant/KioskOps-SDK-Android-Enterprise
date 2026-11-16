@@ -8,7 +8,6 @@
     <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun matchesType(element: JsonElement, expected: String): Boolean</ID>
     <ID>CyclomaticComplexMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
     <ID>CyclomaticComplexMethod:StatisticalAnomalyDetector.kt$StatisticalAnomalyDetector$override fun analyze(eventType: String, payloadJson: String): AnomalyResult</ID>
-    <ID>CyclomaticComplexMethod:SyncEngine.kt$SyncEngine$private suspend fun flushOnceLocked(): TransportResult&lt;SyncOnceResult></ID>
     <ID>EmptyFunctionBlock:GeofenceTransitionListener.kt$GeofenceTransitionAdapter${}</ID>
     <ID>EmptyFunctionBlock:Logger.kt$NoOpLogger${}</ID>
     <ID>EmptyFunctionBlock:Meter.kt$NoOpCounter${}</ID>
@@ -20,9 +19,7 @@
     <ID>ImplicitDefaultLocale:SpanContext.kt$SpanContext$String.format("%02x", traceFlags)</ID>
     <ID>LongMethod:JsonSchemaValidator.kt$JsonSchemaValidator$private fun validateElement( element: JsonElement, schema: JsonElement, path: String, errors: MutableList&lt;String>, )</ID>
     <ID>LongMethod:RemoteConfigManager.kt$RemoteConfigManager$suspend fun processConfigBundle( bundle: Bundle, source: ConfigSource, ): ConfigUpdateResult</ID>
-    <ID>LongMethod:SyncEngine.kt$SyncEngine$private suspend fun flushOnceLocked(): TransportResult&lt;SyncOnceResult></ID>
     <ID>LongParameterList:QueueRepository.kt$QueueRepository$( type: String, payloadJson: String, bytes: ByteArray, nowOverrideMs: Long?, cfg: KioskOpsConfig, stableEventId: String?, idempotencyKeyOverride: String?, droppedOldest: Int, userId: String? = null, dataClassification: String? = null, anomalyScore: Float? = null, )</ID>
-    <ID>LoopWithTooManyJumpStatements:SyncEngine.kt$SyncEngine$for</ID>
     <ID>MatchingDeclarationName:NistCompliance.kt$NistControl</ID>
     <ID>MaxLineLength:ManagedConfigReader.kt$ManagedConfigReader$val includeDeviceId = if (bundle.containsKey(Keys.TELEMETRY_INCLUDE_DEVICE_ID)) bundle.getBoolean(Keys.TELEMETRY_INCLUDE_DEVICE_ID) else defaults.telemetryPolicy.includeDeviceId</ID>
     <ID>MaxLineLength:QueueRepository.kt$QueueRepository$val reason = "Queue limits exceeded count=$beforeCount/${limits.maxActiveEvents} bytes=${beforeBytes}+${newBytes}/${limits.maxActiveBytes}"</ID>
