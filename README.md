@@ -14,7 +14,7 @@
 
 **An offline-first event pipeline with a hash-chained audit trail that a server can anchor, for regulated device fleets.**
 Devices lose network and keep recording: events are encrypted at rest, validated, PII-screened, hash-chained, and synced when connectivity returns.
-Android today (API 33+), iOS in preview from v1.6.0.
+Android today (API 33+), iOS in preview from v1.7.0.
 
 API reference: [sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise](https://sara-star-quant.github.io/KioskOps-SDK-Android-Enterprise/) (auto-published from `main` and release tags).
 
@@ -88,7 +88,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:1.5.0")
+    implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:1.6.0")
 }
 ```
 
@@ -110,7 +110,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:1.5.0")
+    implementation("com.sarastarquant.kioskops:kiosk-ops-sdk:1.6.0")
 }
 ```
 
@@ -126,7 +126,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.sara-star-quant:KioskOps-SDK-Android-Enterprise:v1.5.0")
+    implementation("com.github.sara-star-quant:KioskOps-SDK-Android-Enterprise:v1.6.0")
 }
 ```
 
