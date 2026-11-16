@@ -93,9 +93,9 @@ Optional network synchronization with your backend:
 
 - **Disabled by default** - No silent off-device transfer
 - **Batch processing** - Configurable batch size
-- **Retry logic** - Exponential backoff (10s base, 6h max) with jitter
+- **Retry logic** - Deterministic exponential backoff: 10s base, doubling per attempt, capped at 10240s (about 2.8h); no jitter
 - **Request signing** - Optional HMAC integrity protection
-- **Poison events** - Quarantine for non-retryable failures
+- **Poison events** - Quarantine for non-retryable rejections, and for events whose payload cannot be decoded once they reach maxAttemptsPerEvent
 
 ### Diagnostics
 
