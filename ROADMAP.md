@@ -457,7 +457,29 @@ Focus: enforce the public API, and close the delivery and retention loops.
 
 ---
 
-## v1.6.0 Cross-platform foundation
+## v1.6.0 Audit Integrity and Sync Safety [UNRELEASED]
+
+Focus: an audit trail a server can anchor, and a sync flush that keeps events
+retryable through failures. Ships ahead of the cross-platform work because
+both are prerequisites for it: the chain core and the flush logic are what
+the common module carries.
+
+### Audit
+- [x] Sequence-ordered audit chain, length-prefixed hash format, golden vectors
+- [x] Paged verification; retention records where it pruned
+- [x] Signed checkpoints linked to the last acknowledged pin
+  (`SecurityPolicy.signedAuditCheckpoints`, on in the regulated presets)
+- [x] Server rules and limits documented (`docs/SECURE_DESIGN.md`)
+
+### Sync
+- [x] Pure decision core for per-event outcomes
+- [x] Batches return to the queue after cancellation, checkpoint failure, or a
+  transport exception; undecodable events are quarantined on their own
+- [x] Flushes serialized
+
+---
+
+## v1.7.0 Cross-platform foundation
 
 Focus: second runtime, first platform; plus the verification, security, and
 documentation items carried over from v1.3.
