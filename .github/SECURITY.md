@@ -29,7 +29,7 @@ release. The short version is below.
 
 **Please do NOT report security vulnerabilities through public GitHub issues.**
 
-Instead, please send an email to: **pzverkov@protonmail.com**
+Instead, report it privately through [GitHub private vulnerability reporting](https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/security/advisories/new).
 
 Include the following information:
 - Type of vulnerability (e.g., injection, data exposure, authentication bypass)

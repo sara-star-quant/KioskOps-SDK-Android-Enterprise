@@ -1,0 +1,22 @@
+name: Commercial licensing
+description: Ask about terms outside the BSL 1.1 Additional Use Grant
+title: "[licensing] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Do not post confidential details, prices or contract terms. We reply with a way to continue privately.
+        Production use is already allowed unless you offer a commercial product or service that competes with KioskOps. See the LICENSE file for the exact terms.
+  - type: textarea
+    id: use
+    attributes:
+      label: What do you want to do that the Additional Use Grant does not cover?
+      description: A short, general description is enough. Name no customers or figures.
+    validations:
+      required: true
+  - type: input
+    id: who
+    attributes:
+      label: Company or project, in general terms
+    validations:
+      required: false
