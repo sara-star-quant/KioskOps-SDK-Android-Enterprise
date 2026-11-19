@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Signed audit exports carry `seq` and `formatVersion` on every line**, so a reader can recompute each hash without the device. Existing fields are unchanged.
+
 ## [1.6.0] - 2026-11-16
 
 The audit trail becomes something a server can anchor, and a sync flush no longer strands events when it is cancelled or fails. Upgrading migrates the audit database in place; read the upgrade notes first.
