@@ -566,7 +566,16 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/DeviceAttes
 	public abstract fun getAttestationChain ()Ljava/util/List;
 	public abstract fun isHardwareBacked ()Z
 	public abstract fun signAuditEntry (Ljava/lang/String;)Ljava/lang/String;
+	public fun signingKeyId ()Ljava/lang/String;
+	public fun signingPublicKey ()[B
 	public abstract fun verifySignature (Ljava/lang/String;Ljava/lang/String;)Z
+	public fun verifyWithPublicKey ([BLjava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider$DefaultImpls {
+	public static fun signingKeyId (Lcom/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider;)Ljava/lang/String;
+	public static fun signingPublicKey (Lcom/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider;)[B
+	public static fun verifyWithPublicKey (Lcom/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider;[BLjava/lang/String;Ljava/lang/String;)Z
 }
 
 public final class com/sarastarquant/kioskops/sdk/audit/KeystoreAttestationProvider : com/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider {
@@ -578,7 +587,10 @@ public final class com/sarastarquant/kioskops/sdk/audit/KeystoreAttestationProvi
 	public fun isHardwareBacked ()Z
 	public final fun parseAttestationBlob ([B)Ljava/util/List;
 	public fun signAuditEntry (Ljava/lang/String;)Ljava/lang/String;
+	public fun signingKeyId ()Ljava/lang/String;
+	public fun signingPublicKey ()[B
 	public fun verifySignature (Ljava/lang/String;Ljava/lang/String;)Z
+	public fun verifyWithPublicKey ([BLjava/lang/String;Ljava/lang/String;)Z
 }
 
 public final class com/sarastarquant/kioskops/sdk/audit/KeystoreAttestationProvider$Companion {
