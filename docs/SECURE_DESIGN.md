@@ -173,6 +173,16 @@ the row, so it cannot be tested against guessed content. The run list does show 
 belonged to one erased user. A chain already broken by an erase made before 1.6.1 stays Broken
 until retention prunes past those rows.
 
+A replaced signing key is a recorded event. Before each signed write, `PersistentAuditTrail` compares
+the provider's key id with the newest key marker row. The first marker (`signing_key`) announces the
+key in use and stores its public key. When the key later differs, a `signing_key_changed` row names
+both key ids, stores the new public key and starts the next chain generation. Signatures are checked
+against the newest marker at or below their row (rows before the first marker use the first marker's
+key), so rows signed before a change keep verifying. A pinning server sees the generation change as
+Regressed under rule R1 and an operator re-pins by procedure; the server cannot confirm the new key
+until an enrollment contract exists. A key that was lost before the markers existed cannot be
+detected afterwards, and a provider that cannot name its key writes no markers.
+
 Data wipes reset the chain. `DataRightsManager.wipeAllSdkData` deletes the audit database and the
 device audit key; clearing app data or reinstalling does the same. The next checkpoint starts a
 new chain, so a pinning server reports Regressed. An operator must re-baseline (re-enroll) the

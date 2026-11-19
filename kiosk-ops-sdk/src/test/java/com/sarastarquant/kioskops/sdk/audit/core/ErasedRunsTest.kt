@@ -6,6 +6,10 @@
 package com.sarastarquant.kioskops.sdk.audit.core
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.junit.Test
 
 class ErasedRunsTest {
@@ -100,6 +104,33 @@ class ErasedRunsTest {
     val tampered = without(3L..5L).map { if (it.seq == 6L) it.copy(name = "forged") else it }
     val result = AuditChainCore.verifyPage(tampered, "GENESIS", listOf(run(3, 5)))
     assertThat((result as PageResult.Broken).seq).isEqualTo(6)
+  }
+
+  @Test
+  fun `golden erase vector bridges with its runs and breaks without them`() {
+    val vector = kotlinx.serialization.json.Json.parseToJsonElement(
+      checkNotNull(javaClass.getResource("/audit/golden_vectors.json")).readText(),
+    ).jsonObject.getValue("ERASE_V2").jsonObject
+    val kept = vector.getValue("keptSeqs").jsonArray.map { it.jsonPrimitive.long }.toSet()
+    val links = vector.getValue("rows").jsonArray.map { it.jsonObject }.filter { it.getValue("seq").jsonPrimitive.long in kept }
+      .map { v ->
+        ChainLink(
+          v.getValue("seq").jsonPrimitive.long, v.getValue("id").jsonPrimitive.content,
+          v.getValue("ts").jsonPrimitive.long, v.getValue("name").jsonPrimitive.content,
+          v.getValue("fieldsJson").jsonPrimitive.content, v.getValue("prevHash").jsonPrimitive.content,
+          v.getValue("hash").jsonPrimitive.content, AuditHashFormat.V2.version,
+        )
+      }
+    val runs = vector.getValue("runs").jsonArray.map { r ->
+      val o = r.jsonObject
+      ErasedRun(
+        o.getValue("fromSeq").jsonPrimitive.long, o.getValue("toSeq").jsonPrimitive.long,
+        o.getValue("startPrev").jsonPrimitive.content, o.getValue("endHash").jsonPrimitive.content,
+      )
+    }
+
+    assertThat(AuditChainCore.verifyPage(links, "GENESIS", runs)).isInstanceOf(PageResult.Ok::class.java)
+    assertThat((AuditChainCore.verifyPage(links, "GENESIS") as PageResult.Broken).seq).isEqualTo(4)
   }
 
   @Test
