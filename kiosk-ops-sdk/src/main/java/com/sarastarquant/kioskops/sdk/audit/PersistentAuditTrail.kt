@@ -153,7 +153,8 @@ class PersistentAuditTrail(
     dao.eraseRowsWithRecord(userId) { rows ->
       val state = dao.getChainState() ?: initializeChainState()
       val runs = erasedRuns(rows, state.lastAckedSeq)
-      nextEntry(state, ERASE_EVENT, extraFields + (RUNS_FIELD to runs.toFieldValue()), null, provider)
+      val fields = extraFields + mapOf("auditDeleted" to rows.size.toString(), RUNS_FIELD to runs.toFieldValue())
+      nextEntry(state, ERASE_EVENT, fields, null, provider)
     }
   }
 
@@ -484,6 +485,9 @@ class PersistentAuditTrail(
    * next checkpoint as Forked.
    * @since 0.5.0
    */
+  @Deprecated(
+    "Removes chain links without recording the erase. Use DataRightsManager.deleteUserData, which keeps the chain verifiable.",
+  )
   suspend fun deleteEventsByUserId(userId: String): Int {
     return dao.deleteEventsByUserId(userId)
   }

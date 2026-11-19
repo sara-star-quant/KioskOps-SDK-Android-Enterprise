@@ -162,11 +162,16 @@ Host requirement: keep `android:allowBackup="false"` (or exclude the audit datab
 backup and device transfer). A restored backup is an older chain; it is indistinguishable from a
 rollback and the server will flag it as one.
 
-Per-user erasure is a known limit. `DataRightsManager.deleteUserData` deletes the user's audit
-rows without a prune record, so it removes links from the chain. `verifyChainIntegrity` then
-reports Broken for any chain that contains erased rows, until retention prunes past them. When the
-erased row is the one at `lastAckedSeq`, the next checkpoint carries no link hash and a pinning
-server reports Forked. A chain event that records erasures is planned work.
+Per-user erasure keeps the chain verifiable from 1.6.1. `DataRightsManager.deleteUserData` removes
+the user's audit rows and appends one `user_data_deleted` row in a single transaction. The row
+lists each removed run of seqs by its boundary hashes (the hash before the run and the hash of the
+run's last row), never the user id or any erased content. `verifyChainIntegrity` bridges a link
+mismatch only when recorded runs cover the gap exactly, so deleting a row without a record still
+reports Broken. When the erased row is the one at `lastAckedSeq`, the record keeps its hash and the
+next checkpoint still links to the pin. Each kept hash covers a random row id that is deleted with
+the row, so it cannot be tested against guessed content. The run list does show that rows N to M
+belonged to one erased user. A chain already broken by an erase made before 1.6.1 stays Broken
+until retention prunes past those rows.
 
 Data wipes reset the chain. `DataRightsManager.wipeAllSdkData` deletes the audit database and the
 device audit key; clearing app data or reinstalling does the same. The next checkpoint starts a
