@@ -477,7 +477,7 @@ the common module carries.
 
 ---
 
-## v1.6.1 Audit Continuity [PLANNED]
+## v1.6.1 Audit Continuity [RELEASED]
 
 Focus: an operator can erase a user, lose a device key, or reset a device and
 still hand an auditor a chain that verifies. Correctness only; no new feature
