@@ -1,0 +1,117 @@
+# Third-party notices
+
+Runtime dependencies of `kiosk-ops-sdk` (release runtime classpath, 70 artifacts), generated from the CycloneDX SBOM. Test, build and lint tooling are not listed because they are not distributed with the SDK.
+
+Apache-2.0 components are used under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
+| Artifact | Version | License |
+|---|---|---|
+| androidx.annotation:annotation | 1.9.1 | Apache-2.0 |
+| androidx.annotation:annotation-experimental | 1.5.0 | Apache-2.0 |
+| androidx.annotation:annotation-jvm | 1.9.1 | Apache-2.0 |
+| androidx.arch.core:core-common | 2.2.0 | Apache-2.0 |
+| androidx.arch.core:core-runtime | 2.2.0 | Apache-2.0 |
+| androidx.collection:collection | 1.6.0 | Apache-2.0 |
+| androidx.collection:collection-jvm | 1.6.0 | Apache-2.0 |
+| androidx.concurrent:concurrent-futures | 1.2.0 | Apache-2.0 |
+| androidx.concurrent:concurrent-futures-ktx | 1.2.0 | Apache-2.0 |
+| androidx.core:core | 1.19.1 | Apache-2.0 |
+| androidx.core:core-ktx | 1.19.1 | Apache-2.0 |
+| androidx.core:core-viewtree | 1.0.0 | Apache-2.0 |
+| androidx.datastore:datastore | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-android | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-core | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-core-android | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-core-okio | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-core-okio-jvm | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-preferences | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-preferences-android | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-preferences-core | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-preferences-core-android | 1.3.0 | Apache-2.0 |
+| androidx.datastore:datastore-preferences-external-protobuf | 1.3.0 | BSD-3-Clause |
+| androidx.datastore:datastore-preferences-proto | 1.3.0 | Apache-2.0 |
+| androidx.interpolator:interpolator | 1.0.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-common | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-common-jvm | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-livedata | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-livedata-core | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-livedata-core-ktx | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-process | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-runtime | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-runtime-android | 2.10.0 | Apache-2.0 |
+| androidx.lifecycle:lifecycle-service | 2.10.0 | Apache-2.0 |
+| androidx.profileinstaller:profileinstaller | 1.4.0 | Apache-2.0 |
+| androidx.room:room-common | 2.8.5 | Apache-2.0 |
+| androidx.room:room-common-jvm | 2.8.5 | Apache-2.0 |
+| androidx.room:room-ktx | 2.8.5 | Apache-2.0 |
+| androidx.room:room-runtime | 2.8.5 | Apache-2.0 |
+| androidx.room:room-runtime-android | 2.8.5 | Apache-2.0 |
+| androidx.sqlite:sqlite | 2.7.0 | Apache-2.0 |
+| androidx.sqlite:sqlite-android | 2.7.0 | Apache-2.0 |
+| androidx.sqlite:sqlite-framework | 2.7.0 | Apache-2.0 |
+| androidx.sqlite:sqlite-framework-android | 2.7.0 | Apache-2.0 |
+| androidx.startup:startup-runtime | 1.2.0 | Apache-2.0 |
+| androidx.tracing:tracing | 2.0.1 | Apache-2.0 |
+| androidx.tracing:tracing-android | 2.0.1 | Apache-2.0 |
+| androidx.tracing:tracing-ktx | 2.0.1 | Apache-2.0 |
+| androidx.versionedparcelable:versionedparcelable | 1.1.1 | Apache-2.0 |
+| androidx.work:work-runtime | 2.12.0 | Apache-2.0 |
+| androidx.work:work-runtime-ktx | 2.12.0 | Apache-2.0 |
+| com.google.guava:listenablefuture | 9999.0-empty-to-avoid-conflict-with-guava | Apache-2.0 |
+| com.squareup.okhttp3:okhttp | 5.5.1 | Apache-2.0 |
+| com.squareup.okhttp3:okhttp-android | 5.5.1 | Apache-2.0 |
+| com.squareup.okio:okio | 3.18.1 | Apache-2.0 |
+| com.squareup.okio:okio-jvm | 3.18.1 | Apache-2.0 |
+| org.jetbrains:annotations | 23.0.0 | Apache-2.0 |
+| org.jetbrains.kotlin:kotlin-stdlib | 2.4.21 | Apache-2.0 |
+| org.jetbrains.kotlinx:atomicfu | 0.28.0 | Apache-2.0 |
+| org.jetbrains.kotlinx:atomicfu-jvm | 0.28.0 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-coroutines-android | 1.11.0 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-coroutines-bom | 1.9.0 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-coroutines-core | 1.9.0 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm | 1.9.0 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-serialization-bom | 1.8.1 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-serialization-core | 1.8.1 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-serialization-core-jvm | 1.8.1 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-serialization-json | 1.8.1 | Apache-2.0 |
+| org.jetbrains.kotlinx:kotlinx-serialization-json-jvm | 1.8.1 | Apache-2.0 |
+| org.jspecify:jspecify | 1.0.1 | Apache-2.0 |
+
+## Protocol Buffers (BSD-3-Clause)
+
+Used through `androidx.datastore:datastore-preferences-external-protobuf`.
+
+```
+Copyright 2008 Google Inc.  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Code generated by the Protocol Buffer compiler is owned by the owner
+of the input file used when generating it.  This code is not
+standalone and requires a support library to be linked with it.  This
+support library is itself covered by the above license.
+```
