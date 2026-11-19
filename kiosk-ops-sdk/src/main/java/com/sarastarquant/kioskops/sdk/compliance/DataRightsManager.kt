@@ -210,13 +210,14 @@ class DataRightsManager(
   /**
    * Delete all data for a specific user (GDPR Art. 17 erasure).
    *
-   * The deletion itself is audit-logged (without userId to avoid re-creating data).
+   * The deletion itself is audit-logged (without userId to avoid re-creating data). The persistent
+   * audit rows are removed and a `user_data_deleted` row is appended in one transaction. It lists the
+   * removed seq runs by boundary hash, so
+   * [com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail.verifyChainIntegrity] keeps reporting
+   * Valid and a pinning server sees a consistent next checkpoint.
    *
-   * Known limit: erasing the user's audit rows removes links from the audit hash chain, so
-   * [com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail.verifyChainIntegrity] reports Broken
-   * for a chain that contains erased rows until retention prunes past them. When an erased row is
-   * the head of the last acknowledged checkpoint, a server that pins checkpoints reports the next one
-   * as Forked. A chain event that records erasures is planned work. See docs/SECURE_DESIGN.md.
+   * Known limit: a chain already broken by an erase made before 1.6.1 stays Broken until retention
+   * prunes past the erased rows. See docs/SECURE_DESIGN.md.
    *
    * @param userId The user identifier whose data should be deleted.
    * @return Deletion result.
@@ -228,16 +229,13 @@ class DataRightsManager(
     }
     return try {
       val queueDeleted = queue?.deleteByUserId(userId) ?: 0
-      val auditDeleted = persistentAudit?.deleteEventsByUserId(userId) ?: 0
 
-      // Audit the deletion itself (without userId to avoid circular data creation)
-      persistentAudit?.record(
-        "user_data_deleted",
-        mapOf(
-          "queueDeleted" to queueDeleted.toString(),
-          "auditDeleted" to auditDeleted.toString(),
-        ),
-      )
+      // Erase and audit the deletion in one transaction (the record carries no userId)
+      val auditDeleted = persistentAudit?.eraseUser(
+        userId,
+        mapOf("queueDeleted" to queueDeleted.toString()),
+        sign = true,
+      ) ?: 0
 
       DataDeletionResult.Success(queueDeleted, auditDeleted)
     } catch (e: Exception) {

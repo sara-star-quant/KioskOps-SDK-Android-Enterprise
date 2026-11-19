@@ -142,6 +142,25 @@ interface AuditDao {
     deleteEventsThroughSeq(state.prunedThroughSeq)
   }
 
+  /**
+   * Atomic erase: delete every row of [userId], then insert the row and chain state that [build]
+   * returns for the removed rows. Any exception rolls the whole erase back.
+   *
+   * @return Number of rows removed.
+   */
+  @Transaction
+  suspend fun eraseRowsWithRecord(
+    userId: String,
+    build: suspend (List<AuditEventEntity>) -> Pair<AuditEventEntity, AuditChainState>,
+  ): Int {
+    val rows = getEventsByUserId(userId)
+    if (rows.isNotEmpty()) deleteEventsByUserId(userId)
+    val (record, state) = build(rows)
+    insertEvent(record)
+    upsertChainState(state)
+    return rows.size
+  }
+
   /** Lowest and highest seq among events whose ts is within the range; both null if none. */
   @Query("SELECT MIN(seq) AS minSeq, MAX(seq) AS maxSeq FROM audit_events WHERE ts >= :fromTs AND ts <= :toTs")
   suspend fun getSeqBoundsInRange(fromTs: Long, toTs: Long): SeqBounds

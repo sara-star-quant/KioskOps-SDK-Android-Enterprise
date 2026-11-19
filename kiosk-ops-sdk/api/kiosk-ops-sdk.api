@@ -566,7 +566,16 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/DeviceAttes
 	public abstract fun getAttestationChain ()Ljava/util/List;
 	public abstract fun isHardwareBacked ()Z
 	public abstract fun signAuditEntry (Ljava/lang/String;)Ljava/lang/String;
+	public fun signingKeyId ()Ljava/lang/String;
+	public fun signingPublicKey ()[B
 	public abstract fun verifySignature (Ljava/lang/String;Ljava/lang/String;)Z
+	public fun verifyWithPublicKey ([BLjava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider$DefaultImpls {
+	public static fun signingKeyId (Lcom/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider;)Ljava/lang/String;
+	public static fun signingPublicKey (Lcom/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider;)[B
+	public static fun verifyWithPublicKey (Lcom/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider;[BLjava/lang/String;Ljava/lang/String;)Z
 }
 
 public final class com/sarastarquant/kioskops/sdk/audit/KeystoreAttestationProvider : com/sarastarquant/kioskops/sdk/audit/DeviceAttestationProvider {
@@ -578,7 +587,10 @@ public final class com/sarastarquant/kioskops/sdk/audit/KeystoreAttestationProvi
 	public fun isHardwareBacked ()Z
 	public final fun parseAttestationBlob ([B)Ljava/util/List;
 	public fun signAuditEntry (Ljava/lang/String;)Ljava/lang/String;
+	public fun signingKeyId ()Ljava/lang/String;
+	public fun signingPublicKey ()[B
 	public fun verifySignature (Ljava/lang/String;Ljava/lang/String;)Z
+	public fun verifyWithPublicKey ([BLjava/lang/String;Ljava/lang/String;)Z
 }
 
 public final class com/sarastarquant/kioskops/sdk/audit/KeystoreAttestationProvider$Companion {
@@ -680,6 +692,7 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/db/AuditDao
 	public abstract fun deleteAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteEventsThroughSeq (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun eraseRowsWithRecord (Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getChainState (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getEventById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -700,6 +713,7 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/db/AuditDao
 }
 
 public final class com/sarastarquant/kioskops/sdk/audit/db/AuditDao$DefaultImpls {
+	public static fun eraseRowsWithRecord (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditDao;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun insertEventWithChainUpdate (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditDao;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun pruneThrough (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditDao;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -712,6 +726,7 @@ public final class com/sarastarquant/kioskops/sdk/audit/db/AuditDao_Impl : com/s
 	public fun deleteAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteEventsThroughSeq (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun eraseRowsWithRecord (Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getChainState (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getEventById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -4055,6 +4070,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QueueStates {
 }
 
 public final class com/sarastarquant/kioskops/sdk/sync/Backoff {
+	public static final field CEILING_MS J
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/sync/Backoff;
 	public final fun nextDelayMs (I)J
 }

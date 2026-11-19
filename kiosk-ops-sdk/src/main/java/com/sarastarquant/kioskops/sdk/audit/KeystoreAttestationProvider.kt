@@ -17,7 +17,10 @@ import java.security.PrivateKey
 import java.security.SecureRandom
 import java.security.Signature
 import java.security.cert.CertificateFactory
+import java.security.KeyFactory
+import java.security.MessageDigest
 import java.security.cert.X509Certificate
+import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 import javax.crypto.SecretKeyFactory
 
@@ -74,6 +77,18 @@ class KeystoreAttestationProvider(
       false
     }
   }
+
+  override fun signingPublicKey(): ByteArray? = try {
+    getOrCreateSigningKey()
+    keyStore.getCertificate(keyAlias)?.publicKey?.encoded
+  } catch (e: Exception) {
+    null
+  }
+
+  override fun signingKeyId(): String? = signingPublicKey()?.let(::signingKeyIdOf)
+
+  override fun verifyWithPublicKey(publicKey: ByteArray, payload: String, signature: String): Boolean =
+    verifyEcdsaSha256(publicKey, payload, signature)
 
   override fun getAttestationChain(): List<X509Certificate>? {
     if (cachedAttestationChain != null) {
@@ -259,3 +274,19 @@ class KeystoreAttestationProvider(
     }
   }
 }
+
+/** First 16 bytes of SHA-256 over the X.509 public key, as unpadded base64url (22 characters). */
+internal fun signingKeyIdOf(publicKey: ByteArray): String {
+  val digest = MessageDigest.getInstance("SHA-256").digest(publicKey)
+  return Base64.getUrlEncoder().withoutPadding().encodeToString(digest.copyOf(16))
+}
+
+/** SHA256withECDSA verification with an explicit X.509 public key; false on any malformed input. */
+internal fun verifyEcdsaSha256(publicKey: ByteArray, payload: String, signature: String): Boolean = runCatching {
+  val key = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(publicKey))
+  Signature.getInstance("SHA256withECDSA").run {
+    initVerify(key)
+    update(payload.toByteArray(Charsets.UTF_8))
+    verify(Base64.getDecoder().decode(signature))
+  }
+}.getOrDefault(false)

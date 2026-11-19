@@ -162,11 +162,33 @@ Host requirement: keep `android:allowBackup="false"` (or exclude the audit datab
 backup and device transfer). A restored backup is an older chain; it is indistinguishable from a
 rollback and the server will flag it as one.
 
-Per-user erasure is a known limit. `DataRightsManager.deleteUserData` deletes the user's audit
-rows without a prune record, so it removes links from the chain. `verifyChainIntegrity` then
-reports Broken for any chain that contains erased rows, until retention prunes past them. When the
-erased row is the one at `lastAckedSeq`, the next checkpoint carries no link hash and a pinning
-server reports Forked. A chain event that records erasures is planned work.
+Per-user erasure keeps the chain verifiable from 1.6.1. `DataRightsManager.deleteUserData` removes
+the user's audit rows and appends one `user_data_deleted` row in a single transaction. The row
+lists each removed run of seqs by its boundary hashes (the hash before the run and the hash of the
+run's last row), never the user id or any erased content. `verifyChainIntegrity` bridges a link
+mismatch only when recorded runs cover the gap exactly, so deleting a row without a record still
+reports Broken. When the erased row is the one at `lastAckedSeq`, the record keeps its hash and the
+next checkpoint still links to the pin. Each kept hash covers a random row id that is deleted with
+the row, so it cannot be tested against guessed content. The run list does show that rows N to M
+belonged to one erased user. A chain already broken by an erase made before 1.6.1 stays Broken
+until retention prunes past those rows.
+
+Limit: an erase record is a chain row like any other. Someone who can write the audit database
+offline can delete rows below a pinned head and append a record that bridges the gap, and local
+verification then returns Valid. `deleteUserData` signs the record when a signing provider is
+configured, so a forged unsigned record is distinguishable by a verifier that requires signatures;
+making that mandatory is planned work. Pinning and signed checkpoints remain the defense against
+rewrites of already acknowledged history.
+
+A replaced signing key is a recorded event. Before each signed write, `PersistentAuditTrail` compares
+the provider's key id with the newest key marker row. The first marker (`signing_key`) announces the
+key in use and stores its public key. When the key later differs, a `signing_key_changed` row names
+both key ids, stores the new public key and starts the next chain generation. Signatures are checked
+against the newest marker at or below their row (rows before the first marker use the first marker's
+key), so rows signed before a change keep verifying. A pinning server sees the generation change as
+Regressed under rule R1 and an operator re-pins by procedure; the server cannot confirm the new key
+until an enrollment contract exists. A key that was lost before the markers existed cannot be
+detected afterwards, and a provider that cannot name its key writes no markers.
 
 Data wipes reset the chain. `DataRightsManager.wipeAllSdkData` deletes the audit database and the
 device audit key; clearing app data or reinstalling does the same. The next checkpoint starts a

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+An erased user, a replaced signing key and a long retry streak no longer look like tampering. No schema change and no change to the checkpoint payload.
+
+### Upgrade notes
+
+- **User erasure keeps the audit chain verifiable.** `DataRightsManager.deleteUserData` removes the audit rows and appends one `user_data_deleted` row in the same transaction. The row lists the removed seq runs by boundary hash and carries no user id. `verifyChainIntegrity` returns Valid for such chains. A chain already broken by an erase made before this release stays Broken until retention prunes past those rows.
+- **A replaced signing key is recorded.** When the key changes, the chain gets a `signing_key_changed` row and a new chainGeneration. A server that pins checkpoints reports the generation change as Regressed under rule R1, which is the intended alarm; re-pin the device by your operator procedure. Signatures made before the change keep verifying against the public key stored in the first marker. A key lost before upgrading cannot be detected afterwards.
+- **Retention keeps signing key markers working.** Before pruning past the marker that governs the surviving rows, retention appends a copy of it. When a later marker still needs the older one, the prune waits until that later marker is itself old enough.
+- **`DeviceAttestationProvider` gains `signingKeyId()`, `signingPublicKey()` and `verifyWithPublicKey()`.** They have defaults, so existing Kotlin and Java implementations keep compiling. A provider that implements them gets key-change markers.
+- **`PersistentAuditTrail.deleteEventsByUserId` is deprecated.** It still removes chain links without a record. Use `deleteUserData`.
+- **The retry ceiling is stated in code.** `Backoff.CEILING_MS` is 10,240,000 ms (about 2.8 hours). Behavior is unchanged; the older 6 hour figure was unreachable.
+
 ### Changed
 
 - **Signed audit exports carry `seq` and `formatVersion` on every line**, so a reader can recompute each hash without the device. Existing fields are unchanged.

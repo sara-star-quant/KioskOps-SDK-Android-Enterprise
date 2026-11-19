@@ -62,4 +62,28 @@ interface DeviceAttestationProvider {
    * @return Serialized attestation data, or null if unavailable.
    */
   fun getAttestationBlob(): ByteArray?
+
+  /**
+   * Stable identifier of the current signing key, or null when the provider cannot name its key.
+   * The audit trail records it so a replaced key shows up as a chain event.
+   *
+   * @since 1.6.1
+   */
+  fun signingKeyId(): String? = null
+
+  /**
+   * X.509 SubjectPublicKeyInfo of the current signing key, or null when unavailable. The audit trail
+   * stores it when the key changes so older signatures stay verifiable.
+   *
+   * @since 1.6.1
+   */
+  fun signingPublicKey(): ByteArray? = null
+
+  /**
+   * Verify [signature] over [payload] with an explicit [publicKey] (X.509 SubjectPublicKeyInfo)
+   * instead of the current key. Return false when the provider cannot.
+   *
+   * @since 1.6.1
+   */
+  fun verifyWithPublicKey(publicKey: ByteArray, payload: String, signature: String): Boolean = false
 }

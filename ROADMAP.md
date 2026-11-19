@@ -483,13 +483,13 @@ Focus: an operator can erase a user, lose a device key, or reset a device and
 still hand an auditor a chain that verifies. Correctness only; no new feature
 surface.
 
-- [ ] A data-rights erasure keeps the chain verifiable: the erase is recorded as
+- [x] A data-rights erasure keeps the chain verifiable: the erase is recorded as
   a chain event, so a GDPR request no longer turns the next audit export into a
   reported break
-- [ ] Key loss is visible, not silent: when the signing key is reset or
+- [x] Key loss is visible, not silent: when the signing key is reset or
   invalidated, the chain starts a new generation with a recorded discontinuity
   an auditor can read
-- [ ] Retry timing matches what operators are told: one documented backoff
+- [x] Retry timing matches what operators are told: one documented backoff
   ceiling, covered by a test (the code stops doubling at about 2.8 hours; older
   notes say 6)
 
