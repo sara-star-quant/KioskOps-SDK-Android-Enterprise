@@ -4055,6 +4055,7 @@ public final class com/sarastarquant/kioskops/sdk/queue/QueueStates {
 }
 
 public final class com/sarastarquant/kioskops/sdk/sync/Backoff {
+	public static final field CEILING_MS J
 	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/sync/Backoff;
 	public final fun nextDelayMs (I)J
 }
