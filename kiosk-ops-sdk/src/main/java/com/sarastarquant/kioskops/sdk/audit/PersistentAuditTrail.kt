@@ -292,6 +292,8 @@ class PersistentAuditTrail(
         val line = json.encodeToString(
           mapOf(
             "id" to event.id,
+            "seq" to event.seq.toString(),
+            "formatVersion" to event.formatVersion.toString(),
             "ts" to event.ts.toString(),
             "name" to event.name,
             "fields" to event.fieldsJson,

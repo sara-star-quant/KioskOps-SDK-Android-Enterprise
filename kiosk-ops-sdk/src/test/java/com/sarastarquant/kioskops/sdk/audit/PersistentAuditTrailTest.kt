@@ -178,6 +178,21 @@ class PersistentAuditTrailTest {
   }
 
   @Test
+  fun `export lines carry seq and formatVersion so a reader can recompute each hash`() = runTest {
+    trail.record("export_verify", mapOf("key" to "value"))
+    nowMs += 100
+    trail.record("export_verify_2")
+
+    val file = trail.exportSignedAuditRange(1_700_000_000_000L, nowMs + 1000)
+    val lines = java.util.zip.GZIPInputStream(file.inputStream()).bufferedReader().readLines()
+
+    assertThat(lines).hasSize(2)
+    val rows = lines.map { kotlinx.serialization.json.Json.parseToJsonElement(it) as kotlinx.serialization.json.JsonObject }
+    assertThat(rows.map { it["seq"].toString().trim('"') }).containsExactly("1", "2").inOrder()
+    assertThat(rows.map { it["formatVersion"].toString().trim('"') }.toSet()).containsExactly("2")
+  }
+
+  @Test
   fun `large batch of records maintains chain integrity`() = runTest {
     for (i in 1..50) {
       nowMs += 10
