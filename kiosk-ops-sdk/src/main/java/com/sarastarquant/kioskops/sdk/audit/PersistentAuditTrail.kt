@@ -25,6 +25,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Base64
 import java.util.UUID
 import java.util.zip.GZIPOutputStream
 
@@ -67,6 +68,8 @@ class PersistentAuditTrail(
     private val RECORD_FORMAT = AuditHashFormat.V2
     private const val ERASE_EVENT = "user_data_deleted"
     private const val RUNS_FIELD = "runs"
+    private const val KEY_EVENT = "signing_key"
+    private const val KEY_CHANGED_EVENT = "signing_key_changed"
   }
 
   /**
@@ -85,8 +88,9 @@ class PersistentAuditTrail(
     userId: String? = null,
   ) {
     mutex.withLock {
-      val chainState = dao.getChainState() ?: initializeChainState()
       val provider = if (sign) attestationProvider?.invoke() else null
+      provider?.let { guardSigningKey(it) }
+      val chainState = dao.getChainState() ?: initializeChainState()
       val (event, newChainState) = nextEntry(chainState, name, fields, userId, provider)
       dao.insertEventWithChainUpdate(event, newChainState)
     }
@@ -152,35 +156,10 @@ class PersistentAuditTrail(
     val provider = if (sign) attestationProvider?.invoke() else null
     dao.eraseRowsWithRecord(userId) { rows ->
       val state = dao.getChainState() ?: initializeChainState()
-      val runs = erasedRuns(rows, state.lastAckedSeq)
+      val runs = erasedRunsOf(rows, state.lastAckedSeq)
       val fields = extraFields + mapOf("auditDeleted" to rows.size.toString(), RUNS_FIELD to runs.toFieldValue())
       nextEntry(state, ERASE_EVENT, fields, null, provider)
     }
-  }
-
-  /** Contiguous seq groups of [rows], with the acknowledged checkpoint hash when it falls inside one. */
-  private fun erasedRuns(rows: List<AuditEventEntity>, ackedSeq: Long): List<ErasedRun> {
-    val runs = mutableListOf<ErasedRun>()
-    var group = mutableListOf<AuditEventEntity>()
-    fun flush() {
-      if (group.isEmpty()) return
-      val acked = group.firstOrNull { it.seq == ackedSeq && ackedSeq > 0 }
-      runs += ErasedRun(
-        fromSeq = group.first().seq,
-        toSeq = group.last().seq,
-        startPrev = group.first().prevHash,
-        endHash = group.last().hash,
-        ackedSeq = acked?.seq,
-        ackedHash = acked?.hash,
-      )
-      group = mutableListOf()
-    }
-    for (row in rows.sortedBy { it.seq }) {
-      if (group.isNotEmpty() && row.seq != group.last().seq + 1) flush()
-      group += row
-    }
-    flush()
-    return runs
   }
 
   /** Runs recorded by erase rows, keeping only runs that sit before the row that records them. */
@@ -233,6 +212,7 @@ class PersistentAuditTrail(
       chainStartSeq = dao.getSeqBoundsInRange(Long.MIN_VALUE, Long.MAX_VALUE).minSeq,
       pruneSeed = dao.getChainState()?.prunedThroughHash ?: GENESIS_HASH,
       gaps = loadErasedRuns(),
+      keyMarkers = loadKeyMarkers(),
     )
     var expectedPrevHash: String? = null
     var count = 0
@@ -246,7 +226,7 @@ class PersistentAuditTrail(
       val (seed, result) = checkPage(page, expectedPrevHash, afterSeq, pageContext)
       val verified = if (result is PageResult.Broken) page.takeWhile { it.seq < result.seq } else page
 
-      signatureFailure(verified)?.let { return it }
+      signatureFailure(verified, pageContext.keyMarkers)?.let { return it }
       if (result is PageResult.Broken) return brokenResult(page.first { it.seq == result.seq }, verified, seed)
 
       result as PageResult.Ok
@@ -260,8 +240,59 @@ class PersistentAuditTrail(
     return ChainVerificationResult.Valid(eventCount = count, fromTs = firstTs, toTs = lastTs)
   }
 
+  /**
+   * Before signing: when the provider's key differs from the one the newest marker row names, record
+   * the change. The first marker (`signing_key`) claims no change. Later ones (`signing_key_changed`)
+   * start a new chain generation, so an auditor can read the discontinuity and a pinning server sees
+   * the generation change. Callers hold [mutex]. A provider that cannot name its key is skipped.
+   */
+  private suspend fun guardSigningKey(provider: DeviceAttestationProvider) {
+    val keyId = provider.signingKeyId()
+    val publicKey = provider.signingPublicKey()?.let { Base64.getEncoder().encodeToString(it) }
+    if (keyId == null || publicKey == null) return
+    val newestId = newestKeyMarkerId()
+    if (newestId != keyId) writeKeyMarker(keyId, publicKey, newestId)
+  }
+
+  /** Appends the marker row for [keyId]; [oldKeyId] is the key it replaces, null for the first marker. */
+  private suspend fun writeKeyMarker(keyId: String, publicKey: String, oldKeyId: String?) {
+    val state = dao.getChainState() ?: initializeChainState()
+    val changed = oldKeyId != null
+    val markerState = if (changed) state.copy(chainGeneration = state.chainGeneration + 1) else state
+    val fields = buildMap {
+      put("keyId", keyId)
+      put("publicKey", publicKey)
+      if (changed) {
+        put("oldKeyId", oldKeyId!!)
+        put("reason", "key_replaced")
+      }
+    }
+    val (event, next) = nextEntry(markerState, if (changed) KEY_CHANGED_EVENT else KEY_EVENT, fields, null, null)
+    dao.insertEventWithChainUpdate(event, next)
+  }
+
+  private suspend fun newestKeyMarkerId(): String? =
+    keyMarkerRows().maxByOrNull { it.seq }?.let { markerField(it, "keyId") }
+
+  private suspend fun keyMarkerRows(): List<AuditEventEntity> =
+    dao.getEventsByName(KEY_EVENT) + dao.getEventsByName(KEY_CHANGED_EVENT)
+
+  private fun markerField(row: AuditEventEntity, key: String): String? =
+    runCatching { json.decodeFromString<Map<String, String>>(row.fieldsJson)[key] }.getOrNull()
+
+  /** Public keys named by marker rows, in chain order. Rows with an unreadable key are skipped. */
+  private suspend fun loadKeyMarkers(): List<KeyMarker> = keyMarkerRows().sortedBy { it.seq }.mapNotNull { row ->
+    val key = markerField(row, "publicKey")?.let { runCatching { Base64.getDecoder().decode(it) }.getOrNull() }
+    key?.let { KeyMarker(row.seq, it) }
+  }
+
   /** What every page of one verification run shares. */
-  private class PageContext(val chainStartSeq: Long?, val pruneSeed: String, val gaps: List<ErasedRun>)
+  private class PageContext(
+    val chainStartSeq: Long?,
+    val pruneSeed: String,
+    val gaps: List<ErasedRun>,
+    val keyMarkers: List<KeyMarker>,
+  )
 
   /** Verifies one page; returns the seed it was checked against and the result. */
   private fun checkPage(
@@ -290,12 +321,15 @@ class PersistentAuditTrail(
   private fun AuditEventEntity.toLink() =
     ChainLink(seq, id, ts, name, fieldsJson, prevHash, hash, formatVersion)
 
-  private fun signatureFailure(events: List<AuditEventEntity>): ChainVerificationResult? {
+  private fun signatureFailure(events: List<AuditEventEntity>, markers: List<KeyMarker>): ChainVerificationResult? {
     val provider = attestationProvider?.invoke() ?: return null
     val bad = events.firstOrNull { event ->
       val format = AuditHashFormat.forStoredVersion(event.formatVersion)
       event.signature != null && format != null &&
-        !provider.verifySignature(
+        !signatureHolds(
+          provider,
+          markers,
+          event.seq,
           AuditChainCore.content(format, event.id, event.ts, event.name, event.fieldsJson, event.prevHash),
           event.signature,
         )
@@ -417,17 +451,14 @@ class PersistentAuditTrail(
    * @since 1.6.0
    */
   internal suspend fun createCheckpoint(sign: Boolean): AuditCheckpoint {
+    if (sign) mutex.withLock { attestationProvider?.invoke()?.let { guardSigningKey(it) } }
     val unsigned = mutex.withLock {
       val state = dao.getChainState()
       val head = dao.getHeadEvent()
       val prunedSeq = state?.prunedThroughSeq ?: 0L
       val prunedHash = state?.prunedThroughHash ?: GENESIS_HASH
       val linkSeq = state?.lastAckedSeq?.takeIf { it > 0 }
-      val linkHash = linkSeq?.let { seq ->
-        dao.getEventsPageBySeq(seq - 1, 1).firstOrNull { it.seq == seq }?.hash
-          ?: prunedHash.takeIf { seq == prunedSeq }
-          ?: loadErasedRuns().firstOrNull { it.ackedSeq == seq }?.ackedHash
-      }
+      val linkHash = linkSeq?.let { linkHashFor(it, prunedSeq, prunedHash) }
       AuditCheckpoint(
         headSeq = head?.seq ?: prunedSeq,
         headHash = head?.hash ?: prunedHash,
@@ -450,6 +481,12 @@ class PersistentAuditTrail(
     }
     return unsigned.copy(signature = signature)
   }
+
+  /** Hash this database holds at [seq]: the stored row, the prune point, or a recorded erased run. */
+  private suspend fun linkHashFor(seq: Long, prunedSeq: Long, prunedHash: String): String? =
+    dao.getEventsPageBySeq(seq - 1, 1).firstOrNull { it.seq == seq }?.hash
+      ?: prunedHash.takeIf { seq == prunedSeq }
+      ?: loadErasedRuns().firstOrNull { it.ackedSeq == seq }?.ackedHash
 
   /**
    * Record that a server accepted [checkpoint]; the next checkpoint links to its headSeq.
