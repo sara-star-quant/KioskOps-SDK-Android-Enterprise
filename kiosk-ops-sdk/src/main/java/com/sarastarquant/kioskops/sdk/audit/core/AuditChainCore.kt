@@ -128,24 +128,60 @@ internal object AuditChainCore {
    * Verifies [events] in order: seq strictly increases, each prevHash links to the previous hash
    * (the first to [expectedPrevHash]), and each stored hash matches its recomputed content.
    * An empty page is Ok with [expectedPrevHash] and lastSeq 0.
+   *
+   * A link whose prevHash does not match is accepted only when [gaps] bridge it (see [bridge]).
+   * [afterSeq] is the seq of the row that produced [expectedPrevHash], or null when unknown (the
+   * first page, where retention may have removed the rows before it).
    */
-  fun verifyPage(events: List<ChainLink>, expectedPrevHash: String): PageResult {
+  fun verifyPage(
+    events: List<ChainLink>,
+    expectedPrevHash: String,
+    gaps: List<ErasedRun> = emptyList(),
+    afterSeq: Long? = null,
+  ): PageResult {
     var prevHash = expectedPrevHash
-    var lastSeq = 0L
-    for ((index, e) in events.withIndex()) {
-      val reason = linkError(e, prevHash, if (index == 0) null else lastSeq)
+    var lastSeq: Long? = afterSeq
+    for (e in events) {
+      val reason = linkError(e, prevHash, lastSeq, gaps)
       if (reason != null) return PageResult.Broken(e.seq, reason)
       prevHash = e.hash
       lastSeq = e.seq
     }
-    return PageResult.Ok(prevHash, lastSeq)
+    return PageResult.Ok(prevHash, lastSeq ?: 0L)
   }
 
-  private fun linkError(e: ChainLink, prevHash: String, previousSeq: Long?): String? {
+  /**
+   * True when [gaps], taken in order, connect [expectedPrev] to [nextPrev] and cover every seq from
+   * after [lastSeq] up to but not including [nextSeq]. Each step must start at the hash the previous
+   * step ended on. When [lastSeq] is null the first run may start at any seq.
+   */
+  fun bridge(expectedPrev: String, lastSeq: Long?, nextSeq: Long, nextPrev: String, gaps: List<ErasedRun>): Boolean {
+    var cur = expectedPrev
+    var seq: Long? = lastSeq?.plus(1)
+    var connected = false
+    var done = false
+    var steps = 0
+    while (!done && steps++ < gaps.size) {
+      val from = seq
+      val run = gaps.firstOrNull { it.startPrev == cur && (from == null || it.fromSeq == from) }
+      if (run == null) {
+        done = true
+      } else {
+        cur = run.endHash
+        seq = run.toSeq + 1
+        done = run.toSeq + 1 >= nextSeq
+        connected = run.toSeq + 1 == nextSeq && cur == nextPrev
+      }
+    }
+    return connected
+  }
+
+  private fun linkError(e: ChainLink, prevHash: String, previousSeq: Long?, gaps: List<ErasedRun>): String? {
     val format = AuditHashFormat.forStoredVersion(e.formatVersion)
     return when {
       previousSeq != null && e.seq <= previousSeq -> "seq ${e.seq} does not follow $previousSeq"
-      e.prevHash != prevHash -> "prevHash does not match the previous link"
+      e.prevHash != prevHash && !bridge(prevHash, previousSeq, e.seq, e.prevHash, gaps) ->
+        "prevHash does not match the previous link"
       format == null -> "unknown format version ${e.formatVersion}"
       hash(content(format, e.id, e.ts, e.name, e.fieldsJson, e.prevHash)) != e.hash -> "hash does not match content"
       else -> null
