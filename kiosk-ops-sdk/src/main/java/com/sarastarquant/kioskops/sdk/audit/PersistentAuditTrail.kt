@@ -10,6 +10,9 @@ import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
 import com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint
 import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
 import com.sarastarquant.kioskops.sdk.audit.core.ChainLink
+import com.sarastarquant.kioskops.sdk.audit.core.ErasedRun
+import com.sarastarquant.kioskops.sdk.audit.core.parseErasedRuns
+import com.sarastarquant.kioskops.sdk.audit.core.toFieldValue
 import com.sarastarquant.kioskops.sdk.audit.core.PageResult
 import com.sarastarquant.kioskops.sdk.audit.db.AuditChainState
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
@@ -62,6 +65,8 @@ class PersistentAuditTrail(
     private const val GENESIS_HASH = "GENESIS"
     internal const val VERIFY_PAGE_SIZE = 500
     private val RECORD_FORMAT = AuditHashFormat.V2
+    private const val ERASE_EVENT = "user_data_deleted"
+    private const val RUNS_FIELD = "runs"
   }
 
   /**
@@ -80,56 +85,107 @@ class PersistentAuditTrail(
     userId: String? = null,
   ) {
     mutex.withLock {
-      val ts = clock.nowMs()
-      val id = UUID.randomUUID().toString()
-
-      // Get current chain state or initialize
       val chainState = dao.getChainState() ?: initializeChainState()
-      val prevHash = chainState.lastHash
-
-      // Build event content for hashing
-      val fieldsJson = json.encodeToString(fields)
-      val eventContent = AuditChainCore.content(RECORD_FORMAT, id, ts, name, fieldsJson, prevHash)
-      val hash = AuditChainCore.hash(eventContent)
-
-      // Optional signing
-      var signature: String? = null
-      var attestationBlob: ByteArray? = null
-
-      if (sign && attestationProvider != null) {
-        val provider = attestationProvider.invoke()
-        signature = provider.signAuditEntry(eventContent)
-        if (signature != null) {
-          attestationBlob = provider.getAttestationBlob()
-        }
-      }
-
-      // Create event entity
-      val event = AuditEventEntity(
-        id = id,
-        ts = ts,
-        name = name,
-        fieldsJson = fieldsJson,
-        prevHash = prevHash,
-        hash = hash,
-        signature = signature,
-        deviceAttestationBlob = attestationBlob,
-        chainGeneration = chainState.chainGeneration,
-        userId = userId,
-        seq = chainState.eventCount + 1,
-        formatVersion = RECORD_FORMAT.version,
-      )
-
-      // Update chain state
-      val newChainState = chainState.copy(
-        lastHash = hash,
-        lastTs = ts,
-        eventCount = chainState.eventCount + 1,
-      )
-
-      // Atomic insert
+      val provider = if (sign) attestationProvider?.invoke() else null
+      val (event, newChainState) = nextEntry(chainState, name, fields, userId, provider)
       dao.insertEventWithChainUpdate(event, newChainState)
     }
+  }
+
+  /**
+   * The row that follows [chainState] and the chain state after it. Signs with [provider] when given.
+   * Callers hold [mutex].
+   */
+  private fun nextEntry(
+    chainState: AuditChainState,
+    name: String,
+    fields: Map<String, String>,
+    userId: String?,
+    provider: DeviceAttestationProvider?,
+  ): Pair<AuditEventEntity, AuditChainState> {
+    val ts = clock.nowMs()
+    val id = UUID.randomUUID().toString()
+    val prevHash = chainState.lastHash
+
+    val fieldsJson = json.encodeToString(fields)
+    val eventContent = AuditChainCore.content(RECORD_FORMAT, id, ts, name, fieldsJson, prevHash)
+    val hash = AuditChainCore.hash(eventContent)
+
+    val signature = provider?.signAuditEntry(eventContent)
+    val attestationBlob = if (signature != null) provider.getAttestationBlob() else null
+
+    val event = AuditEventEntity(
+      id = id,
+      ts = ts,
+      name = name,
+      fieldsJson = fieldsJson,
+      prevHash = prevHash,
+      hash = hash,
+      signature = signature,
+      deviceAttestationBlob = attestationBlob,
+      chainGeneration = chainState.chainGeneration,
+      userId = userId,
+      seq = chainState.eventCount + 1,
+      formatVersion = RECORD_FORMAT.version,
+    )
+    val newChainState = chainState.copy(
+      lastHash = hash,
+      lastTs = ts,
+      eventCount = chainState.eventCount + 1,
+    )
+    return event to newChainState
+  }
+
+  /**
+   * Erase every row of [userId] and append one `user_data_deleted` row that lists the removed seq
+   * runs by boundary hash, in a single transaction, so the chain keeps verifying. The row carries
+   * [extraFields] and the runs, never the user id or any erased content. Signs the row when [sign] is
+   * true and a provider exists; a signing exception rolls the whole erase back.
+   *
+   * @return Number of rows removed.
+   */
+  internal suspend fun eraseUser(
+    userId: String,
+    extraFields: Map<String, String> = emptyMap(),
+    sign: Boolean = false,
+  ): Int = mutex.withLock {
+    val provider = if (sign) attestationProvider?.invoke() else null
+    dao.eraseRowsWithRecord(userId) { rows ->
+      val state = dao.getChainState() ?: initializeChainState()
+      val runs = erasedRuns(rows, state.lastAckedSeq)
+      nextEntry(state, ERASE_EVENT, extraFields + (RUNS_FIELD to runs.toFieldValue()), null, provider)
+    }
+  }
+
+  /** Contiguous seq groups of [rows], with the acknowledged checkpoint hash when it falls inside one. */
+  private fun erasedRuns(rows: List<AuditEventEntity>, ackedSeq: Long): List<ErasedRun> {
+    val runs = mutableListOf<ErasedRun>()
+    var group = mutableListOf<AuditEventEntity>()
+    fun flush() {
+      if (group.isEmpty()) return
+      val acked = group.firstOrNull { it.seq == ackedSeq && ackedSeq > 0 }
+      runs += ErasedRun(
+        fromSeq = group.first().seq,
+        toSeq = group.last().seq,
+        startPrev = group.first().prevHash,
+        endHash = group.last().hash,
+        ackedSeq = acked?.seq,
+        ackedHash = acked?.hash,
+      )
+      group = mutableListOf()
+    }
+    for (row in rows.sortedBy { it.seq }) {
+      if (group.isNotEmpty() && row.seq != group.last().seq + 1) flush()
+      group += row
+    }
+    flush()
+    return runs
+  }
+
+  /** Runs recorded by erase rows, keeping only runs that sit before the row that records them. */
+  private suspend fun loadErasedRuns(): List<ErasedRun> = dao.getEventsByName(ERASE_EVENT).flatMap { row ->
+    val field = runCatching { json.decodeFromString<Map<String, String>>(row.fieldsJson)[RUNS_FIELD] }.getOrNull()
+    (field?.let(::parseErasedRuns) ?: emptyList()).filter { it.toSeq < row.seq }
   }
 
   /**
@@ -172,8 +228,11 @@ class PersistentAuditTrail(
     var afterSeq = seqRange.first - 1
     val maxSeq = seqRange.last
 
-    val chainStartSeq = dao.getSeqBoundsInRange(Long.MIN_VALUE, Long.MAX_VALUE).minSeq
-    val pruneSeed = dao.getChainState()?.prunedThroughHash ?: GENESIS_HASH
+    val pageContext = PageContext(
+      chainStartSeq = dao.getSeqBoundsInRange(Long.MIN_VALUE, Long.MAX_VALUE).minSeq,
+      pruneSeed = dao.getChainState()?.prunedThroughHash ?: GENESIS_HASH,
+      gaps = loadErasedRuns(),
+    )
     var expectedPrevHash: String? = null
     var count = 0
     var firstTs = 0L
@@ -183,9 +242,7 @@ class PersistentAuditTrail(
       val page = dao.getEventsPageBySeq(afterSeq, VERIFY_PAGE_SIZE).filter { it.seq <= maxSeq }
       if (page.isEmpty()) break
       if (expectedPrevHash == null) firstTs = page.first().ts
-      val seed = expectedPrevHash ?: startSeed(page.first(), chainStartSeq, pruneSeed)
-
-      val result = AuditChainCore.verifyPage(page.map { it.toLink() }, seed)
+      val (seed, result) = checkPage(page, expectedPrevHash, afterSeq, pageContext)
       val verified = if (result is PageResult.Broken) page.takeWhile { it.seq < result.seq } else page
 
       signatureFailure(verified)?.let { return it }
@@ -200,6 +257,21 @@ class PersistentAuditTrail(
 
     if (count == 0) return ChainVerificationResult.EmptyRange(effectiveFromTs, effectiveToTs)
     return ChainVerificationResult.Valid(eventCount = count, fromTs = firstTs, toTs = lastTs)
+  }
+
+  /** What every page of one verification run shares. */
+  private class PageContext(val chainStartSeq: Long?, val pruneSeed: String, val gaps: List<ErasedRun>)
+
+  /** Verifies one page; returns the seed it was checked against and the result. */
+  private fun checkPage(
+    page: List<AuditEventEntity>,
+    expectedPrevHash: String?,
+    afterSeq: Long,
+    context: PageContext,
+  ): Pair<String, PageResult> {
+    val seed = expectedPrevHash ?: startSeed(page.first(), context.chainStartSeq, context.pruneSeed)
+    val knownAfter = afterSeq.takeIf { expectedPrevHash != null }
+    return seed to AuditChainCore.verifyPage(page.map { it.toLink() }, seed, context.gaps, knownAfter)
   }
 
   /** The chain's first stored row links to the prune point; any later row can only vouch for itself. */
@@ -353,6 +425,7 @@ class PersistentAuditTrail(
       val linkHash = linkSeq?.let { seq ->
         dao.getEventsPageBySeq(seq - 1, 1).firstOrNull { it.seq == seq }?.hash
           ?: prunedHash.takeIf { seq == prunedSeq }
+          ?: loadErasedRuns().firstOrNull { it.ackedSeq == seq }?.ackedHash
       }
       AuditCheckpoint(
         headSeq = head?.seq ?: prunedSeq,

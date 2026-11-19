@@ -680,6 +680,7 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/db/AuditDao
 	public abstract fun deleteAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteEventsThroughSeq (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun eraseRowsWithRecord (Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getChainState (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getEventById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -700,6 +701,7 @@ public abstract interface class com/sarastarquant/kioskops/sdk/audit/db/AuditDao
 }
 
 public final class com/sarastarquant/kioskops/sdk/audit/db/AuditDao$DefaultImpls {
+	public static fun eraseRowsWithRecord (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditDao;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun insertEventWithChainUpdate (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditDao;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditEventEntity;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun pruneThrough (Lcom/sarastarquant/kioskops/sdk/audit/db/AuditDao;Lcom/sarastarquant/kioskops/sdk/audit/db/AuditChainState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -712,6 +714,7 @@ public final class com/sarastarquant/kioskops/sdk/audit/db/AuditDao_Impl : com/s
 	public fun deleteAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteEventsByUserId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteEventsThroughSeq (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun eraseRowsWithRecord (Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getAllEvents (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getChainState (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getEventById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
