@@ -167,6 +167,68 @@ class PersistentAuditTrailKeyChangeTest {
     assertThat(trail.createCheckpoint(sign = false).chainGeneration).isEqualTo(1)
   }
 
+  private fun retentionTrail() = PersistentAuditTrail(
+    ctx,
+    {
+      RetentionPolicy(
+        retainSentEventsDays = 1,
+        retainFailedEventsDays = 1,
+        retainAuditDays = 1,
+        retainLogsDays = 1,
+        retainTelemetryDays = 1,
+      )
+    },
+    clock,
+    { provider },
+  )
+
+  @Test
+  fun `retention keeps a governing key marker for the rows it leaves`() = runTest {
+    val short = retentionTrail()
+    short.record("a", sign = true)
+    short.record("b", sign = true)
+    nowMs += 3 * 24 * 60 * 60 * 1000L
+    short.record("c", sign = true)
+
+    short.applyRetention()
+
+    val left = short.getEventsInRange(0, Long.MAX_VALUE).sortedBy { it.seq }.map { it.name }
+    assertThat(left).containsExactly("c", "signing_key").inOrder()
+    assertThat(short.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
+
+    provider.swapKey()
+    short.record("d", sign = true)
+
+    assertThat(short.getEventsInRange(0, Long.MAX_VALUE).map { it.name }).contains("signing_key_changed")
+    assertThat(short.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
+  }
+
+  @Test
+  fun `retention waits when a later key marker still needs the old one`() = runTest {
+    val short = retentionTrail()
+    short.record("a", sign = true)
+    provider.swapKey()
+    nowMs += 3 * 24 * 60 * 60 * 1000L
+    short.record("b", sign = true)
+    val before = short.getEventsInRange(0, Long.MAX_VALUE).size
+
+    short.applyRetention()
+
+    assertThat(short.getEventsInRange(0, Long.MAX_VALUE)).hasSize(before)
+    assertThat(short.verifyChainIntegrity()).isInstanceOf(ChainVerificationResult.Valid::class.java)
+  }
+
+  @Test
+  fun `the erase record is signed when a provider exists`() = runTest {
+    signed("a")
+
+    trail.eraseUser("nobody", sign = true)
+
+    val record = trail.getEventsInRange(0, Long.MAX_VALUE).single { it.name == "user_data_deleted" }
+    assertThat(record.signature).isNotNull()
+    assertValid()
+  }
+
   @Test
   fun `signing a checkpoint after a key change also records the change`() = runTest {
     signed("a")

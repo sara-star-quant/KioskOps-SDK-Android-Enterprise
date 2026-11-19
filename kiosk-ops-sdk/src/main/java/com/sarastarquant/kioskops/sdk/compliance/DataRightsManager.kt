@@ -231,7 +231,11 @@ class DataRightsManager(
       val queueDeleted = queue?.deleteByUserId(userId) ?: 0
 
       // Erase and audit the deletion in one transaction (the record carries no userId)
-      val auditDeleted = persistentAudit?.eraseUser(userId, mapOf("queueDeleted" to queueDeleted.toString())) ?: 0
+      val auditDeleted = persistentAudit?.eraseUser(
+        userId,
+        mapOf("queueDeleted" to queueDeleted.toString()),
+        sign = true,
+      ) ?: 0
 
       DataDeletionResult.Success(queueDeleted, auditDeleted)
     } catch (e: Exception) {

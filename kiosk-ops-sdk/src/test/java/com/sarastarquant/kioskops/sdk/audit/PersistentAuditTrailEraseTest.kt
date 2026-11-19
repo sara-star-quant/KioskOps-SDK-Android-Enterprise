@@ -132,6 +132,22 @@ class PersistentAuditTrailEraseTest {
   }
 
   @Test
+  fun `erasing the head while its checkpoint is in flight keeps the next checkpoint consistent`() = runTest {
+    record("u2")
+    record("u1")
+    val pin = trail.createCheckpoint(sign = false)
+
+    trail.eraseUser("u1")
+    trail.acknowledgeCheckpoint(pin)
+    record("u2")
+
+    val current = trail.createCheckpoint(sign = false)
+    assertThat(current.linkHash).isEqualTo(pin.headHash)
+    assertThat(AuditChainCore.compareToPin(pin, nowMs, current, nowMs, dayMs)).isEqualTo(PinResult.Consistent)
+    assertValid(rows = 4)
+  }
+
+  @Test
   fun `erasing the newest rows does not regress the head`() = runTest {
     record("u2")
     record("u1")

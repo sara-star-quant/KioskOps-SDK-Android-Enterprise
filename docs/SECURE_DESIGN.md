@@ -173,6 +173,13 @@ the row, so it cannot be tested against guessed content. The run list does show 
 belonged to one erased user. A chain already broken by an erase made before 1.6.1 stays Broken
 until retention prunes past those rows.
 
+Limit: an erase record is a chain row like any other. Someone who can write the audit database
+offline can delete rows below a pinned head and append a record that bridges the gap, and local
+verification then returns Valid. `deleteUserData` signs the record when a signing provider is
+configured, so a forged unsigned record is distinguishable by a verifier that requires signatures;
+making that mandatory is planned work. Pinning and signed checkpoints remain the defense against
+rewrites of already acknowledged history.
+
 A replaced signing key is a recorded event. Before each signed write, `PersistentAuditTrail` compares
 the provider's key id with the newest key marker row. The first marker (`signing_key`) announces the
 key in use and stores its public key. When the key later differs, a `signing_key_changed` row names

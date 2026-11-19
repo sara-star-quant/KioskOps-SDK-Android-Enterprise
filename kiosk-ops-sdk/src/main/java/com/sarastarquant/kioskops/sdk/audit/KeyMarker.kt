@@ -8,6 +8,12 @@ package com.sarastarquant.kioskops.sdk.audit
 import com.sarastarquant.kioskops.sdk.audit.core.ErasedRun
 import com.sarastarquant.kioskops.sdk.audit.db.AuditEventEntity
 
+private val markerJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+/** Field [key] of a marker row's fields JSON, or null when absent or unreadable. */
+internal fun markerField(row: AuditEventEntity, key: String): String? =
+  runCatching { markerJson.decodeFromString<Map<String, String>>(row.fieldsJson)[key] }.getOrNull()
+
 /** A signing key announced by a marker row at [seq]. */
 internal class KeyMarker(val seq: Long, val publicKey: ByteArray)
 

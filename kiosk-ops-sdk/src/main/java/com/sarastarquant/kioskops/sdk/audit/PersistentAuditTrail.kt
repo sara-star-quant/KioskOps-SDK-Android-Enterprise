@@ -68,6 +68,7 @@ class PersistentAuditTrail(
     private val RECORD_FORMAT = AuditHashFormat.V2
     private const val ERASE_EVENT = "user_data_deleted"
     private const val RUNS_FIELD = "runs"
+    private const val ACK_ERASED_EVENT = "acked_head_erased"
     private const val KEY_EVENT = "signing_key"
     private const val KEY_CHANGED_EVENT = "signing_key_changed"
   }
@@ -193,11 +194,15 @@ class PersistentAuditTrail(
     fromTs: Long? = null,
     toTs: Long? = null,
   ): ChainVerificationResult {
-    val prunedBefore = dao.getChainState()?.prunedThroughSeq
+    val before = verifyStamp()
     val result = verifyOnce(fromTs, toTs)
-    if (dao.getChainState()?.prunedThroughSeq == prunedBefore) return result
+    if (verifyStamp() == before) return result
     return verifyOnce(fromTs, toTs)
   }
+
+  /** What a concurrent prune or erase changes while pages are read without the lock. */
+  private suspend fun verifyStamp(): Pair<Long?, Int> =
+    dao.getChainState()?.prunedThroughSeq to dao.getEventsByName(ERASE_EVENT).size
 
   private suspend fun verifyOnce(fromTs: Long?, toTs: Long?): ChainVerificationResult {
     val effectiveFromTs = fromTs ?: 0L
@@ -250,7 +255,7 @@ class PersistentAuditTrail(
     val keyId = provider.signingKeyId()
     val publicKey = provider.signingPublicKey()?.let { Base64.getEncoder().encodeToString(it) }
     if (keyId == null || publicKey == null) return
-    val newestId = newestKeyMarkerId()
+    val newestId = keyMarkerRows().maxByOrNull { it.seq }?.let { markerField(it, "keyId") }
     if (newestId != keyId) writeKeyMarker(keyId, publicKey, newestId)
   }
 
@@ -263,7 +268,7 @@ class PersistentAuditTrail(
       put("keyId", keyId)
       put("publicKey", publicKey)
       if (changed) {
-        put("oldKeyId", oldKeyId!!)
+        put("oldKeyId", oldKeyId)
         put("reason", "key_replaced")
       }
     }
@@ -271,14 +276,8 @@ class PersistentAuditTrail(
     dao.insertEventWithChainUpdate(event, next)
   }
 
-  private suspend fun newestKeyMarkerId(): String? =
-    keyMarkerRows().maxByOrNull { it.seq }?.let { markerField(it, "keyId") }
-
   private suspend fun keyMarkerRows(): List<AuditEventEntity> =
     dao.getEventsByName(KEY_EVENT) + dao.getEventsByName(KEY_CHANGED_EVENT)
-
-  private fun markerField(row: AuditEventEntity, key: String): String? =
-    runCatching { json.decodeFromString<Map<String, String>>(row.fieldsJson)[key] }.getOrNull()
 
   /** Public keys named by marker rows, in chain order. Rows with an unreadable key are skipped. */
   private suspend fun loadKeyMarkers(): List<KeyMarker> = keyMarkerRows().sortedBy { it.seq }.mapNotNull { row ->
@@ -432,9 +431,32 @@ class PersistentAuditTrail(
     val cutoffMs = clock.nowMs() - retention.retainAuditDays.toLong() * 24 * 60 * 60 * 1000
 
     mutex.withLock {
-      val boundary = dao.getPruneBoundary(cutoffMs) ?: return@withLock
-      val state = dao.getChainState() ?: return@withLock
-      dao.pruneThrough(state.copy(prunedThroughSeq = boundary.seq, prunedThroughHash = boundary.hash))
+      val boundary = dao.getPruneBoundary(cutoffMs)
+      val state = dao.getChainState()
+      if (boundary != null && state != null && keysSurvive(boundary)) {
+        dao.pruneThrough(dao.getChainState()!!.copy(prunedThroughSeq = boundary.seq, prunedThroughHash = boundary.hash))
+      }
+    }
+  }
+
+  /**
+   * True when pruning through [boundary] leaves every surviving row with a key marker that governs it.
+   * When the governing marker would be pruned and no later marker survives, a copy of it is appended
+   * first. When a later marker survives, the rows between the boundary and that marker still need the
+   * old one, so the prune waits until that later marker is itself old enough. Callers hold [mutex].
+   */
+  private suspend fun keysSurvive(boundary: AuditEventEntity): Boolean {
+    val markers = keyMarkerRows()
+    val governing = markers.filter { it.seq <= boundary.seq }.maxByOrNull { it.seq }
+    return when {
+      governing == null -> true
+      markers.any { it.seq > boundary.seq } -> false
+      else -> {
+        val fields = listOf("keyId", "publicKey").associateWith { markerField(governing, it).orEmpty() }
+        val (event, next) = nextEntry(dao.getChainState()!!, KEY_EVENT, fields, null, null)
+        dao.insertEventWithChainUpdate(event, next)
+        true
+      }
     }
   }
 
@@ -487,6 +509,9 @@ class PersistentAuditTrail(
     dao.getEventsPageBySeq(seq - 1, 1).firstOrNull { it.seq == seq }?.hash
       ?: prunedHash.takeIf { seq == prunedSeq }
       ?: loadErasedRuns().firstOrNull { it.ackedSeq == seq }?.ackedHash
+      ?: dao.getEventsByName(ACK_ERASED_EVENT).firstNotNullOfOrNull { row ->
+        markerField(row, "hash").takeIf { markerField(row, "seq") == seq.toString() }
+      }
 
   /**
    * Record that a server accepted [checkpoint]; the next checkpoint links to its headSeq.
@@ -494,8 +519,20 @@ class PersistentAuditTrail(
    */
   internal suspend fun acknowledgeCheckpoint(checkpoint: AuditCheckpoint) {
     mutex.withLock {
-      val state = dao.getChainState() ?: return@withLock
-      if (checkpoint.headSeq > state.lastAckedSeq) dao.upsertChainState(state.copy(lastAckedSeq = checkpoint.headSeq))
+      val state = dao.getChainState()
+      if (state != null && checkpoint.headSeq > state.lastAckedSeq) {
+        val acked = state.copy(lastAckedSeq = checkpoint.headSeq)
+        val gone = checkpoint.headSeq > state.prunedThroughSeq &&
+          dao.getEventsPageBySeq(checkpoint.headSeq - 1, 1).none { it.seq == checkpoint.headSeq }
+        if (gone) {
+          // An erase removed the acknowledged head while the request was in flight: keep its hash.
+          val fields = mapOf("seq" to checkpoint.headSeq.toString(), "hash" to checkpoint.headHash)
+          val (event, next) = nextEntry(acked, ACK_ERASED_EVENT, fields, null, null)
+          dao.insertEventWithChainUpdate(event, next)
+        } else {
+          dao.upsertChainState(acked)
+        }
+      }
     }
   }
 
