@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-An erased user, a replaced signing key and a long retry streak no longer look like tampering. No schema change and no change to the checkpoint payload.
+## [1.6.1] - 2026-11-19
+
+An erased user and a replaced signing key no longer make a valid audit chain look tampered, and signed audit exports now carry what an outside reader needs to recompute each hash. No schema change and no change to the checkpoint payload. Update; no action is needed unless you pin checkpoints on a server (see the key replacement note).
 
 ### Upgrade notes
 
@@ -20,6 +22,7 @@ An erased user, a replaced signing key and a long retry streak no longer look li
 
 ### Changed
 
+- **`NOTICE` and `THIRD_PARTY_NOTICES.md` ship in the repository** and list the 70 runtime artifacts with their licenses.
 - **Signed audit exports carry `seq` and `formatVersion` on every line**, so a reader can recompute each hash without the device. Existing fields are unchanged.
 
 ## [1.6.0] - 2026-11-16
