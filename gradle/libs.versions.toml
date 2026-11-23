@@ -19,7 +19,7 @@ sqlcipher = "4.20.0"
 
 junit4 = "4.13.2"
 truth = "1.4.5"
-robolectric = "4.16.1"
+robolectric = "4.18.1"
 androidxTestCore = "1.7.0"
 androidxTestRunner = "1.7.0"
 androidxTestRules = "1.7.0"
