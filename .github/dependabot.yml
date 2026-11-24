@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # 5.x removed ClassInfo.loadClass, which the test helper relies on.
+      - dependency-name: "io.github.classgraph:classgraph"
+        update-types: ["version-update:semver-major"]
     groups:
       androidx:
         patterns:
