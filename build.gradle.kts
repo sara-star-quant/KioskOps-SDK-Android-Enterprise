@@ -10,7 +10,7 @@ buildscript {
       "org.bouncycastle:bcpkix-jdk18on:1.87",
       "org.bouncycastle:bcutil-jdk18on:1.86",
       "org.bouncycastle:bcpg-jdk18on:1.86",
-      "org.codehaus.plexus:plexus-utils:4.0.3",
+      "org.codehaus.plexus:plexus-utils:4.2.0",
       "com.google.guava:guava:33.8.0-jre",
     )
   }
