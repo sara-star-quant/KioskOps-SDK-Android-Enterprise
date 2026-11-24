@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 SARA STAR QUANT LLC
+ * SPDX-License-Identifier: BUSL-1.1
+ */
+
 package com.sarastarquant.kioskops.sdk.fuzz
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider
