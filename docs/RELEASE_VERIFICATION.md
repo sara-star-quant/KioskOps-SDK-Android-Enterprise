@@ -189,6 +189,16 @@ findings in the GitHub Release notes.
     `PENDING` on init.
   - Next `syncOnce()` drains the backlog.
 
+### Audit chain drills (scripted)
+
+`scripts/drills/audit-drills.sh [OLD_TAG] [KILL_RUNS]` runs three drills on one connected device or emulator, with the real Keystore key and a real database file:
+
+- An older tag writes 50 audit rows (signed and unsigned, two users, one acknowledged checkpoint); the current build is installed over it without clearing data and must verify the old chain.
+- The current build erases a user and then deletes the Keystore signing key; the chain must stay Valid, record a `signing_key_changed` row, and still verify signatures made before the key was lost.
+- The process is killed repeatedly in the middle of record and erase cycles; after every kill the chain must verify. An interrupted erase leaves its rows in place with no erase record (the transaction did not commit), never a half-applied erase.
+
+Results for 1.6.1 (API 36 emulator, upgrade from 1.6.0): upgrade, erase and key replacement passed; 14 of 14 kills left a Valid chain.
+
 ### In-place upgrade from prior minor
 
 - Install sample-app built against the previous minor (e.g., 1.1.0). Enqueue a
