@@ -21,6 +21,8 @@ plugins {
   alias(libs.plugins.android.library) apply false
   alias(libs.plugins.kotlin.serialization) apply false
   alias(libs.plugins.ksp) apply false
+  alias(libs.plugins.kotlin.multiplatform) apply false
+  alias(libs.plugins.android.kmp.library) apply false
   // Load the publish plugin at the root (applied in kiosk-ops-sdk) so the
   // MavenCentralBuildService loads under a single classloader.
   alias(libs.plugins.maven.publish) apply false

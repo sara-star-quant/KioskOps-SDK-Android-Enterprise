@@ -14,7 +14,7 @@ package com.sarastarquant.kioskops.sdk.audit.core
  *
  * Existing hashes depend on these layouts byte for byte: never change one, add a new version instead.
  */
-internal enum class AuditHashFormat(val version: Int) {
+public enum class AuditHashFormat(public val version: Int) {
   FILE_V0(0),
   V1(1),
   V2(2),
@@ -22,7 +22,7 @@ internal enum class AuditHashFormat(val version: Int) {
 
   companion object {
     /** Format for a Room event's stored formatVersion, or null when the version is unknown. */
-    fun forStoredVersion(version: Int): AuditHashFormat? = when (version) {
+    public fun forStoredVersion(version: Int): AuditHashFormat? = when (version) {
       V1.version -> V1
       V2.version -> V2
       else -> null

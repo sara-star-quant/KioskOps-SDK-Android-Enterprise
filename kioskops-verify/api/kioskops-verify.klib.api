@@ -1,0 +1,236 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <KioskOpsSdk:kioskops-verify>
+final enum class com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat : kotlin/Enum<com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat> { // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat|null[0]
+    enum entry FILE_V0 // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.FILE_V0|null[0]
+    enum entry V1 // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.V1|null[0]
+    enum entry V2 // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.V2|null[0]
+
+    final val entries // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat> // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val version // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.version|{}version[0]
+        final fun <get-version>(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.version.<get-version>|<get-version>(){}[0]
+
+    final fun valueOf(kotlin/String): com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat> // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.values|values#static(){}[0]
+
+    final object Companion { // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.Companion|null[0]
+        final fun forStoredVersion(kotlin/Int): com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat? // com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat.Companion.forStoredVersion|forStoredVersion(kotlin.Int){}[0]
+    }
+}
+
+abstract fun interface com.sarastarquant.kioskops.sdk.audit.core/SignatureVerifier { // com.sarastarquant.kioskops.sdk.audit.core/SignatureVerifier|null[0]
+    abstract fun verify(kotlin/String, kotlin/String): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/SignatureVerifier.verify|verify(kotlin.String;kotlin.String){}[0]
+}
+
+sealed interface com.sarastarquant.kioskops.sdk.audit.core/PageResult { // com.sarastarquant.kioskops.sdk.audit.core/PageResult|null[0]
+    final class Broken : com.sarastarquant.kioskops.sdk.audit.core/PageResult { // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken|null[0]
+        constructor <init>(kotlin/Long, kotlin/String) // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.<init>|<init>(kotlin.Long;kotlin.String){}[0]
+
+        final val reason // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.reason.<get-reason>|<get-reason>(){}[0]
+        final val seq // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.seq|{}seq[0]
+            final fun <get-seq>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.seq.<get-seq>|<get-seq>(){}[0]
+
+        final fun component1(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.component2|component2(){}[0]
+        final fun copy(kotlin/Long = ..., kotlin/String = ...): com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.copy|copy(kotlin.Long;kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Broken.toString|toString(){}[0]
+    }
+
+    final class Ok : com.sarastarquant.kioskops.sdk.audit.core/PageResult { // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok|null[0]
+        constructor <init>(kotlin/String, kotlin/Long) // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.<init>|<init>(kotlin.String;kotlin.Long){}[0]
+
+        final val lastHash // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.lastHash|{}lastHash[0]
+            final fun <get-lastHash>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.lastHash.<get-lastHash>|<get-lastHash>(){}[0]
+        final val lastSeq // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.lastSeq|{}lastSeq[0]
+            final fun <get-lastSeq>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.lastSeq.<get-lastSeq>|<get-lastSeq>(){}[0]
+
+        final fun component1(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Long = ...): com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.copy|copy(kotlin.String;kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PageResult.Ok.toString|toString(){}[0]
+    }
+}
+
+sealed interface com.sarastarquant.kioskops.sdk.audit.core/PinResult { // com.sarastarquant.kioskops.sdk.audit.core/PinResult|null[0]
+    final class Forked : com.sarastarquant.kioskops.sdk.audit.core/PinResult { // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked|null[0]
+        constructor <init>(kotlin/String) // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.<init>|<init>(kotlin.String){}[0]
+
+        final val reason // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.reason.<get-reason>|<get-reason>(){}[0]
+
+        final fun component1(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Forked.toString|toString(){}[0]
+    }
+
+    final class Regressed : com.sarastarquant.kioskops.sdk.audit.core/PinResult { // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed|null[0]
+        constructor <init>(kotlin/String) // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.<init>|<init>(kotlin.String){}[0]
+
+        final val reason // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.reason.<get-reason>|<get-reason>(){}[0]
+
+        final fun component1(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Regressed.toString|toString(){}[0]
+    }
+
+    final object Consistent : com.sarastarquant.kioskops.sdk.audit.core/PinResult { // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Consistent|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Consistent.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Consistent.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/PinResult.Consistent.toString|toString(){}[0]
+    }
+}
+
+final class com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint { // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint|null[0]
+    constructor <init>(kotlin/Long, kotlin/String, kotlin/Long, kotlin/Int, kotlin/Long, kotlin/String, kotlin/Long?, kotlin/String?, kotlin/String?) // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.<init>|<init>(kotlin.Long;kotlin.String;kotlin.Long;kotlin.Int;kotlin.Long;kotlin.String;kotlin.Long?;kotlin.String?;kotlin.String?){}[0]
+
+    final val chainGeneration // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.chainGeneration|{}chainGeneration[0]
+        final fun <get-chainGeneration>(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.chainGeneration.<get-chainGeneration>|<get-chainGeneration>(){}[0]
+    final val eventCount // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.eventCount|{}eventCount[0]
+        final fun <get-eventCount>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.eventCount.<get-eventCount>|<get-eventCount>(){}[0]
+    final val headHash // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.headHash|{}headHash[0]
+        final fun <get-headHash>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.headHash.<get-headHash>|<get-headHash>(){}[0]
+    final val headSeq // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.headSeq|{}headSeq[0]
+        final fun <get-headSeq>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.headSeq.<get-headSeq>|<get-headSeq>(){}[0]
+    final val linkHash // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.linkHash|{}linkHash[0]
+        final fun <get-linkHash>(): kotlin/String? // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.linkHash.<get-linkHash>|<get-linkHash>(){}[0]
+    final val linkSeq // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.linkSeq|{}linkSeq[0]
+        final fun <get-linkSeq>(): kotlin/Long? // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.linkSeq.<get-linkSeq>|<get-linkSeq>(){}[0]
+    final val prunedThroughHash // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.prunedThroughHash|{}prunedThroughHash[0]
+        final fun <get-prunedThroughHash>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.prunedThroughHash.<get-prunedThroughHash>|<get-prunedThroughHash>(){}[0]
+    final val prunedThroughSeq // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.prunedThroughSeq|{}prunedThroughSeq[0]
+        final fun <get-prunedThroughSeq>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.prunedThroughSeq.<get-prunedThroughSeq>|<get-prunedThroughSeq>(){}[0]
+    final val signature // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.signature|{}signature[0]
+        final fun <get-signature>(): kotlin/String? // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.signature.<get-signature>|<get-signature>(){}[0]
+
+    final fun component1(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component4|component4(){}[0]
+    final fun component5(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component5|component5(){}[0]
+    final fun component6(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component6|component6(){}[0]
+    final fun component7(): kotlin/Long? // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component7|component7(){}[0]
+    final fun component8(): kotlin/String? // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component8|component8(){}[0]
+    final fun component9(): kotlin/String? // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.component9|component9(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/String = ..., kotlin/Long = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/String = ..., kotlin/Long? = ..., kotlin/String? = ..., kotlin/String? = ...): com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.copy|copy(kotlin.Long;kotlin.String;kotlin.Long;kotlin.Int;kotlin.Long;kotlin.String;kotlin.Long?;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.hashCode|hashCode(){}[0]
+    final fun signingPayload(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.signingPayload|signingPayload(){}[0]
+    final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint> { // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.$serializer|null[0]
+        final val descriptor // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint) // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint){}[0]
+    }
+
+    final object Companion { // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint> // com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class com.sarastarquant.kioskops.sdk.audit.core/ChainLink { // com.sarastarquant.kioskops.sdk.audit.core/ChainLink|null[0]
+    constructor <init>(kotlin/Long, kotlin/String, kotlin/Long, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/Int) // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.<init>|<init>(kotlin.Long;kotlin.String;kotlin.Long;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.Int){}[0]
+
+    final val fieldsJson // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.fieldsJson|{}fieldsJson[0]
+        final fun <get-fieldsJson>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.fieldsJson.<get-fieldsJson>|<get-fieldsJson>(){}[0]
+    final val formatVersion // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.formatVersion|{}formatVersion[0]
+        final fun <get-formatVersion>(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.formatVersion.<get-formatVersion>|<get-formatVersion>(){}[0]
+    final val hash // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.hash|{}hash[0]
+        final fun <get-hash>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.hash.<get-hash>|<get-hash>(){}[0]
+    final val id // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.id.<get-id>|<get-id>(){}[0]
+    final val name // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.name.<get-name>|<get-name>(){}[0]
+    final val prevHash // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.prevHash|{}prevHash[0]
+        final fun <get-prevHash>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.prevHash.<get-prevHash>|<get-prevHash>(){}[0]
+    final val seq // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.seq|{}seq[0]
+        final fun <get-seq>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.seq.<get-seq>|<get-seq>(){}[0]
+    final val ts // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.ts|{}ts[0]
+        final fun <get-ts>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.ts.<get-ts>|<get-ts>(){}[0]
+
+    final fun component1(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component3|component3(){}[0]
+    final fun component4(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component4|component4(){}[0]
+    final fun component5(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component5|component5(){}[0]
+    final fun component6(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component6|component6(){}[0]
+    final fun component7(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component7|component7(){}[0]
+    final fun component8(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.component8|component8(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/String = ..., kotlin/Long = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Int = ...): com.sarastarquant.kioskops.sdk.audit.core/ChainLink // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.copy|copy(kotlin.Long;kotlin.String;kotlin.Long;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ChainLink.toString|toString(){}[0]
+}
+
+final class com.sarastarquant.kioskops.sdk.audit.core/ErasedRun { // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun|null[0]
+    constructor <init>(kotlin/Long, kotlin/Long, kotlin/String, kotlin/String, kotlin/Long? = ..., kotlin/String? = ...) // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.String;kotlin.String;kotlin.Long?;kotlin.String?){}[0]
+
+    final val ackedHash // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.ackedHash|{}ackedHash[0]
+        final fun <get-ackedHash>(): kotlin/String? // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.ackedHash.<get-ackedHash>|<get-ackedHash>(){}[0]
+    final val ackedSeq // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.ackedSeq|{}ackedSeq[0]
+        final fun <get-ackedSeq>(): kotlin/Long? // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.ackedSeq.<get-ackedSeq>|<get-ackedSeq>(){}[0]
+    final val endHash // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.endHash|{}endHash[0]
+        final fun <get-endHash>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.endHash.<get-endHash>|<get-endHash>(){}[0]
+    final val fromSeq // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.fromSeq|{}fromSeq[0]
+        final fun <get-fromSeq>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.fromSeq.<get-fromSeq>|<get-fromSeq>(){}[0]
+    final val startPrev // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.startPrev|{}startPrev[0]
+        final fun <get-startPrev>(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.startPrev.<get-startPrev>|<get-startPrev>(){}[0]
+    final val toSeq // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.toSeq|{}toSeq[0]
+        final fun <get-toSeq>(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.toSeq.<get-toSeq>|<get-toSeq>(){}[0]
+
+    final fun component1(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.component2|component2(){}[0]
+    final fun component3(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.component3|component3(){}[0]
+    final fun component4(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.component4|component4(){}[0]
+    final fun component5(): kotlin/Long? // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.component6|component6(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Long? = ..., kotlin/String? = ...): com.sarastarquant.kioskops.sdk.audit.core/ErasedRun // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.copy|copy(kotlin.Long;kotlin.Long;kotlin.String;kotlin.String;kotlin.Long?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.sarastarquant.kioskops.sdk.audit.core/ErasedRun> { // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.$serializer|null[0]
+        final val descriptor // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.sarastarquant.kioskops.sdk.audit.core/ErasedRun // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.sarastarquant.kioskops.sdk.audit.core/ErasedRun) // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.sarastarquant.kioskops.sdk.audit.core.ErasedRun){}[0]
+    }
+
+    final object Companion { // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.sarastarquant.kioskops.sdk.audit.core/ErasedRun> // com.sarastarquant.kioskops.sdk.audit.core/ErasedRun.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final object com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore { // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore|null[0]
+    final fun bridge(kotlin/String, kotlin/Long?, kotlin/Long, kotlin/String, kotlin.collections/List<com.sarastarquant.kioskops.sdk.audit.core/ErasedRun>): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore.bridge|bridge(kotlin.String;kotlin.Long?;kotlin.Long;kotlin.String;kotlin.collections.List<com.sarastarquant.kioskops.sdk.audit.core.ErasedRun>){}[0]
+    final fun compareToPin(com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint, kotlin/Long, com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint, kotlin/Long, kotlin/Long, com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint? = ..., kotlin/Long = ...): com.sarastarquant.kioskops.sdk.audit.core/PinResult // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore.compareToPin|compareToPin(com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint;kotlin.Long;com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint;kotlin.Long;kotlin.Long;com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint?;kotlin.Long){}[0]
+    final fun content(com.sarastarquant.kioskops.sdk.audit.core/AuditHashFormat, kotlin/String, kotlin/Long, kotlin/String, kotlin/String, kotlin/String): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore.content|content(com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat;kotlin.String;kotlin.Long;kotlin.String;kotlin.String;kotlin.String){}[0]
+    final fun hash(kotlin/String): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore.hash|hash(kotlin.String){}[0]
+    final fun lengthPrefixed(kotlin/Array<out kotlin/String>...): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore.lengthPrefixed|lengthPrefixed(kotlin.Array<out|kotlin.String>...){}[0]
+    final fun verifyCheckpointSignature(com.sarastarquant.kioskops.sdk.audit.core/AuditCheckpoint, com.sarastarquant.kioskops.sdk.audit.core/SignatureVerifier): kotlin/Boolean // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore.verifyCheckpointSignature|verifyCheckpointSignature(com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint;com.sarastarquant.kioskops.sdk.audit.core.SignatureVerifier){}[0]
+    final fun verifyPage(kotlin.collections/List<com.sarastarquant.kioskops.sdk.audit.core/ChainLink>, kotlin/String, kotlin.collections/List<com.sarastarquant.kioskops.sdk.audit.core/ErasedRun> = ..., kotlin/Long? = ...): com.sarastarquant.kioskops.sdk.audit.core/PageResult // com.sarastarquant.kioskops.sdk.audit.core/AuditChainCore.verifyPage|verifyPage(kotlin.collections.List<com.sarastarquant.kioskops.sdk.audit.core.ChainLink>;kotlin.String;kotlin.collections.List<com.sarastarquant.kioskops.sdk.audit.core.ErasedRun>;kotlin.Long?){}[0]
+}
+
+final fun (kotlin.collections/List<com.sarastarquant.kioskops.sdk.audit.core/ErasedRun>).com.sarastarquant.kioskops.sdk.audit.core/toFieldValue(): kotlin/String // com.sarastarquant.kioskops.sdk.audit.core/toFieldValue|toFieldValue@kotlin.collections.List<com.sarastarquant.kioskops.sdk.audit.core.ErasedRun>(){}[0]
+final fun com.sarastarquant.kioskops.sdk.audit.core/parseErasedRuns(kotlin/String): kotlin.collections/List<com.sarastarquant.kioskops.sdk.audit.core/ErasedRun>? // com.sarastarquant.kioskops.sdk.audit.core/parseErasedRuns|parseErasedRuns(kotlin.String){}[0]

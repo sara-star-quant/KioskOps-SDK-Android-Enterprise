@@ -5,11 +5,8 @@
 
 package com.sarastarquant.kioskops.sdk.audit.core
 
-import com.sarastarquant.kioskops.sdk.audit.DeviceAttestationProvider
-import com.sarastarquant.kioskops.sdk.util.Hashing
-
 /** One stored link of the audit hash chain, independent of the storage layer. */
-internal data class ChainLink(
+public data class ChainLink(
   val seq: Long,
   val id: String,
   val ts: Long,
@@ -21,7 +18,7 @@ internal data class ChainLink(
 )
 
 /** Outcome of verifying one ordered page of chain links. */
-internal sealed interface PageResult {
+public sealed interface PageResult {
   /** Every link verified; [lastHash] and [lastSeq] seed the next page. */
   data class Ok(val lastHash: String, val lastSeq: Long) : PageResult
 
@@ -30,7 +27,7 @@ internal sealed interface PageResult {
 }
 
 /** Pure hash chain logic shared by the audit trails. No Android or storage dependencies. */
-internal object AuditChainCore {
+public object AuditChainCore {
 
   /**
    * Builds the string hashed for one link. For [AuditHashFormat.FILE_V0], [id] is ignored and
@@ -51,10 +48,10 @@ internal object AuditChainCore {
 
   /** Concatenates each value as `"<utf8 byte length>:<value>"`, so no value can alias a neighbour. */
   fun lengthPrefixed(vararg values: String): String = buildString {
-    for (value in values) append(value.toByteArray(Charsets.UTF_8).size).append(':').append(value)
+    for (value in values) append(value.encodeToByteArray().size).append(':').append(value)
   }
 
-  fun hash(content: String): String = Hashing.sha256Base64Url(content)
+  fun hash(content: String): String = Sha256.base64Url(content.encodeToByteArray())
 
   /**
    * The server rule for a device checkpoint, given the [pin] the server holds for that device
@@ -120,9 +117,9 @@ internal object AuditChainCore {
     else -> null
   }
 
-  /** True when [checkpoint] carries a signature that [provider] accepts over its signing payload. */
-  fun verifyCheckpointSignature(checkpoint: AuditCheckpoint, provider: DeviceAttestationProvider): Boolean =
-    checkpoint.signature?.let { provider.verifySignature(checkpoint.signingPayload(), it) } ?: false
+  /** True when [checkpoint] carries a signature that [verifier] accepts over its signing payload. */
+  fun verifyCheckpointSignature(checkpoint: AuditCheckpoint, verifier: SignatureVerifier): Boolean =
+    checkpoint.signature?.let { verifier.verify(checkpoint.signingPayload(), it) } ?: false
 
   /**
    * Verifies [events] in order: seq strictly increases, each prevHash links to the previous hash

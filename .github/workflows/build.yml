@@ -38,6 +38,9 @@ jobs:
         run: |
           ./gradlew \
             testDebugUnitTest \
+            :kioskops-verify:jvmTest \
+            :kioskops-verify:checkKotlinAbi \
+            :kioskops-verify:detekt \
             :kiosk-ops-sdk:koverXmlReportDebug \
             :kiosk-ops-sdk:koverHtmlReportDebug \
             :kiosk-ops-sdk:koverVerifyDebug \

@@ -19,7 +19,7 @@ import java.io.File
 class AuditChainCoreTest {
 
   private val vectors: JsonObject = Json.parseToJsonElement(
-    checkNotNull(javaClass.getResource("/audit/golden_vectors.json")).readText(),
+    File("../kioskops-verify/vectors/golden_vectors.json").readText(),
   ).jsonObject
 
   private fun JsonObject.str(key: String) = getValue(key).jsonPrimitive.content
@@ -148,7 +148,7 @@ class AuditChainCoreTest {
 
   @Test
   fun `core package has no android imports`() {
-    val dir = File("src/main/java/com/sarastarquant/kioskops/sdk/audit/core")
+    val dir = File("../kioskops-verify/src/commonMain/kotlin/com/sarastarquant/kioskops/sdk/audit/core")
     val files = dir.listFiles { f -> f.extension == "kt" }.orEmpty()
     assertThat(files).isNotEmpty()
     for (f in files) {
