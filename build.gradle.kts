@@ -7,7 +7,7 @@ buildscript {
   configurations.classpath {
     resolutionStrategy.force(
       "org.bouncycastle:bcprov-jdk18on:1.86",
-      "org.bouncycastle:bcpkix-jdk18on:1.86",
+      "org.bouncycastle:bcpkix-jdk18on:1.87",
       "org.bouncycastle:bcutil-jdk18on:1.86",
       "org.bouncycastle:bcpg-jdk18on:1.86",
       "org.codehaus.plexus:plexus-utils:4.0.3",
@@ -30,7 +30,7 @@ subprojects {
   configurations.configureEach {
     resolutionStrategy.force(
       "org.bouncycastle:bcprov-jdk18on:1.86",
-      "org.bouncycastle:bcpkix-jdk18on:1.86",
+      "org.bouncycastle:bcpkix-jdk18on:1.87",
       "org.bouncycastle:bcutil-jdk18on:1.86",
       "org.bouncycastle:bcpg-jdk18on:1.86",
       // guava arrives only via Robolectric, Truth, and AGP tooling (test and build

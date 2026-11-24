@@ -4,6 +4,7 @@
 #   2. erase and key reset: erase a user, then delete the Keystore signing key, then verify.
 #   3. process kill: kill the process repeatedly in the middle of record and erase cycles.
 # Usage: scripts/drills/audit-drills.sh [OLD_TAG] [KILL_RUNS]    (defaults: v1.6.0, 8)
+# OLD_TAG must predate key markers (1.6.0 or older): the upgrade drill expects 50 rows and no marker rows.
 # Needs: adb with one device, JAVA_HOME on JDK 21, a clean git tree (the old tag runs in a worktree).
 set -euo pipefail
 
