@@ -211,13 +211,15 @@ jobs:
             kioskops-sample-demo-*.apk.bundle
             kioskops-sample-demo-*.apk.sigstore.json
           )
+          # A pre-release tag (1.7.0-rc1) is marked as a pre-release and never as the latest release.
+          if [[ "$TAG" == *-* ]]; then flags=(--prerelease); else flags=(--latest); fi
           # Re-running a release (e.g. to retry a failed Maven Central publish) must not
           # fail just because the release already exists. Create it, or refresh assets.
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --title "$TAG" --notes-file release_notes.md --latest
+            gh release edit "$TAG" --title "$TAG" --notes-file release_notes.md "${flags[@]}"
             gh release upload "$TAG" "${assets[@]}" --clobber
           else
-            gh release create "$TAG" --title "$TAG" --notes-file release_notes.md --latest "${assets[@]}"
+            gh release create "$TAG" --title "$TAG" --notes-file release_notes.md "${flags[@]}" "${assets[@]}"
           fi
         env:
           TAG: ${{ steps.version.outputs.TAG }}

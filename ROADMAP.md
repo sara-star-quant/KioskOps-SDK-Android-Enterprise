@@ -504,7 +504,7 @@ Order of work: the portable core lands before the iOS target, so Android
 behavior and its public API are settled before a second runtime depends on them.
 
 ### Platform
-- [ ] Kotlin Multiplatform common module carved out of core
+- [ ] Kotlin Multiplatform common module carved out of core (audit chain core shipped as `kioskops-verify` in 1.7.0-rc1; validation, PII, anomaly, sync and policy still to move)
 - [ ] iOS target (Darwin) with Swift-friendly interop, shipped as a preview;
   XCFramework via Swift Package Manager
 - [ ] React Native bridge and Flutter plugin move to v2.x (iOS first)

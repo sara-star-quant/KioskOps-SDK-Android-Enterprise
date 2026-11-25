@@ -199,6 +199,8 @@ findings in the GitHub Release notes.
 
 Results for 1.6.1 (API 36 emulator, upgrade from 1.6.0): upgrade, erase and key replacement passed; 14 of 14 kills left a Valid chain.
 
+Results for 1.7.0-rc1 (API 36 emulator, upgrade from 1.6.0, kioskops-verify carve): upgrade, erase and key replacement passed; 8 of 8 kills left a Valid chain.
+
 ### In-place upgrade from prior minor
 
 - Install sample-app built against the previous minor (e.g., 1.1.0). Enqueue a
