@@ -11,7 +11,50 @@ on:
 permissions: read-all
 
 jobs:
+  # The SDK depends on kioskops-verify, so it must be on Maven Central first. Its iOS publications
+  # only build on macOS, which is why it has its own job. A re-run skips the publish when the
+  # version is already on Central.
+  publish-verify:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Golden vectors on every target
+        run: ./gradlew :kioskops-verify:jvmTest :kioskops-verify:iosSimulatorArm64Test
+
+      - name: Publish kioskops-verify to Maven Central
+        run: |
+          VERSION="${TAG#v}"
+          if curl -fsI "https://repo1.maven.org/maven2/com/sarastarquant/kioskops/kioskops-verify/$VERSION/kioskops-verify-$VERSION.pom" >/dev/null; then
+            echo "kioskops-verify $VERSION is already on Maven Central; skipping"
+            exit 0
+          fi
+          ./gradlew :kioskops-verify:publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="$VERSION"
+        env:
+          TAG: ${{ inputs.tag }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+
   release:
+    needs: publish-verify
     runs-on: ubuntu-latest
     permissions:
       contents: write
