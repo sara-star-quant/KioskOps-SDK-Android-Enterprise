@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0-rc1] - 2026-11-25
+
+A pre-release of 1.7.0, not a stable version. The audit chain core moves into its own module, `kioskops-verify`, built for JVM, Android and iOS, and the SDK behaves as in 1.6.1. Try it on a test fleet; production apps stay on 1.6.1 until 1.7.0.
+
+### Upgrade notes
+
+- **The SDK now depends on `com.sarastarquant.kioskops:kioskops-verify`.** Gradle resolves it with the SDK; a build that does not use Gradle metadata sees an empty root pom for it. `AuditCheckpoint` ships from that module with the same package and class name, so source and binary callers are unaffected.
+- **`AuditChainCore.verifyCheckpointSignature` takes a `SignatureVerifier`** instead of a `DeviceAttestationProvider`. It is not public API of the SDK; only code that reached into the core is affected.
+- **Pin `1.7.0-rc1` explicitly to try it.** It is marked as a GitHub pre-release and is not the latest release.
+
+### Changed
+
+- **Golden vectors run on JVM, Android and the iOS simulator** from one JSON file, pinning the hash chain format on every target.
+- **CI checks the source license headers and keeps `THIRD_PARTY_NOTICES.md` in step with the runtime classpath**, and refuses licenses outside an allow list.
+- **The release workflow publishes `kioskops-verify` from a macOS job before the SDK.**
+- Dependency updates: androidx lifecycle 2.11.1, bouncycastle 1.87, Gradle 9.9.2, plexus-utils 4.2.0, jazzer 0.30.0, CycloneDX plugin 3.6.1.
+
 ## [1.6.1] - 2026-11-19
 
 An erased user and a replaced signing key no longer make a valid audit chain look tampered, and signed audit exports now carry what an outside reader needs to recompute each hash. No schema change and no change to the checkpoint payload. Update; no action is needed unless you pin checkpoints on a server (see the key replacement note).
