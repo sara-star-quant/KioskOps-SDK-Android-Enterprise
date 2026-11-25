@@ -30,10 +30,9 @@ jobs:
       contents: read
       pages: write
       id-token: write
-      actions: read
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.first.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -64,21 +63,18 @@ jobs:
         with:
           path: ${{ runner.temp }}/site
 
-      # deploy-pages lists the run's artifacts once, with no retry. After the upload the list can
-      # stay empty for a while, so wait until it shows the artifact.
-      - name: Wait for the artifact listing
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ github.run_id }}
-        run: |
-          for i in $(seq 1 24); do
-            n=$(gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts" --jq '[.artifacts[]|select(.name=="github-pages")]|length')
-            [ "$n" -ge 1 ] && exit 0
-            sleep 5
-          done
-          echo "::error::github-pages artifact not listed after 2 minutes"
-          exit 1
-
+      # deploy-pages looks the artifact up once, with no retry, and the lookup sometimes returns
+      # nothing right after the upload. Try once, wait, try again.
       - name: Deploy to GitHub Pages
+        id: first
+        continue-on-error: true
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+      - name: Wait before the second deploy attempt
+        if: steps.first.outcome == 'failure'
+        run: sleep 60
+
+      - name: Deploy to GitHub Pages (second attempt)
         id: deployment
+        if: steps.first.outcome == 'failure'
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
