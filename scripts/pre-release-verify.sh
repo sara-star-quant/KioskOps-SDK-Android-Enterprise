@@ -37,6 +37,10 @@ log "Running gradle verification tasks"
 ./gradlew \
   :kiosk-ops-sdk:testDebugUnitTest \
   :kiosk-ops-sdk:detekt \
+  :kioskops-verify:jvmTest \
+  :kioskops-verify:iosSimulatorArm64Test \
+  :kioskops-verify:checkKotlinAbi \
+  :kioskops-verify:detekt \
   :sample-app:assembleDebug \
   :sample-app:assembleRelease \
   :kiosk-ops-sdk:koverVerifyDebug \
@@ -61,6 +65,15 @@ JAVADOC="$REPO_ROOT/kiosk-ops-sdk/build/libs/kiosk-ops-sdk-javadoc.jar"
 for f in "$AAR" "$POM" "$SOURCES" "$JAVADOC"; do
   [ -s "$f" ] || die "missing or empty artifact: $f"
 done
+
+log "kioskops-verify publications (the SDK depends on it)"
+./gradlew :kioskops-verify:generatePomFileForKotlinMultiplatformPublication \
+  :kioskops-verify:generatePomFileForJvmPublication \
+  :kioskops-verify:generatePomFileForAndroidPublication --no-daemon
+VPOM="$REPO_ROOT/kioskops-verify/build/publications/kotlinMultiplatform/pom-default.xml"
+[ -s "$VPOM" ] || die "missing kioskops-verify root pom: $VPOM"
+grep -q '<artifactId>kioskops-verify</artifactId>' "$REPO_ROOT/kiosk-ops-sdk/build/publications/maven/pom-default.xml" \
+  || die "SDK pom does not depend on kioskops-verify"
 
 log "POM references verification"
 grep -q 'github.com/sara-star-quant' "$POM" \

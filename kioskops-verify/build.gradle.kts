@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.android.kmp.library)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.detekt)
+  alias(libs.plugins.maven.publish)
 }
 
 kotlin {
@@ -55,4 +56,44 @@ kotlin.sourceSets.commonTest { kotlin.srcDir(generateGoldenVectors) }
 detekt {
   source.setFrom("src/commonMain/kotlin", "src/jvmShared/kotlin", "src/iosMain/kotlin", "src/commonTest/kotlin")
   config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+}
+
+version = findProperty("VERSION_NAME")?.toString() ?: "0.1.0-SNAPSHOT"
+
+// Same publishing setup as kiosk-ops-sdk. The iOS publications are only built on macOS, so the
+// release workflow publishes this module from a macOS runner.
+mavenPublishing {
+  publishToMavenCentral()
+  if (project.hasProperty("signingInMemoryKey")) {
+    signAllPublications()
+  }
+
+  coordinates(groupId = "com.sarastarquant.kioskops", artifactId = "kioskops-verify")
+
+  pom {
+    name.set("KioskOps Verify")
+    description.set("Audit chain verification for KioskOps: hash formats, page verification, erase bridging and checkpoint pin rules")
+    url.set("https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise")
+
+    licenses {
+      license {
+        name.set("Business Source License 1.1")
+        url.set("https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise/blob/main/LICENSE")
+      }
+    }
+
+    developers {
+      developer {
+        id.set("pzverkov")
+        name.set("Petro Zverkov")
+        organization.set("Sara Star Quant LLC")
+      }
+    }
+
+    scm {
+      url.set("https://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise")
+      connection.set("scm:git:git://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise.git")
+      developerConnection.set("scm:git:ssh://github.com/sara-star-quant/KioskOps-SDK-Android-Enterprise.git")
+    }
+  }
 }
