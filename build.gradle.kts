@@ -8,7 +8,7 @@ buildscript {
     resolutionStrategy.force(
       "org.bouncycastle:bcprov-jdk18on:1.87",
       "org.bouncycastle:bcpkix-jdk18on:1.87",
-      "org.bouncycastle:bcutil-jdk18on:1.86",
+      "org.bouncycastle:bcutil-jdk18on:1.87",
       "org.bouncycastle:bcpg-jdk18on:1.87",
       "org.codehaus.plexus:plexus-utils:4.2.0",
       "com.google.guava:guava:33.8.0-jre",
@@ -33,7 +33,7 @@ subprojects {
     resolutionStrategy.force(
       "org.bouncycastle:bcprov-jdk18on:1.87",
       "org.bouncycastle:bcpkix-jdk18on:1.87",
-      "org.bouncycastle:bcutil-jdk18on:1.86",
+      "org.bouncycastle:bcutil-jdk18on:1.87",
       "org.bouncycastle:bcpg-jdk18on:1.87",
       // guava arrives only via Robolectric, Truth, and AGP tooling (test and build
       // classpaths); absent from releaseRuntimeClasspath, never in the AAR.
