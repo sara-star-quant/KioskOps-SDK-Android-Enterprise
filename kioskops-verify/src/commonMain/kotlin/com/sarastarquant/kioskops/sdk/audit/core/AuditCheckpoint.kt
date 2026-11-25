@@ -58,7 +58,7 @@ data class AuditCheckpoint(
 }
 
 /** Outcome of comparing a device checkpoint with the one a server pinned earlier. */
-internal sealed interface PinResult {
+public sealed interface PinResult {
   /** The current chain extends the pinned one. */
   data object Consistent : PinResult
 

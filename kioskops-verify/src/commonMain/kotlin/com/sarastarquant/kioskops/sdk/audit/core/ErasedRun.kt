@@ -24,7 +24,7 @@ import kotlinx.serialization.json.Json
  * @property ackedHash Hash of the row at [ackedSeq].
  */
 @Serializable
-internal data class ErasedRun(
+public data class ErasedRun(
   val fromSeq: Long,
   val toSeq: Long,
   val startPrev: String,
@@ -36,11 +36,11 @@ internal data class ErasedRun(
 private val runsJson = Json { ignoreUnknownKeys = true }
 
 /** The value stored under the `runs` field of an erase record row. */
-internal fun List<ErasedRun>.toFieldValue(): String =
+public fun List<ErasedRun>.toFieldValue(): String =
   runsJson.encodeToString(ListSerializer(ErasedRun.serializer()), this)
 
 /** Parses an erase record's `runs` field; null when it is malformed or a run is inverted. */
-internal fun parseErasedRuns(fieldValue: String): List<ErasedRun>? {
+public fun parseErasedRuns(fieldValue: String): List<ErasedRun>? {
   val runs = runCatching {
     runsJson.decodeFromString(ListSerializer(ErasedRun.serializer()), fieldValue)
   }.getOrNull() ?: return null

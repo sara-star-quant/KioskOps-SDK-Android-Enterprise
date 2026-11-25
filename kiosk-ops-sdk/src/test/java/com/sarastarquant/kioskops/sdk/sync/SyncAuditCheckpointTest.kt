@@ -13,6 +13,7 @@ import com.sarastarquant.kioskops.sdk.KioskOpsConfig
 import com.sarastarquant.kioskops.sdk.audit.PersistentAuditTrail
 import com.sarastarquant.kioskops.sdk.audit.SoftwareAttestationProvider
 import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.SignatureVerifier
 import com.sarastarquant.kioskops.sdk.audit.db.AuditDatabase
 import com.sarastarquant.kioskops.sdk.compliance.RetentionPolicy
 import com.sarastarquant.kioskops.sdk.compliance.SecurityPolicy
@@ -55,6 +56,7 @@ class SyncAuditCheckpointTest {
   }
 
   private val provider = SoftwareAttestationProvider()
+  private val verifier = SignatureVerifier(provider::verifySignature)
 
   @After
   fun tearDown() {
@@ -102,7 +104,7 @@ class SyncAuditCheckpointTest {
     ).flushOnce()
 
     val request = transport.requests.last()
-    request.auditCheckpoint?.let { cp -> assertThat(AuditChainCore.verifyCheckpointSignature(cp, provider)).isTrue() }
+    request.auditCheckpoint?.let { cp -> assertThat(AuditChainCore.verifyCheckpointSignature(cp, verifier)).isTrue() }
     return request
   }
 

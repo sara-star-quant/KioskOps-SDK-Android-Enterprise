@@ -10,6 +10,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.sarastarquant.kioskops.sdk.audit.core.AuditChainCore
+import com.sarastarquant.kioskops.sdk.audit.core.SignatureVerifier
 import com.sarastarquant.kioskops.sdk.audit.core.AuditCheckpoint
 import com.sarastarquant.kioskops.sdk.audit.core.AuditHashFormat
 import com.sarastarquant.kioskops.sdk.audit.core.PinResult
@@ -103,6 +104,7 @@ class AuditCheckpointTest {
 
   @Test
   fun `checkpoint signature verifies with the device key`() = runTest {
+    val verifier = SignatureVerifier(provider::verifySignature)
     val trail = trail()
     recordFive(trail)
 
@@ -112,10 +114,10 @@ class AuditCheckpointTest {
     assertThat(checkpoint.headHash).isEqualTo(hashAtSeq(5))
     assertThat(checkpoint.eventCount).isEqualTo(5L)
     assertThat(checkpoint.signature).isNotNull()
-    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint, provider)).isTrue()
-    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(headSeq = 4), provider)).isFalse()
-    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(linkSeq = 1), provider)).isFalse()
-    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(signature = null), provider)).isFalse()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint, verifier)).isTrue()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(headSeq = 4), verifier)).isFalse()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(linkSeq = 1), verifier)).isFalse()
+    assertThat(AuditChainCore.verifyCheckpointSignature(checkpoint.copy(signature = null), verifier)).isFalse()
     assertThat(trail.getEventsInRange(0, Long.MAX_VALUE).map { it.name }).doesNotContain("checkpoint_unsigned")
   }
 

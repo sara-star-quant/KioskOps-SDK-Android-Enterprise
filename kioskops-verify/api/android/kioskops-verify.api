@@ -1,0 +1,205 @@
+public final class com/sarastarquant/kioskops/sdk/audit/core/AuditChainCore {
+	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/audit/core/AuditChainCore;
+	public final fun bridge (Ljava/lang/String;Ljava/lang/Long;JLjava/lang/String;Ljava/util/List;)Z
+	public final fun compareToPin (Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;JLcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;JJLcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;J)Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult;
+	public static synthetic fun compareToPin$default (Lcom/sarastarquant/kioskops/sdk/audit/core/AuditChainCore;Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;JLcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;JJLcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;JILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult;
+	public final fun content (Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat;Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun hash (Ljava/lang/String;)Ljava/lang/String;
+	public final fun lengthPrefixed ([Ljava/lang/String;)Ljava/lang/String;
+	public final fun verifyCheckpointSignature (Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;Lcom/sarastarquant/kioskops/sdk/audit/core/SignatureVerifier;)Z
+	public final fun verifyPage (Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/lang/Long;)Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult;
+	public static synthetic fun verifyPage$default (Lcom/sarastarquant/kioskops/sdk/audit/core/AuditChainCore;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/lang/Long;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint {
+	public static final field Companion Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint$Companion;
+	public fun <init> (JLjava/lang/String;JIJLjava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()J
+	public final fun component4 ()I
+	public final fun component5 ()J
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/Long;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/String;JIJLjava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;JLjava/lang/String;JIJLjava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainGeneration ()I
+	public final fun getEventCount ()J
+	public final fun getHeadHash ()Ljava/lang/String;
+	public final fun getHeadSeq ()J
+	public final fun getLinkHash ()Ljava/lang/String;
+	public final fun getLinkSeq ()Ljava/lang/Long;
+	public final fun getPrunedThroughHash ()Ljava/lang/String;
+	public final fun getPrunedThroughSeq ()J
+	public final fun getSignature ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun signingPayload ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/AuditCheckpoint$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat : java/lang/Enum {
+	public static final field Companion Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat$Companion;
+	public static final field FILE_V0 Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat;
+	public static final field V1 Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat;
+	public static final field V2 Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getVersion ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat;
+	public static fun values ()[Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat$Companion {
+	public final fun forStoredVersion (I)Lcom/sarastarquant/kioskops/sdk/audit/core/AuditHashFormat;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/ChainLink {
+	public fun <init> (JLjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()J
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()I
+	public final fun copy (JLjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Lcom/sarastarquant/kioskops/sdk/audit/core/ChainLink;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/core/ChainLink;JLjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/ChainLink;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFieldsJson ()Ljava/lang/String;
+	public final fun getFormatVersion ()I
+	public final fun getHash ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPrevHash ()Ljava/lang/String;
+	public final fun getSeq ()J
+	public final fun getTs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/ErasedRun {
+	public static final field Companion Lcom/sarastarquant/kioskops/sdk/audit/core/ErasedRun$Companion;
+	public fun <init> (JJLjava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;)V
+	public synthetic fun <init> (JJLjava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/Long;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (JJLjava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/audit/core/ErasedRun;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/core/ErasedRun;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/ErasedRun;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAckedHash ()Ljava/lang/String;
+	public final fun getAckedSeq ()Ljava/lang/Long;
+	public final fun getEndHash ()Ljava/lang/String;
+	public final fun getFromSeq ()J
+	public final fun getStartPrev ()Ljava/lang/String;
+	public final fun getToSeq ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/sarastarquant/kioskops/sdk/audit/core/ErasedRun$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/audit/core/ErasedRun$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/sarastarquant/kioskops/sdk/audit/core/ErasedRun;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/sarastarquant/kioskops/sdk/audit/core/ErasedRun;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/ErasedRun$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/ErasedRunKt {
+	public static final fun parseErasedRuns (Ljava/lang/String;)Ljava/util/List;
+	public static final fun toFieldValue (Ljava/util/List;)Ljava/lang/String;
+}
+
+public abstract interface class com/sarastarquant/kioskops/sdk/audit/core/PageResult {
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/PageResult$Broken : com/sarastarquant/kioskops/sdk/audit/core/PageResult {
+	public fun <init> (JLjava/lang/String;)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/String;)Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult$Broken;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult$Broken;JLjava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult$Broken;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getSeq ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/PageResult$Ok : com/sarastarquant/kioskops/sdk/audit/core/PageResult {
+	public fun <init> (Ljava/lang/String;J)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun copy (Ljava/lang/String;J)Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult$Ok;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult$Ok;Ljava/lang/String;JILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/PageResult$Ok;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLastHash ()Ljava/lang/String;
+	public final fun getLastSeq ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/sarastarquant/kioskops/sdk/audit/core/PinResult {
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/PinResult$Consistent : com/sarastarquant/kioskops/sdk/audit/core/PinResult {
+	public static final field INSTANCE Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult$Consistent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/PinResult$Forked : com/sarastarquant/kioskops/sdk/audit/core/PinResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult$Forked;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult$Forked;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult$Forked;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/sarastarquant/kioskops/sdk/audit/core/PinResult$Regressed : com/sarastarquant/kioskops/sdk/audit/core/PinResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult$Regressed;
+	public static synthetic fun copy$default (Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult$Regressed;Ljava/lang/String;ILjava/lang/Object;)Lcom/sarastarquant/kioskops/sdk/audit/core/PinResult$Regressed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/sarastarquant/kioskops/sdk/audit/core/SignatureVerifier {
+	public abstract fun verify (Ljava/lang/String;Ljava/lang/String;)Z
+}
+

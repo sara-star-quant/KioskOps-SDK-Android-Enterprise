@@ -109,7 +109,7 @@ class ErasedRunsTest {
   @Test
   fun `golden erase vector bridges with its runs and breaks without them`() {
     val vector = kotlinx.serialization.json.Json.parseToJsonElement(
-      checkNotNull(javaClass.getResource("/audit/golden_vectors.json")).readText(),
+      java.io.File("../kioskops-verify/vectors/golden_vectors.json").readText(),
     ).jsonObject.getValue("ERASE_V2").jsonObject
     val kept = vector.getValue("keptSeqs").jsonArray.map { it.jsonPrimitive.long }.toSet()
     val links = vector.getValue("rows").jsonArray.map { it.jsonObject }.filter { it.getValue("seq").jsonPrimitive.long in kept }

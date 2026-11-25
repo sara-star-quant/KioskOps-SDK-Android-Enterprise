@@ -170,6 +170,7 @@ dependencies {
   testImplementation(libs.junit4)
   testImplementation(libs.truth)
   testImplementation(libs.classgraph)
+  api(project(":kioskops-verify"))
   testImplementation(libs.robolectric)
   testImplementation(libs.androidx.test.core)
   testImplementation(libs.okhttp.mockwebserver)
