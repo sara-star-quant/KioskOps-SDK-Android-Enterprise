@@ -30,6 +30,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
+      actions: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -62,6 +63,21 @@ jobs:
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v4.0.0
         with:
           path: ${{ runner.temp }}/site
+
+      # deploy-pages lists the run's artifacts once, with no retry. After the upload the list can
+      # stay empty for a while, so wait until it shows the artifact.
+      - name: Wait for the artifact listing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          for i in $(seq 1 24); do
+            n=$(gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts" --jq '[.artifacts[]|select(.name=="github-pages")]|length')
+            [ "$n" -ge 1 ] && exit 0
+            sleep 5
+          done
+          echo "::error::github-pages artifact not listed after 2 minutes"
+          exit 1
 
       - name: Deploy to GitHub Pages
         id: deployment
